@@ -384,8 +384,33 @@ void Session::OnDecodeOnFrame(AVFrame *frame)
 	memcpy(yuv[1], frame->data[1], width * height / 4);
 	memcpy(yuv[2], frame->data[2], width * height / 4);*/
 
-	Frame *_fr = new Frame(frame->width, frame->height, (char*)frame->data[0], (char*)frame->data[1], (char*)frame->data[2]);
-	StreamDecoder::Get()->PushFrame2Net(_fr);
+	//不需要内存对齐
+	if (frame->linesize[0] == width)
+	{
+		Frame *tmpFrame = new Frame(frame->width, frame->height, (char*)frame->data[0], (char*)frame->data[1], (char*)frame->data[2]);
+		StreamDecoder::Get()->PushFrame2Net(tmpFrame);
+	}
+	else
+	{
+
+		Frame *tmpFrame = new Frame(width, height, NULL, NULL, NULL, false);
+		for (int i = 0; i < height; i++)
+		{
+			memcpy(tmpFrame->frame_y + width * i, frame->data[0] + frame->linesize[0] * i, width);
+		}
+		for (int i = 0; i < height / 2; i++)
+		{
+			memcpy(tmpFrame->frame_u + width / 2 * i, frame->data[1] + frame->linesize[1] * i, width / 2);
+		}
+		for (int i = 0; i < height / 2; i++)
+		{
+			memcpy(tmpFrame->frame_v + width / 2 * i, frame->data[2] + frame->linesize[2] * i, width / 2);
+		}
+		StreamDecoder::Get()->PushFrame2Net(tmpFrame);
+
+	}
+
+	
 
 	mux.unlock();
 	av_frame_free(&frame);

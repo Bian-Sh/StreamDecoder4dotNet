@@ -10,6 +10,8 @@ public class GameManager : MonoBehaviour
 {
 
     private DecodeSession session;
+    public int readBuffSize = 1024;
+    public int pushFrameInterval = 20;
     public Text tipText;
     public string path = "F:/HTTPServer/Faded.mp4";
     private bool isRunthread = false;
@@ -23,7 +25,7 @@ public class GameManager : MonoBehaviour
     // Use this for initialization
     void Start()
     {
-        tipText.text = Application.streamingAssetsPath;
+
 #if UNITY_EDITOR
         StreamDecoder.dllPath = Application.streamingAssetsPath + "/../../../../bin/";
 #else
@@ -31,9 +33,13 @@ public class GameManager : MonoBehaviour
 #endif
 
         //加载动态库
-        if (!StreamDecoder.LoadLibrary()) return;
+        if (!StreamDecoder.LoadLibrary())
+        {
+            tipText.text = "FFmpeg动态链接库加载失败";
+            return;
+        }
         StreamDecoder.InitializeStreamDecoder();
-        StreamDecoder.SetStreamDecoderPushFrameInterval(20);
+        StreamDecoder.SetStreamDecoderPushFrameInterval(pushFrameInterval);
         StreamDecoder.logEvent += StreamDecoderLog;
         StreamDecoder.drawEvent += OnDrawFrame;
 
@@ -89,14 +95,14 @@ public class GameManager : MonoBehaviour
         }
         file = new FileStream(path, FileMode.Open);
         isRunthread = true;
-        byte[] readBuff = new byte[1024];
+        byte[] readBuff = new byte[readBuffSize];
         int count = 0;
         while(!isExit)
         {
             int ret = 0;
             try
             {
-                ret = file.Read(readBuff, 0, 1024);
+                ret = file.Read(readBuff, 0, readBuffSize);
             }
             catch (System.Exception ex)
             {

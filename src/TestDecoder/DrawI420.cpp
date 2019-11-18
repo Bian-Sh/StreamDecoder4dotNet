@@ -114,9 +114,9 @@ void DrawI420::Init(int width, int height)
 	delete datas[1];
 	delete datas[2];
 	//分配内存空间
-	datas[0] = new unsigned char[width * height];
-	datas[1] = new unsigned char[width * height / 4];
-	datas[2] = new unsigned char[width * height / 4];
+	datas[0] = new unsigned char[width * height * 2];
+	datas[1] = new unsigned char[width * height / 2];
+	datas[2] = new unsigned char[width * height / 2];
 
 	//清理
 	if (texs[0])
@@ -219,9 +219,9 @@ bool DrawI420::Repaint(DotNetFrame* frame)
 	if (isRepainting) return false;
 
 	isRepainting = true;
-	memcpy(datas[0], frame->frame_y, width * height);
-	memcpy(datas[1], frame->frame_u, width * height / 4);
-	memcpy(datas[2], frame->frame_v, width * height / 4);
+	memcpy(datas[0], frame->frame_y, frame->width * frame->height);
+	memcpy(datas[1], frame->frame_u, frame->width * frame->height / 4);
+	memcpy(datas[2], frame->frame_v, frame->width * frame->height / 4);
 	//QThread::msleep(30);
 	update();
 

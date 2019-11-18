@@ -96,7 +96,7 @@ void H264Decoder::mrun()
 	qDebug() << "read stream thread start";
 	
 	if(!fp)
-		fp = fopen("f:/HTTPServer/faded.mp4", "rb");
+		fp = fopen("f:/HTTPServer/mv.mp4", "rb");
 		
 	if (!fp)
 	{

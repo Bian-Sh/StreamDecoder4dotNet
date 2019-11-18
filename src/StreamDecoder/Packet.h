@@ -106,7 +106,7 @@ struct Frame
 	char* frame_u;
 	char* frame_v;
 	
-	Frame(int width, int height, char* y, char* u, char* v)
+	Frame(int width, int height, char* y, char* u, char* v, bool isLineAlign = true)
 	{
 		this->width = width;
 		this->height = height;
@@ -116,9 +116,12 @@ struct Frame
 		frame_y = new char[size_y];
 		frame_u = new char[size_u];
 		frame_v = new char[size_v];
-		memcpy(frame_y, y, size_y);
-		memcpy(frame_u, u, size_u);
-		memcpy(frame_v, v, size_v);
+		if (isLineAlign)
+		{
+			memcpy(frame_y, y, size_y);
+			memcpy(frame_u, u, size_u);
+			memcpy(frame_v, v, size_v);
+		}
 	}
 	~Frame()
 	{

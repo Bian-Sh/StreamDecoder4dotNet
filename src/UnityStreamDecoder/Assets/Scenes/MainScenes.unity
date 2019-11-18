@@ -268,7 +268,7 @@ RectTransform:
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 53029132}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 454, y: 255.5, z: 0}
+  m_LocalPosition: {x: 483.5, y: 272, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
   - {fileID: 504296490}
@@ -312,7 +312,7 @@ RectTransform:
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 182904880}
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -369.14, y: 106.2, z: 0}
+  m_LocalPosition: {x: -398.64, y: 122.7, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
   - {fileID: 1409339608}
@@ -723,7 +723,7 @@ RectTransform:
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 924700255}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -369.14, y: 231.19, z: 0}
+  m_LocalPosition: {x: -398.64, y: 247.69, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
   - {fileID: 1187393840}
@@ -845,7 +845,7 @@ RectTransform:
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 1024790741}
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -170.9, y: 169.09995, z: 0}
+  m_LocalPosition: {x: -200.40001, y: 185.59995, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
   - {fileID: 1036173}
@@ -1115,7 +1115,7 @@ RectTransform:
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 1381706616}
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -170.9, y: 106.2, z: 0}
+  m_LocalPosition: {x: -200.40001, y: 122.7, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
   - {fileID: 491491821}
@@ -1237,7 +1237,7 @@ RectTransform:
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 1396557577}
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -369.14, y: 169.1, z: 0}
+  m_LocalPosition: {x: -398.64, y: 185.6, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
   - {fileID: 1039933831}
@@ -1577,8 +1577,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e6ada6c607b276149bbc15988b8f3e28, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  readBuffSize: 5000
+  pushFrameInterval: 1
   tipText: {fileID: 488605589}
-  path: "F:/HTTPServer/\u4F53\u9762 \u4E8E\u6587\u6587.mp4"
+  path: F:/HTTPServer/mv.mp4
   rimg: {fileID: 504296491}
 --- !u!4 &1551522791
 Transform:
@@ -1618,7 +1620,7 @@ RectTransform:
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 1961479569}
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -170.9, y: 231.19006, z: 0}
+  m_LocalPosition: {x: -200.40001, y: 247.69006, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
   - {fileID: 295797966}
