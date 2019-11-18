@@ -6,7 +6,6 @@ bin/H264Decoder.exe
 bin/scrcpy-server.jar
 *.jar
 *.ilk
-*.lib
 *.pdb
 *.exp
 bin/TestDecoder.exe
@@ -21,3 +20,4 @@ src/UnityStreamDecoder/Build
 src/UnityStreamDecoder/UnityPackageManager
 src/UnityStreamDecoder/UnityStreamDecoder.sln
 src/UnityStreamDecoder/UnityStreamDecoder.csproj
+bin/StreamDecoder.lib
