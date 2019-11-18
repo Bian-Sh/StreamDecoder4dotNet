@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>H264DecoderClass</class>
+ <widget class="QWidget" name="H264DecoderClass">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>600</width>
+    <height>400</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>H264Decoder</string>
+  </property>
+  <widget class="QPushButton" name="createsession">
+   <property name="geometry">
+    <rect>
+     <x>52</x>
+     <y>100</y>
+     <width>121</width>
+     <height>28</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>CreateSession</string>
+   </property>
+  </widget>
+  <widget class="QPushButton" name="deletesession">
+   <property name="geometry">
+    <rect>
+     <x>52</x>
+     <y>180</y>
+     <width>121</width>
+     <height>28</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>DeleteSession</string>
+   </property>
+  </widget>
+  <widget class="QPushButton" name="GetFree">
+   <property name="geometry">
+    <rect>
+     <x>430</x>
+     <y>100</y>
+     <width>93</width>
+     <height>28</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>GetFree</string>
+   </property>
+  </widget>
+  <widget class="QPushButton" name="OpenDemux">
+   <property name="geometry">
+    <rect>
+     <x>210</x>
+     <y>100</y>
+     <width>111</width>
+     <height>28</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>OpenDemux</string>
+   </property>
+  </widget>
+  <widget class="QPushButton" name="begindecode">
+   <property name="geometry">
+    <rect>
+     <x>210</x>
+     <y>180</y>
+     <width>111</width>
+     <height>28</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>BeginDecode</string>
+   </property>
+  </widget>
+  <widget class="QPushButton" name="stopdecode">
+   <property name="geometry">
+    <rect>
+     <x>210</x>
+     <y>250</y>
+     <width>111</width>
+     <height>28</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>StopDecode</string>
+   </property>
+  </widget>
+ </widget>
+ <layoutdefault spacing="6" margin="11"/>
+ <resources>
+  <include location="H264Decoder.qrc"/>
+ </resources>
+ <connections/>
+</ui>
