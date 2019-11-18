@@ -4,13 +4,14 @@
 #include <QGLShaderProgram>
 #include <QMutex>
 #include <QWaitCondition>
+class DotNetFrame;
 class DrawI420 : public QOpenGLWidget, protected QOpenGLFunctions
 {
 
 	Q_OBJECT
 
 public:
-	DrawI420(class Session* session);
+	DrawI420();
 	~DrawI420();
 
 	void Init(int width, int height);
@@ -20,6 +21,7 @@ public:
 
 	//»æÖÆYUVÊý¾Ý
 	bool Repaint(unsigned char* yuv[]);
+	bool Repaint(DotNetFrame* frame);
 
 	void Close();
 
@@ -54,6 +56,6 @@ private:
 
 	bool isExit = false;
 
-	Session* session = NULL;
+	//Session* session = NULL;
 };
 

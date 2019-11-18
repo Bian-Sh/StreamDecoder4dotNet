@@ -5,15 +5,38 @@
 #include "StreamDecoder.h"
 #include <QCryptographicHash>
 #include <Session.h>
-#include "SCharList.h"
+#include "Packet.h"
+#include "DrawI420.h"
 #pragma comment(lib, "StreamDecoder.lib")
+
+H264Decoder* H264Decoder::self = NULL;
+
+void H264Decoder::OnDrawFrame(DotNetFrame* frame)
+{
+	if (canvas == NULL)
+	{
+		canvas = new DrawI420();
+		
+		canvas->resize(frame->width, frame->height);
+		canvas->show();
+		canvas->Init(frame->width, frame->height);
+	}
+	canvas->Repaint(frame);
+}
+
 H264Decoder::H264Decoder(QWidget *parent)
 	: QWidget(parent)
 {
 	ui.setupUi(this);
-	StreamDecoderInitialize(NULL);
+	if (self == NULL) self = this;
+	StreamDecoderInitialize(NULL, &OnDraw);
 }
 
+
+void OnDraw(DotNetFrame* frame)
+{
+	H264Decoder::self->OnDrawFrame(frame);
+}
 
 void H264Decoder::on_createsession_clicked()
 {

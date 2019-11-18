@@ -40,13 +40,13 @@
     <ClInclude Include="StreamDecoder.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="SCharList.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="Session.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Decode.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Packet.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

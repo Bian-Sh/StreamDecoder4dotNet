@@ -104,7 +104,7 @@
   <ItemGroup>
     <ClInclude Include="Decode.h" />
     <ClInclude Include="Session.h" />
-    <ClInclude Include="SCharList.h" />
+    <ClInclude Include="Packet.h" />
     <ClInclude Include="StreamDecoder.h">
       <IncludePath Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">.\..\..\include;.\GeneratedFiles;.;$(QTDIR)\include;.\GeneratedFiles\$(ConfigurationName)\.;$(QTDIR)\include\QtCore</IncludePath>
       <IncludePath Condition="'$(Configuration)|$(Platform)'=='Release|x64'">.\..\..\include;.\GeneratedFiles;.;$(QTDIR)\include;.\GeneratedFiles\$(ConfigurationName)\.;$(QTDIR)\include\QtCore</IncludePath>

@@ -5,6 +5,8 @@
 #include "Session.h"
 #include <QThread>
 #include <QMutex>
+
+void OnDraw(struct DotNetFrame* frame);
 class H264Decoder : public QWidget
 {
 	Q_OBJECT
@@ -12,6 +14,8 @@ class H264Decoder : public QWidget
 public:
 	H264Decoder(QWidget *parent = Q_NULLPTR);
 
+	static H264Decoder* self;
+	void OnDrawFrame(DotNetFrame* frame);
 public slots :
 	void on_createsession_clicked();
 	void on_deletesession_clicked();
@@ -20,6 +24,7 @@ public slots :
 	void on_stopdecode_clicked();
 
 	void on_GetFree_clicked();
+
 protected:
 	void closeEvent(QCloseEvent *event);
 private:
@@ -34,4 +39,6 @@ private:
 	bool isExit = false;
 
 	bool isRunthread = false;
+
+	class DrawI420* canvas = NULL;
 };

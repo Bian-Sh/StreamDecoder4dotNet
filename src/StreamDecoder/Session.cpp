@@ -3,7 +3,7 @@
 //#include <QMutexLocker>
 #include "Decode.h"
 #include "StreamDecoder.h"
-#include "SCharList.h"
+#include "Packet.h"
 #include <thread>
 #include <iostream>
 //#include <QCryptographicHash>
@@ -311,7 +311,7 @@ void Session::Close()
 	dataCache->Clear();
 	dataCacheMux.unlock();*/
 
-	if (yuv[0])
+	/*if (yuv[0])
 	{
 		delete yuv[0];
 		delete yuv[1];
@@ -320,7 +320,7 @@ void Session::Close()
 		yuv[1] = NULL;
 		yuv[2] = NULL;
 		linesizeY = 0;
-	}
+	}*/
 
 	width = 0;
 	height = 0;
@@ -354,7 +354,7 @@ char* Session::av_strerror2(int errnum)
 	return logbuf;
 }
 
-void Session::OnDecodeOnFrame(AVFrame *frame, bool use_frame)
+void Session::OnDecodeOnFrame(AVFrame *frame)
 {
 	mux.lock();
 	if (isExit)
@@ -364,7 +364,7 @@ void Session::OnDecodeOnFrame(AVFrame *frame, bool use_frame)
 		return;
 	}
 
-	if (linesizeY != frame->linesize[0])
+	/*if (linesizeY != frame->linesize[0])
 	{
 		width = frame->width;
 		height = frame->height;
@@ -382,7 +382,10 @@ void Session::OnDecodeOnFrame(AVFrame *frame, bool use_frame)
 	}
 	memcpy(yuv[0], frame->data[0], width * height);
 	memcpy(yuv[1], frame->data[1], width * height / 4);
-	memcpy(yuv[2], frame->data[2], width * height / 4);
+	memcpy(yuv[2], frame->data[2], width * height / 4);*/
+
+	Frame *_fr = new Frame(frame->width, frame->height, (char*)frame->data[0], (char*)frame->data[1], (char*)frame->data[2]);
+	StreamDecoder::Get()->PushFrame2Net(_fr);
 
 	mux.unlock();
 	av_frame_free(&frame);

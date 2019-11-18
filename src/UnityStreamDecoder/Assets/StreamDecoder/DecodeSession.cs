@@ -41,18 +41,7 @@ public class DecodeSession {
         IntPtr versionPtr = Native.Invoke<IntPtr, StreamDecoder.GetStreamDecoderVersion>(StreamDecoder.streamDecoder_dll);
         return Marshal.PtrToStringAnsi(versionPtr);
     }
-   
-    //关闭一个Session
-    public void CloseSession()
-    {
-        if (session == null)
-        {
-            Debug.LogError("session is null");
-            return;
-        }
-        Native.Invoke<StreamDecoder.CloseSession>(StreamDecoder.streamDecoder_dll, session);
-    }
-
+    //尝试打开解封装线程
     public bool OpenDemuxThread(int waitDemuxTime)
     {
         if (session == null)
@@ -63,4 +52,37 @@ public class DecodeSession {
         return Native.Invoke<bool, StreamDecoder.OpenDemuxThread>(StreamDecoder.streamDecoder_dll, session, waitDemuxTime);
     }
 
+    //开始解码
+    public void BeginDecode()
+    {
+        if (session == null)
+        {
+            Debug.LogError("session is null");
+            return;
+        }
+        Native.Invoke<StreamDecoder.BeginDecode>(StreamDecoder.streamDecoder_dll, session);
+    }
+
+    //停止解码
+    public void StopDecode()
+    {
+        if (session == null)
+        {
+            Debug.LogError("session is null");
+            return;
+        }
+        Native.Invoke<StreamDecoder.StopDecode>(StreamDecoder.streamDecoder_dll, session);
+    }
+
+    public int GetCacheFreeSize()
+    {
+        if (session == null) return -1;
+        return Native.Invoke<int, StreamDecoder.GetCacheFreeSize>(StreamDecoder.streamDecoder_dll, session);
+    }
+
+    public bool PushStream2Cache(byte[] data, int len)
+    {
+        if (session == null) return false;
+        return Native.Invoke<bool, StreamDecoder.PushStream2Cache>(StreamDecoder.streamDecoder_dll, session, data, len);
+    }
 }

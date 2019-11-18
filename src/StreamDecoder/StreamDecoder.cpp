@@ -2,6 +2,7 @@
 #include "Session.h"
 #include <windows.h>
 #include <iostream>
+#include "Packet.h"
 using namespace std;
 void _stdcall TimerProcess(HWND hwnd, UINT uMsg, UINT idEvent, DWORD dwTime)
 {
@@ -9,20 +10,33 @@ void _stdcall TimerProcess(HWND hwnd, UINT uMsg, UINT idEvent, DWORD dwTime)
 }
 
 //初始化StreamDecoder 设置日志回调函数
-void StreamDecoder::StreamDecoderInitialize(PLog logfunc)
+void StreamDecoder::StreamDecoderInitialize(PLog logfunc, PDrawFrame drawfunc)
 {
-	mux.lock();
+	logMux.lock();
 	if (!Log) Log = logfunc;
-	mux.unlock();
-	SetTimer(NULL, 1, 40, (TIMERPROC)TimerProcess);
+	logMux.unlock();
+
+	frameMux.lock();
+	if (!DrawFrame) DrawFrame = drawfunc;
+	frameMux.unlock();
+	SetTimer(NULL, 1, 25, (TIMERPROC)TimerProcess);
+}
+
+void StreamDecoder::SetPushFrameInterval(int wait)
+{
+	waitPushFrameTime = wait;
 }
 
 //注销StreamDecoder 预留函数
 void StreamDecoder::StreamDecoderDeInitialize()
 {
-	mux.lock();
+	logMux.lock();
 	Log = NULL;
-	mux.unlock();
+	logMux.unlock();
+
+	frameMux.lock();
+	DrawFrame = NULL;
+	frameMux.unlock();
 }
 
 
@@ -118,21 +132,42 @@ bool StreamDecoder::PushStream2Cache(void* session, char* data, int len)
 void StreamDecoder::PushLog2Net(LogLevel level, char* log)
 {
 	LogPacket* packet = new LogPacket(level, log);
-	mux.lock();
+	logMux.lock();
 	logpackets.push_back(packet);
-	mux.unlock();
+	logMux.unlock();
 }
+
+void StreamDecoder::PushFrame2Net(Frame* frame)
+{
+	if (waitPushFrameTime > 0)
+	{
+		Sleep(waitPushFrameTime);
+	}
+	frameMux.lock();
+	framepackets.push_back(frame);
+	frameMux.unlock();
+}
+
 //主线程更新 物理时间
 void StreamDecoder::FixedUpdate()
 {
-	mux.lock();
+	logMux.lock();
 	int size = logpackets.size();
 	for (int i = 0; i < size; i++)
 	{
 		Log2Net(logpackets.front());
 		logpackets.pop_front();
 	}
-	mux.unlock();
+	logMux.unlock();
+
+	frameMux.lock();
+	size = framepackets.size();
+	for (int i = 0; i < size; i++)
+	{
+		DrawFrame2dotNet(framepackets.front());
+		framepackets.pop_front();
+	}
+	frameMux.unlock();
 }
 //调用回调函数（主线程同步）
 void StreamDecoder::Log2Net(LogPacket* logpacket)
@@ -142,15 +177,35 @@ void StreamDecoder::Log2Net(LogPacket* logpacket)
 		Log(logpacket->_level, logpacket->_log);
 	}
 	cout << logpacket->_log << endl;
-	logpacket->Drop();
 	delete logpacket;
 	logpacket = NULL;
 }
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-void StreamDecoderInitialize(PLog logfunc)
+//调用回调函数（主线程同步）
+void StreamDecoder::DrawFrame2dotNet(Frame* frame)
 {
-	StreamDecoder::Get()->StreamDecoderInitialize(logfunc);
+	if (DrawFrame)
+	{
+		DotNetFrame* dotNetFrame = new DotNetFrame();
+		dotNetFrame->width = frame->width;
+		dotNetFrame->height = frame->height;
+		dotNetFrame->frame_y = frame->frame_y;
+		dotNetFrame->frame_u = frame->frame_u;
+		dotNetFrame->frame_v = frame->frame_v;
+		//真正调用C#
+		DrawFrame(dotNetFrame);
+		//Log2Net(new LogPacket(Info, "call ok"));
+		delete dotNetFrame;
+		dotNetFrame = NULL;
+	}
+	delete frame;
+	frame = NULL;
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+void StreamDecoderInitialize(PLog logfunc, PDrawFrame drawfunc)
+{
+	StreamDecoder::Get()->StreamDecoderInitialize(logfunc, drawfunc);
 }
 
 void StreamDecoderDeInitialize()
@@ -197,4 +252,9 @@ int GetCacheFreeSize(void* session)
 bool PushStream2Cache(void* session, char* data, int len)
 {
 	return StreamDecoder::Get()->PushStream2Cache(session, data, len);
+}
+
+HEAD void _cdecl SetPushFrameInterval(int wait)
+{
+	StreamDecoder::Get()->SetPushFrameInterval(wait);
 }

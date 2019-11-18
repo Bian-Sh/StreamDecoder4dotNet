@@ -12,35 +12,19 @@
 #else
 #define HEAD EXTERNC
 #endif
-
+//#pragma pack(1)
 enum LogLevel
 {
 	Info,
 	Warning,
 	Error
 };
-struct LogPacket 
-{
-	LogLevel _level;
-	char* _log = 0;
-	LogPacket(LogLevel level, char* log)
-	{
-		_level = level;
-		int size = strlen(log);
-		_log = new char[size + 1];
-		_log[size] = 0;
-		memcpy(_log, log, size);
-	}
-	void Drop()
-	{
-		if (_log)
-		{
-			delete _log;
-			_log = NULL;
-		}
-	}
-};
+struct LogPacket;
+struct Frame;
+struct DotNetFrame;
 typedef void(*PLog)(int level, char* log);
+typedef void(*PDrawFrame)(DotNetFrame* frame);
+
 class StreamDecoder
 {
 
@@ -53,7 +37,10 @@ public:
 	}
 
 	//初始化StreamDecoder 设置日志回调函数
-	void StreamDecoderInitialize(PLog logfunc);
+	void StreamDecoderInitialize(PLog logfunc, PDrawFrame drawfunc);
+
+	void SetPushFrameInterval(int wait);
+
 	//注销StreamDecoder 预留函数
 	void StreamDecoderDeInitialize();
 
@@ -79,6 +66,8 @@ public:
 
 	//把消息追加到队列，通过主线程发送
 	void PushLog2Net(LogLevel level, char* log);
+	//
+	void PushFrame2Net(Frame* frame);
 	//主线程更新 物理时间
 	void FixedUpdate();
 private:
@@ -86,14 +75,22 @@ private:
 	//调用回调函数（主线程同步）
 	void Log2Net(LogPacket* logpacket);
 
+	void DrawFrame2dotNet(Frame* frame);
+
 private:
-	std::mutex mux;
-	PLog Log = 0;
+	std::mutex logMux;
+	PLog Log = NULL;
+
+	std::mutex frameMux;
+	PDrawFrame DrawFrame = NULL;
 
 	std::list<LogPacket*> logpackets;
+	std::list<Frame*> framepackets;
+
+	int waitPushFrameTime = 0;
 };
 
-HEAD void _cdecl StreamDecoderInitialize(PLog logfunc);
+HEAD void _cdecl StreamDecoderInitialize(PLog logfunc, PDrawFrame drawfunc);
 
 HEAD void _cdecl StreamDecoderDeInitialize();
 
@@ -112,3 +109,5 @@ HEAD void _cdecl StopDecode(void* session);
 HEAD int _cdecl GetCacheFreeSize(void* session);
 
 HEAD bool _cdecl PushStream2Cache(void* session, char* data, int len);
+
+HEAD void _cdecl SetPushFrameInterval(int wait);

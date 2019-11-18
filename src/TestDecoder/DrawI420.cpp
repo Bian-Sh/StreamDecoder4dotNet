@@ -5,7 +5,8 @@
 #include "Session.h"
 #include "DecodeEvent.h"
 #include <QCoreApplication>
-
+#include "StreamDecoder.h"
+#include "Packet.h"
 #define GET_STR(x) #x
 #define A_VER 3
 #define T_VER 4
@@ -46,9 +47,9 @@ void main(void)
 }
 );
 
-DrawI420::DrawI420(Session* session)
+DrawI420::DrawI420()
 {
-	this->session = session;
+	
 }
 
 
@@ -207,6 +208,20 @@ bool DrawI420::Repaint(unsigned char* yuv[])
 	memcpy(datas[0], yuv[0], width * height);
 	memcpy(datas[1], yuv[1], width * height / 4);
 	memcpy(datas[2], yuv[2], width * height / 4);
+	//QThread::msleep(30);
+	update();
+
+	return true;
+}
+
+bool DrawI420::Repaint(DotNetFrame* frame)
+{
+	if (isRepainting) return false;
+
+	isRepainting = true;
+	memcpy(datas[0], frame->frame_y, width * height);
+	memcpy(datas[1], frame->frame_u, width * height / 4);
+	memcpy(datas[2], frame->frame_v, width * height / 4);
 	//QThread::msleep(30);
 	update();
 

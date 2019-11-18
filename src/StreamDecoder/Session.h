@@ -25,7 +25,7 @@ public:
 
 	static char* av_strerror2(int errnum);
 
-	void OnDecodeOnFrame(struct AVFrame *frame, bool use_frame = false);
+	void OnDecodeOnFrame(struct AVFrame *frame);
 	
 	//数据缓冲区大小
 	int dataCacheSize = 500000;
@@ -70,8 +70,8 @@ private:
 	int height = 0;
 
 	//需要清理
-	unsigned char* yuv[3] = {0};
-	int linesizeY = 0;
+	/*unsigned char* yuv[3] = {0};
+	int linesizeY = 0;*/
 
 	//bool isDecodeing = false;
 
