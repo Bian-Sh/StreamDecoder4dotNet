@@ -13,7 +13,9 @@ public:
 	Session(int dataCacheSize);
 	~Session();
 
-	bool OpenDemuxThread(int waitDemuxTime);
+	bool TryDemux(int waitDemuxTime);
+	bool TryNetStreamDemux(char* url);
+
 	void BeginDecode();
 	//
 	void StopDecode();
@@ -52,6 +54,8 @@ public:
 //	void OnDemuxSuccessSignal(bool isSuccess, char* info);
 
 private:
+	void ProbeInputBuffer();
+	bool OpenDemuxThread();
 	void Demux();
 	//Ïß³Ìº¯Êý
 	void run();
@@ -83,4 +87,6 @@ private:
 	bool isRuning = false;
 
 	static char* logbuf;
+
+	char* url = NULL;
 };

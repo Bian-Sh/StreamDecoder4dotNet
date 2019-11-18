@@ -69,15 +69,26 @@ void StreamDecoder::DeleteSession(void* session)
 }
 
 //尝试打开解封装线程
-bool StreamDecoder::OpenDemuxThread(void* session, int waitDemuxTime)
+bool StreamDecoder::TryDemux(void* session, int waitDemuxTime)
 {
 	Session* s = (Session*)session;
 	if (s == NULL)
 	{
-		PushLog2Net(Error, "OpenDemuxThread exception, session is null");
+		PushLog2Net(Error, "TryDemux exception, session is null");
 		return false;
 	}
-	return s->OpenDemuxThread(waitDemuxTime);
+	return s->TryDemux(waitDemuxTime);
+}
+
+bool StreamDecoder::TryNetStreamDemux(void* session, char* url)
+{
+	Session* s = (Session*)session;
+	if (s == NULL)
+	{
+		PushLog2Net(Error, "TryNetStreamDemux exception, session is null");
+		return false;
+	}
+	return s->TryNetStreamDemux(url);
 }
 
 //开始解码
@@ -229,9 +240,14 @@ void DeleteSession(void* session)
 }
 
 
-bool OpenDemuxThread(void* session, int waitDemuxTime)
+bool TryDemux(void* session, int waitDemuxTime)
 {
-	return StreamDecoder::Get()->OpenDemuxThread(session, waitDemuxTime);
+	return StreamDecoder::Get()->TryDemux(session, waitDemuxTime);
+}
+
+bool TryNetStreamDemux(void* session, char* url)
+{
+	return StreamDecoder::Get()->TryNetStreamDemux(session, url);
 }
 
 void BeginDecode(void* session)

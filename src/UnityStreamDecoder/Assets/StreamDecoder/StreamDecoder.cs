@@ -40,7 +40,9 @@ namespace StreamDecoderManager
 
         public delegate void DeleteSession(IntPtr session);
 
-        public delegate bool OpenDemuxThread(IntPtr session, int waitDemuxTime);
+        public delegate bool TryDemux(IntPtr session, int waitDemuxTime);
+
+        public delegate bool TryNetStreamDemux(IntPtr session, string url);
 
 
         public delegate void BeginDecode(IntPtr session);

@@ -53,7 +53,10 @@ public:
 	void DeleteSession(void* session);
 
 	//尝试打开解封装线程
-	bool OpenDemuxThread(void* session, int waitDemuxTime);
+	bool TryDemux(void* session, int waitDemuxTime);
+
+	bool TryNetStreamDemux(void* session, char* url);
+
 	//开始解码
 	void BeginDecode(void* session);
 	//停止解码
@@ -100,7 +103,9 @@ HEAD void* _cdecl CreateSession();
 
 HEAD void _cdecl DeleteSession(void* session);
 
-HEAD bool _cdecl OpenDemuxThread(void* session, int waitDemuxTime);
+HEAD bool _cdecl TryDemux(void* session, int waitDemuxTime);
+
+HEAD bool _cdecl TryNetStreamDemux(void* session, char* url);
 
 HEAD void _cdecl BeginDecode(void* session);
 

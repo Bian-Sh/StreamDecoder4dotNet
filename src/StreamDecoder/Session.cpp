@@ -34,6 +34,8 @@ Session::Session(int dataCacheSize)
 
 	this->dataCacheSize = dataCacheSize;
 	if (!dataCache) dataCache = new SCharList(dataCacheSize);
+	url = new char[100];
+	memset(url, 0, 100);
 }
 
 Session::~Session()
@@ -138,28 +140,30 @@ bool Session::PushStream2Cache(char* data, int len)
 //}
 
 
-bool Session::OpenDemuxThread(int waitDemuxTime)
+bool Session::TryDemux(int waitDemuxTime)
 {
-	//启动解封装线程失败， 线程正在运行
-	if (isRuning)
-	{
-		StreamDecoder::Get()->PushLog2Net(LogLevel::Warning, "demux thread is run, please wait!");
-		return false;
-	}
-	dataCache->Clear();
-	this->waitDemuxTime = waitDemuxTime;
-	isExit = false;
-	isRuning = true;
-	isDemuxing = true;
+	if (!OpenDemuxThread()) return false;
+	std::thread th(&Session::ProbeInputBuffer, this);
+	th.detach();
+	return true;
+}
+
+bool Session::TryNetStreamDemux(char* url)
+{
+	if (!OpenDemuxThread()) return false;
+	memset(this->url, 0, 100);
+	memcpy(this->url, url, strlen(url));
+	StreamDecoder::Get()->PushLog2Net(Info, this->url);
+	/*char c[10];
+	sprintf(c, "value=%d", strlen(url));
+	StreamDecoder::Get()->PushLog2Net(Info, c);*/
 	std::thread th(&Session::Demux, this);
 	th.detach();
 	return true;
 }
 
-void Session::Demux()
+void Session::ProbeInputBuffer()
 {
-	mux.lock();
-
 	//这个readbuff定义为全局的会在第二次打开失败，原因未知
 	unsigned char* readBuff = (unsigned char*)av_malloc(BUFF_SIZE);
 
@@ -170,10 +174,10 @@ void Session::Demux()
 	//探测流格式  
 	//TODO要不要释放？
 	AVInputFormat *piFmt = NULL;
-	
+
 	startTime = av_gettime();
 	int ret = av_probe_input_buffer(avio, &piFmt, NULL, NULL, 0, 0);
-	
+
 	if (ret < 0)
 	{
 		mux.unlock();
@@ -203,8 +207,31 @@ void Session::Demux()
 
 	/*afc->interrupt_callback.opaque = this;
 	afc->interrupt_callback.callback = interrupt_cb;*/
+	Demux();
+}
 
-	ret = avformat_open_input(&afc, NULL, NULL, NULL);
+bool Session::OpenDemuxThread()
+{
+	//启动解封装线程失败， 线程正在运行
+	if (isRuning)
+	{
+		StreamDecoder::Get()->PushLog2Net(LogLevel::Warning, "demux thread is run, please wait!");
+		return false;
+	}
+	dataCache->Clear();
+	this->waitDemuxTime = waitDemuxTime;
+	isExit = false;
+	isRuning = true;
+	isDemuxing = true;
+	
+	return true;
+}
+
+void Session::Demux()
+{
+	mux.lock();
+
+	int ret = avformat_open_input(&afc, url, NULL, NULL);
 	//av_dict_free(&opt);
 	if (ret < 0)
 	{

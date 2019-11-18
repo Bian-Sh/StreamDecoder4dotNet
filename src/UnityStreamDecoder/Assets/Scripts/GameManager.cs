@@ -76,15 +76,20 @@ public class GameManager : MonoBehaviour
         DecodeSession.DeleteSession(ref session);
     }
 
-    public void OpenDemuxThread()
+    public void TryDemux()
     {
         if (session == null) return;
-        Debug.Log(session.OpenDemuxThread(2000));
+        Debug.Log(session.TryDemux(2000));
         if (isRunthread) return;
         isExit = false;
         new Thread(run).Start();
     }
-   
+    public void TryNetStreamDemux(string url)
+    {
+        if (session == null) return;
+        Debug.Log(session.TryNetStreamDemux(url));
+    }
+
     private void run()
     {
         Debug.Log("begin run");

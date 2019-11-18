@@ -42,14 +42,23 @@ public class DecodeSession {
         return Marshal.PtrToStringAnsi(versionPtr);
     }
     //尝试打开解封装线程
-    public bool OpenDemuxThread(int waitDemuxTime)
+    public bool TryDemux(int waitDemuxTime)
     {
         if (session == null)
         {
             Debug.LogError("session is null");
             return false;
         }
-        return Native.Invoke<bool, StreamDecoder.OpenDemuxThread>(StreamDecoder.streamDecoder_dll, session, waitDemuxTime);
+        return Native.Invoke<bool, StreamDecoder.TryDemux>(StreamDecoder.streamDecoder_dll, session, waitDemuxTime);
+    }
+    public bool TryNetStreamDemux(string url)
+    {
+        if (session == null)
+        {
+            Debug.LogError("session is null");
+            return false;
+        }
+        return Native.Invoke<bool, StreamDecoder.TryNetStreamDemux>(StreamDecoder.streamDecoder_dll, session, url);
     }
 
     //开始解码
