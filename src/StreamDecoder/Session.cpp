@@ -164,6 +164,7 @@ bool Session::TryNetStreamDemux(char* url)
 
 void Session::ProbeInputBuffer()
 {
+	mux.lock();
 	//这个readbuff定义为全局的会在第二次打开失败，原因未知
 	unsigned char* readBuff = (unsigned char*)av_malloc(BUFF_SIZE);
 
@@ -207,6 +208,7 @@ void Session::ProbeInputBuffer()
 
 	/*afc->interrupt_callback.opaque = this;
 	afc->interrupt_callback.callback = interrupt_cb;*/
+	mux.unlock();
 	Demux();
 }
 

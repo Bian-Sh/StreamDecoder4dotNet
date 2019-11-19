@@ -91,7 +91,7 @@ public class DecodeSession {
 
     public bool PushStream2Cache(byte[] data, int len)
     {
-        if (session == null) return false;
+        if (session == null) return false; 
         return Native.Invoke<bool, StreamDecoder.PushStream2Cache>(StreamDecoder.streamDecoder_dll, session, data, len);
     }
 }

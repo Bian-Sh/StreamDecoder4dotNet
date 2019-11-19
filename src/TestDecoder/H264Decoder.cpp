@@ -57,7 +57,7 @@ void H264Decoder::on_deletesession_clicked()
 void H264Decoder::on_OpenDemux_clicked()
 {
 	if (!session) return;
-	qDebug() << OpenDemuxThread(session, 2000);
+	qDebug() << TryDemux(session, 2000);
 	if (!isRunthread)
 	{
 		isExit = false;
@@ -96,7 +96,7 @@ void H264Decoder::mrun()
 	qDebug() << "read stream thread start";
 	
 	if(!fp)
-		fp = fopen("f:/HTTPServer/mv.mp4", "rb");
+		fp = fopen("D:/HTTPServer/mv.mp4", "rb");
 		
 	if (!fp)
 	{
