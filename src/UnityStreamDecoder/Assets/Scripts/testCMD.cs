@@ -7,7 +7,7 @@ public class testCMD : MonoBehaviour {
 
     // Use this for initialization
     void Start () {
- 
+        new CMD(null).Execute(@"E:\WorkSpace\VisualStudioSpace\ConsoleApp1\Debug\ConsoleApplication1.exe", "test", null);
 
 	}
 

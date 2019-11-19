@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Timers;
 using UnityEngine;
 
@@ -59,7 +60,7 @@ class CMD
 
             CmdProcess.EnableRaisingEvents = true;                      // 启用Exited事件
             CmdProcess.Exited += new EventHandler(CmdProcess_Exited);   // 注册进程结束事件
-
+           
             CmdProcess.Start();
             CmdProcess.BeginOutputReadLine();
             CmdProcess.BeginErrorReadLine();
@@ -73,10 +74,11 @@ class CMD
         catch (Exception ex)
         {
             //isExit = true;
-            Debug.LogWarning(ex);
+            UnityEngine.Debug.LogWarning(ex);
             if (callback != null) callback(this, ExecuteState.StartFailed);
         }
-        adb.UpdateEvent += Update;
+        if(adb!=null)
+            adb.UpdateEvent += Update;
     }
 
 
@@ -95,7 +97,11 @@ class CMD
     }
     private void CmdProcess_Exited(object sender, EventArgs e)
     {
+        Process process = (Process)sender;
+        UnityEngine.Debug.Log("exit code:" + process.ExitCode);
         isExit = true;
+        UnityEngine.Debug.LogWarning(errorOutStr);
+        UnityEngine.Debug.Log(standardOutStr);
     }
 
     private void Update()

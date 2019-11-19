@@ -19,7 +19,8 @@ public:
 public slots :
 	void on_createsession_clicked();
 	void on_deletesession_clicked();
-	void on_OpenDemux_clicked();
+	void on_trydemux_clicked();
+	void on_trynetstreamdemux_clicked();
 	void on_begindecode_clicked();
 	void on_stopdecode_clicked();
 

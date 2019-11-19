@@ -42,8 +42,8 @@
   <widget class="QPushButton" name="GetFree">
    <property name="geometry">
     <rect>
-     <x>430</x>
-     <y>100</y>
+     <x>70</x>
+     <y>250</y>
      <width>93</width>
      <height>28</height>
     </rect>
@@ -52,7 +52,7 @@
     <string>GetFree</string>
    </property>
   </widget>
-  <widget class="QPushButton" name="OpenDemux">
+  <widget class="QPushButton" name="trydemux">
    <property name="geometry">
     <rect>
      <x>210</x>
@@ -62,7 +62,7 @@
     </rect>
    </property>
    <property name="text">
-    <string>OpenDemux</string>
+    <string>TryDemux</string>
    </property>
   </widget>
   <widget class="QPushButton" name="begindecode">
@@ -89,6 +89,19 @@
    </property>
    <property name="text">
     <string>StopDecode</string>
+   </property>
+  </widget>
+  <widget class="QPushButton" name="trynetstreamdemux">
+   <property name="geometry">
+    <rect>
+     <x>380</x>
+     <y>100</y>
+     <width>161</width>
+     <height>28</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>TryNetStreamDemux</string>
    </property>
   </widget>
  </widget>

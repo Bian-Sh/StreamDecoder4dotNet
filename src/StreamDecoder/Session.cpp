@@ -127,22 +127,21 @@ bool Session::PushStream2Cache(char* data, int len)
 	dataCacheMux.unlock();
 	return true;
 }
-//static int interrupt_cb(void *ctx)
-//{
-//	Session *session = (Session*)ctx;
-//	qDebug() << "interrupt_cb";
-//	int  timeout = 3;
-//	if (av_gettime() - session->lastreadpackettime > timeout * 1000 * 1000)
-//	{
-//		return 1;
-//	}
-//	return 0;
-//}
+int interrupt_cb(void *ctx)
+{
+	Session *session = (Session*)ctx;
+	if (session->isExit) return 1;
+	//cout << "interrupt_cb" << endl;
+	return 0;
+}
 
 
 bool Session::TryDemux(int waitDemuxTime)
 {
 	if (!OpenDemuxThread()) return false;
+
+	afc = avformat_alloc_context();
+
 	std::thread th(&Session::ProbeInputBuffer, this);
 	th.detach();
 	return true;
@@ -154,9 +153,11 @@ bool Session::TryNetStreamDemux(char* url)
 	memset(this->url, 0, 100);
 	memcpy(this->url, url, strlen(url));
 	StreamDecoder::Get()->PushLog2Net(Info, this->url);
-	/*char c[10];
-	sprintf(c, "value=%d", strlen(url));
-	StreamDecoder::Get()->PushLog2Net(Info, c);*/
+
+	afc = avformat_alloc_context();
+	afc->interrupt_callback.opaque = this;
+	afc->interrupt_callback.callback = interrupt_cb;
+
 	std::thread th(&Session::Demux, this);
 	th.detach();
 	return true;
@@ -168,6 +169,7 @@ void Session::ProbeInputBuffer()
 	//这个readbuff定义为全局的会在第二次打开失败，原因未知
 	unsigned char* readBuff = (unsigned char*)av_malloc(BUFF_SIZE);
 
+	
 	//创建 AVIOContext:
 	if (!avio)
 		avio = avio_alloc_context(readBuff, BUFF_SIZE, 0, this, ReadPacket, NULL, NULL);
@@ -191,8 +193,6 @@ void Session::ProbeInputBuffer()
 	sprintf(info, "format:%s[%s]", piFmt->name, piFmt->long_name);
 	StreamDecoder::Get()->PushLog2Net(Warning, info);
 
-	afc = avformat_alloc_context();
-
 	if (!afc)
 	{
 		mux.unlock();
@@ -206,8 +206,6 @@ void Session::ProbeInputBuffer()
 	//AVFMT_FLAG_CUSTOM_IO
 	afc->flags = 0x0080;
 
-	/*afc->interrupt_callback.opaque = this;
-	afc->interrupt_callback.callback = interrupt_cb;*/
 	mux.unlock();
 	Demux();
 }
@@ -232,9 +230,15 @@ bool Session::OpenDemuxThread()
 void Session::Demux()
 {
 	mux.lock();
-
+	
+	//AVDictionary *opts = NULL;
+	//设置rtsp流已tcp协议打开
+	//av_dict_set(&opts, "rtsp_transport", "tcp", 0);
+	//网络延时时间
+	//av_dict_set(&opts, "max_delay", "500", 0);
+	//av_dict_set_int(&opts, "stimeout", 5000, 0);
 	int ret = avformat_open_input(&afc, url, NULL, NULL);
-	//av_dict_free(&opt);
+	//av_dict_free(&opts);
 	if (ret < 0)
 	{
 		mux.unlock();

@@ -13,15 +13,15 @@ H264Decoder* H264Decoder::self = NULL;
 
 void H264Decoder::OnDrawFrame(DotNetFrame* frame)
 {
-	if (canvas == NULL)
+	/*if (canvas == NULL)
 	{
 		canvas = new DrawI420();
-		
+
 		canvas->resize(frame->width, frame->height);
 		canvas->show();
 		canvas->Init(frame->width, frame->height);
 	}
-	canvas->Repaint(frame);
+	canvas->Repaint(frame);*/
 }
 
 H264Decoder::H264Decoder(QWidget *parent)
@@ -54,7 +54,7 @@ void H264Decoder::on_deletesession_clicked()
 	session = NULL;
 }
 
-void H264Decoder::on_OpenDemux_clicked()
+void H264Decoder::on_trydemux_clicked()
 {
 	if (!session) return;
 	qDebug() << TryDemux(session, 2000);
@@ -64,6 +64,12 @@ void H264Decoder::on_OpenDemux_clicked()
 		QtConcurrent::run(this, &H264Decoder::mrun);
 	}
 		
+}
+
+void H264Decoder::on_trynetstreamdemux_clicked()
+{
+	if (!session) return;
+	TryNetStreamDemux(session, "rtmp://202.69.69.180:443/webcast/bshdlive-pc");
 }
 
 void H264Decoder::on_begindecode_clicked()
@@ -96,7 +102,7 @@ void H264Decoder::mrun()
 	qDebug() << "read stream thread start";
 	
 	if(!fp)
-		fp = fopen("D:/HTTPServer/mv.mp4", "rb");
+		fp = fopen("D:/HTTPServer/Excuseme.flv", "rb");
 		
 	if (!fp)
 	{
