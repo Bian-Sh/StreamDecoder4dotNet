@@ -1740,6 +1740,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1551522791}
   - component: {fileID: 1551522790}
+  - component: {fileID: 1551522792}
   m_Layer: 0
   m_Name: GameManager
   m_TagString: Untagged
@@ -1764,6 +1765,7 @@ MonoBehaviour:
   deviceSerialInput: {fileID: 785827603}
   deviceIPInput: {fileID: 736052015}
   isWifi: {fileID: 1692369778}
+  reverserPort: 5555
 --- !u!4 &1551522791
 Transform:
   m_ObjectHideFlags: 0
@@ -1777,6 +1779,22 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 1
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1551522792
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 1551522789}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ae52c0880937b5e47b15d48e9e46404b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  isDebug: 0
+  isPacketDecode: 0
+  clientNum: 0
+  serverIsRun: 0
+  fontSize: 20
 --- !u!1 &1568648766
 GameObject:
   m_ObjectHideFlags: 0

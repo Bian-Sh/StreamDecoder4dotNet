@@ -4,8 +4,10 @@ using UnityEngine;
 using System;
 using System.Text.RegularExpressions;
 
-public class AdbController : MonoBehaviour {
+public class AdbController
+{
 
+    private string deviceLocal = "/sdcard/scrcpy-server.jar";
 
     /// <summary>
     /// 获取设备信息
@@ -13,22 +15,33 @@ public class AdbController : MonoBehaviour {
     /// <param name="cb">获取完成后的回调</param>
     public void GetDevices(Action<List<string>> cb)
     {
-        new CMD(QScrcpy.Instance).Execute("adb", "devices", (sender, state) =>
+        Execute("devices", (sender, state) =>
         {
-            if (state == CMD.ExecuteState.StartFailed) Debug.LogWarning("启动失败");
-            else if (state == CMD.ExecuteState.Finished)
+            if (state == Process.ExecuteState.StartFailed) Debug.LogWarning("启动失败");
+            //else if (state == Process.ExecuteState.StartSuccess) Debug.Log("启动成功");
+            else if (state == Process.ExecuteState.Finished)
             {
-                string[] strsp = sender.StandardOutStr.Split('\n');
-                List<string> list = new List<string>();
-                for (int i = 0; i < strsp.Length; i++)
+                //正常结束
+                if (sender.ExitCode == 0)
                 {
-                    string[] line = strsp[i].Trim().Split('\t');
-                    if (line.Length == 2 && line[1] == "device")
+                    string[] strsp = sender.StandardOutStr.Split('\n');
+                    List<string> list = new List<string>();
+                    for (int i = 0; i < strsp.Length; i++)
                     {
-                        list.Add(line[0]);
+                        string[] line = strsp[i].Trim().Split('\t');
+                        if (line.Length == 2 && line[1] == "device")
+                        {
+                            list.Add(line[0]);
+                        }
                     }
+                    cb(list);
                 }
-                cb(list);
+                //异常结束
+                else
+                {
+                    if (!string.IsNullOrEmpty(sender.ErrorOutStr)) Debug.LogWarning(sender.ErrorOutStr);
+                    if (!string.IsNullOrEmpty(sender.StandardOutStr)) Debug.Log(sender.StandardOutStr);
+                }
             }
         });
     }
@@ -36,11 +49,54 @@ public class AdbController : MonoBehaviour {
     /// <summary>
     /// 关闭ADB
     /// </summary>
+    public void AdbStartServer()
+    {
+        Execute("start-server", (sender, state) =>
+        {
+            if (state == Process.ExecuteState.StartFailed) Debug.LogWarning("启动失败");
+            //else if (state == Process.ExecuteState.StartSuccess) Debug.Log("启动成功");
+            else if (state == Process.ExecuteState.Finished)
+            {
+                //正常结束
+                if (sender.ExitCode == 0)
+                {
+                    Debug.Log("ADB 启动");
+                }
+                //异常结束
+                else
+                {
+                    if (!string.IsNullOrEmpty(sender.ErrorOutStr)) Debug.LogWarning(sender.ErrorOutStr);
+                    if (!string.IsNullOrEmpty(sender.StandardOutStr)) Debug.Log(sender.StandardOutStr);
+                }
+            }
+        });
+    }
+    /// <summary>
+    /// 关闭ADB
+    /// </summary>
     public void AdbKillServer()
     {
-        new CMD(QScrcpy.Instance).Execute("adb", "kill-server", null);
+        Execute("kill-server", (sender, state) =>
+        {
+            if (state == Process.ExecuteState.StartFailed) Debug.LogWarning("启动失败");
+            //else if (state == Process.ExecuteState.StartSuccess) Debug.Log("启动成功");
+            else if (state == Process.ExecuteState.Finished)
+            {
+                //正常结束
+                if (sender.ExitCode == 0)
+                {
+                    Debug.Log("ADB 关闭");
+                }
+                //异常结束
+                else
+                {
+                    if (!string.IsNullOrEmpty(sender.ErrorOutStr)) Debug.LogWarning(sender.ErrorOutStr);
+                    if (!string.IsNullOrEmpty(sender.StandardOutStr)) Debug.Log(sender.StandardOutStr);
+                }
+            }
+        });
     }
-    
+
     /// <summary>
     /// 获取设备IP
     /// </summary>
@@ -49,32 +105,47 @@ public class AdbController : MonoBehaviour {
     /// <param name="cb"></param>
     public void GetDeviceIP(string serial, bool iswifi, Action<string> cb)
     {
-        string cmd = " shell ip -f inet addr show " + (iswifi ? "wlan0" : "eth0");
+        string cmd = "shell ip -f inet addr show " + (iswifi ? "wlan0" : "eth0");
         if (!string.IsNullOrEmpty(serial))
         {
-            cmd = " -s " + serial  + cmd;
+            cmd = "-s " + serial + " " + cmd;
         }
-        new CMD(QScrcpy.Instance).Execute("adb", cmd, (sender, state) =>
+        Execute(cmd, (sender, state) =>
         {
-            if (state == CMD.ExecuteState.StartFailed) Debug.LogWarning("启动失败");
-            else if (state == CMD.ExecuteState.Finished)
+            if (state == Process.ExecuteState.StartFailed) Debug.LogWarning("启动失败");
+            //else if (state == Process.ExecuteState.StartSuccess) Debug.Log("启动成功");
+            else if (state == Process.ExecuteState.Finished)
             {
-                Debug.LogWarning(sender.ErrorOutStr);
-                if (!string.IsNullOrEmpty(sender.StandardOutStr))
+                //正常结束
+                if (sender.ExitCode == 0)
                 {
-                    string[] info = Regex.Match(sender.StandardOutStr, "inet [\\d.]*").Value.Trim().Split(' ');
-                    if (info.Length >= 1 && !string.IsNullOrEmpty(info[0]) && !string.IsNullOrEmpty(info[1]))
+                    if(sender.StandardOutStr.StartsWith("Device"))
+                        Debug.Log(sender.StandardOutStr);
+            
+                    if (!string.IsNullOrEmpty(sender.StandardOutStr))
                     {
-                        cb(info[1].Trim());
+                        bool isUpdateIp = false;
+                        foreach (Match match in Regex.Matches(sender.StandardOutStr, "inet [\\d.]*"))
+                        {
+                            string[] info = match.Value.Trim().Split(' ');
+                            if (info.Length >= 1 && !string.IsNullOrEmpty(info[0]) && !string.IsNullOrEmpty(info[1]))
+                            {
+                                if(!isUpdateIp) cb(info[1].Trim());
+                                isUpdateIp = true;
+                                Debug.Log(info[1]);
+                            }
+                        }
                     }
                 }
+                //异常结束
+                else
+                {
+                    if (!string.IsNullOrEmpty(sender.ErrorOutStr)) Debug.LogWarning(sender.ErrorOutStr);
+                    if (!string.IsNullOrEmpty(sender.StandardOutStr)) Debug.Log(sender.StandardOutStr);
+                }
+                
             }
         });
-    }
-
-    public void TryScrcpy()
-    {
-
     }
 
     /// <summary>
@@ -83,31 +154,79 @@ public class AdbController : MonoBehaviour {
     /// <param name="serial"></param>
     /// <param name="local"></param>
     /// <param name="successCb"></param>
-    public void PushQScrcpy(string serial, string local,  Action successCb)
+    public void PushQScrcpy(string serial, string local, Action<bool> IsSuccessCb)
     {
-        string cmd = " push " + local + " /sdcard/scrcpy-server.jar";
+        string cmd = "push " + local + " " + deviceLocal;
         if (!string.IsNullOrEmpty(serial))
         {
-            cmd = " -s " + serial + cmd;
+            cmd = "-s " + serial + " " + cmd;
         }
-        new CMD(QScrcpy.Instance).Execute("adb", cmd, (sender, state) =>
+
+        Execute(cmd, (sender, state) =>
         {
-            if (state == CMD.ExecuteState.StartFailed) Debug.LogWarning("启动失败");
-            else if (state == CMD.ExecuteState.Finished)
+            if (state == Process.ExecuteState.StartFailed)
             {
-                Debug.LogWarning(sender.ErrorOutStr);
-                if(sender.StandardOutStr.StartsWith("adb:"))
+                if (IsSuccessCb != null) IsSuccessCb(false);
+                Debug.LogWarning("启动失败");
+            }
+            //else if (state == Process.ExecuteState.StartSuccess) Debug.Log("启动成功");
+            else if (state == Process.ExecuteState.Finished)
+            {
+                //正常结束
+                if (sender.ExitCode == 0)
                 {
-                    Debug.Log(sender.StandardOutStr);
+                    if (IsSuccessCb != null) IsSuccessCb(true);
                 }
+                //异常结束
                 else
                 {
-                    if (successCb != null) successCb();
+                    if (!string.IsNullOrEmpty(sender.ErrorOutStr)) Debug.LogWarning(sender.ErrorOutStr);
+                    if (!string.IsNullOrEmpty(sender.StandardOutStr)) Debug.Log(sender.StandardOutStr);
+                    if (IsSuccessCb != null) IsSuccessCb(false);
                 }
+
             }
         });
     }
 
+    /// <summary>
+    /// 打开反向代理
+    /// </summary>
+    /// <param name="serial"></param>
+    /// <param name="localPort"></param>
+    /// <param name="successCb"></param>
+    public void OpenReverseProxy(string serial, int localPort, Action<bool> IsSuccessCb)
+    {
+        string cmd = "reverse localabstract:scrcpy tcp:" + localPort;
+        if (!string.IsNullOrEmpty(serial))
+        {
+            cmd = "-s " + serial + " " + cmd;
+        }
+        new Process(QScrcpy.Instance.SetEvent).Execute("adb", cmd, (sender, state) =>
+        {
+            if (state == Process.ExecuteState.StartFailed)
+            {
+                if (IsSuccessCb != null) IsSuccessCb(false);
+                Debug.LogWarning("启动失败");
+            }
+            //else if (state == Process.ExecuteState.StartSuccess) Debug.Log("启动成功");
+            else if (state == Process.ExecuteState.Finished)
+            {
+                //正常结束
+                if (sender.ExitCode == 0)
+                {
+                    if (IsSuccessCb != null) IsSuccessCb(true);
+                }
+                //异常结束
+                else
+                {
+                    if (!string.IsNullOrEmpty(sender.ErrorOutStr)) Debug.LogWarning(sender.ErrorOutStr);
+                    if (!string.IsNullOrEmpty(sender.StandardOutStr)) Debug.Log(sender.StandardOutStr);
+                    if (IsSuccessCb != null) IsSuccessCb(false);
+                }
+            }
+        });
+    }
     /// <summary>
     /// 移除QScrcpy
     /// </summary>
@@ -117,53 +236,59 @@ public class AdbController : MonoBehaviour {
         string cmd = " shell rm /sdcard/scrcpy-server.jar";
         if (!string.IsNullOrEmpty(serial))
         {
-            cmd = " -s " + serial + cmd;
+            cmd = "-s " + serial + " " + cmd;
         }
-        new CMD(QScrcpy.Instance).Execute("adb", cmd, (sender, state) =>
+        new Process(QScrcpy.Instance.SetEvent).Execute("adb", cmd, (sender, state) =>
         {
-            if (state == CMD.ExecuteState.StartFailed) Debug.LogWarning("启动失败");
-            else if (state == CMD.ExecuteState.Finished)
+            if (state == Process.ExecuteState.StartFailed)
+                Debug.LogWarning("启动失败");
+            //else if (state == Process.ExecuteState.StartSuccess) Debug.Log("启动成功");
+            else if (state == Process.ExecuteState.Finished)
             {
-                Debug.LogWarning(sender.ErrorOutStr);
-                Debug.Log(sender.StandardOutStr);
+                //正常结束
+                if (sender.ExitCode == 0)
+                {
+                    Debug.Log("remove QScrcpy Success");
+                }
+                //异常结束
+                else
+                {
+                    if (!string.IsNullOrEmpty(sender.ErrorOutStr)) Debug.LogWarning(sender.ErrorOutStr);
+                    if (!string.IsNullOrEmpty(sender.StandardOutStr)) Debug.Log(sender.StandardOutStr);
+                }
             }
         });
     }
 
-    public void OpenReverseProxy(string serial, int localPort, Action successCb)
-    {
-        string cmd = " reverse localabstract:scrcpy tcp:" + localPort;
-        if (!string.IsNullOrEmpty(serial))
-        {
-            cmd = " -s " + serial + cmd;
-        }
-        new CMD(QScrcpy.Instance).Execute("adb", cmd, (sender, state) =>
-        {
-            if (state == CMD.ExecuteState.StartFailed) Debug.LogWarning("启动失败");
-            else if (state == CMD.ExecuteState.Finished)
-            {
-               
-                if(sender.ErrorOutStr == null && sender.StandardOutStr == null)
-                {
-                    successCb();
-                }
-                else
-                {
-                    Debug.LogWarning(sender.ErrorOutStr);
-                    Debug.Log(sender.StandardOutStr);
-                }
-            }
-        });
-    }
+   
 
     public void CloseReverseProxy(string serial)
     {
         string cmd = " reverse --remove localabstract:scrcpy";
         if (!string.IsNullOrEmpty(serial))
         {
-            cmd = " -s " + serial + cmd;
+            cmd = "-s " + serial + " " + cmd;
         }
-        new CMD(QScrcpy.Instance).Execute("adb", cmd, null);
+        new Process(QScrcpy.Instance.SetEvent).Execute("adb", cmd, (sender, state) =>
+        {
+            if (state == Process.ExecuteState.StartFailed)
+                Debug.LogWarning("启动失败");
+            //else if (state == Process.ExecuteState.StartSuccess) Debug.Log("启动成功");
+            else if (state == Process.ExecuteState.Finished)
+            {
+                //正常结束
+                if (sender.ExitCode == 0)
+                {
+                    Debug.Log("CloseReverseProxy Success");
+                }
+                //异常结束
+                else
+                {
+                    if (!string.IsNullOrEmpty(sender.ErrorOutStr)) Debug.LogWarning(sender.ErrorOutStr);
+                    if (!string.IsNullOrEmpty(sender.StandardOutStr)) Debug.Log(sender.StandardOutStr);
+                }
+            }
+        });
     }
 
     public void StartQScrcpyServer(string serial, int scrWidth, int bitRate)
@@ -171,14 +296,43 @@ public class AdbController : MonoBehaviour {
         string cmd = string.Format(" shell CLASSPATH=/sdcard/scrcpy-server.jar app_process / com.genymobile.scrcpy.Server {0} {1} false ", scrWidth, bitRate);
         if (!string.IsNullOrEmpty(serial))
         {
-            cmd = " -s " + serial + cmd;
+            cmd = "-s " + serial + " " + cmd;
         }
-        new CMD(QScrcpy.Instance).Execute("adb", cmd, (sender, state) =>
+        Execute(cmd, (sender, state) =>
         {
-            if (state == CMD.ExecuteState.StartSuccess)
+            if (state == Process.ExecuteState.StartFailed)
             {
-                Debug.Log("启动Scrcpy成功");
+                Debug.LogWarning("QScrcpy启动失败");
             }
+            else if (state == Process.ExecuteState.StartSuccess)
+            {
+                Debug.Log("QScrcpy启动成功");
+            }
+            else if (state == Process.ExecuteState.Finished)
+            {
+                //正常结束
+                if (sender.ExitCode == 0)
+                {
+                    Debug.Log("Close QScrcpy Success");
+                }
+                //异常结束
+                else
+                {
+                    if (!string.IsNullOrEmpty(sender.ErrorOutStr)) Debug.LogWarning(sender.ErrorOutStr);
+                    if (!string.IsNullOrEmpty(sender.StandardOutStr)) Debug.Log(sender.StandardOutStr);
+                }
+            }
+
         });
+    }
+
+    /// <summary>
+    /// 执行
+    /// </summary>
+    /// <param name="cmd"></param>
+    /// <param name="cb"></param>
+    private void Execute(string cmd, Action<Process, Process.ExecuteState> cb)
+    {
+        new Process(QScrcpy.Instance.SetEvent).Execute("adb", cmd, cb);
     }
 }
