@@ -1,12 +1,9 @@
 #include "Session.h"
-//#include <QDebug>
-//#include <QMutexLocker>
 #include "Decode.h"
 #include "StreamDecoder.h"
 #include "Packet.h"
 #include <thread>
 #include <iostream>
-//#include <QCryptographicHash>
 using namespace std;
 extern "C"
 {
@@ -153,13 +150,29 @@ bool Session::TryNetStreamDemux(char* url)
 	memset(this->url, 0, 100);
 	memcpy(this->url, url, strlen(url));
 	StreamDecoder::Get()->PushLog2Net(Info, this->url);
-
 	afc = avformat_alloc_context();
 	afc->interrupt_callback.opaque = this;
 	afc->interrupt_callback.callback = interrupt_cb;
 
 	std::thread th(&Session::Demux, this);
 	th.detach();
+	return true;
+}
+
+bool Session::OpenDemuxThread()
+{
+	//启动解封装线程失败， 线程正在运行
+	if (isRuning)
+	{
+		StreamDecoder::Get()->PushLog2Net(LogLevel::Warning, "demux thread is run, please wait!");
+		return false;
+	}
+	dataCache->Clear();
+	this->waitDemuxTime = waitDemuxTime;
+	isExit = false;
+	isRuning = true;
+	isDemuxing = true;
+
 	return true;
 }
 
@@ -186,6 +199,7 @@ void Session::ProbeInputBuffer()
 		mux.unlock();
 		isRuning = false;
 		isDemuxing = false;
+		Close();
 		StreamDecoder::Get()->PushLog2Net(Warning, av_strerror2(ret));
 		return;
 	}
@@ -198,6 +212,7 @@ void Session::ProbeInputBuffer()
 		mux.unlock();
 		isRuning = false;
 		isDemuxing = false;
+		Close();
 		StreamDecoder::Get()->PushLog2Net(Warning, "avformat_alloc_context failed!");
 		return;
 	}
@@ -210,22 +225,7 @@ void Session::ProbeInputBuffer()
 	Demux();
 }
 
-bool Session::OpenDemuxThread()
-{
-	//启动解封装线程失败， 线程正在运行
-	if (isRuning)
-	{
-		StreamDecoder::Get()->PushLog2Net(LogLevel::Warning, "demux thread is run, please wait!");
-		return false;
-	}
-	dataCache->Clear();
-	this->waitDemuxTime = waitDemuxTime;
-	isExit = false;
-	isRuning = true;
-	isDemuxing = true;
-	
-	return true;
-}
+
 
 void Session::Demux()
 {
@@ -244,6 +244,7 @@ void Session::Demux()
 		mux.unlock();
 		isRuning = false;
 		isDemuxing = false;
+		Close();
 		StreamDecoder::Get()->PushLog2Net(Warning, "avformat_open_input failed!");
 		return;
 	}
@@ -255,6 +256,7 @@ void Session::Demux()
 		mux.unlock();
 		isRuning = false;
 		isDemuxing = false;
+		Close();
 		StreamDecoder::Get()->PushLog2Net(Warning, av_strerror2(ret));
 		return;
 	}
@@ -282,6 +284,7 @@ void Session::Demux()
 		mux.unlock();
 		isRuning = false;
 		isDemuxing = false;
+		Close();
 		StreamDecoder::Get()->PushLog2Net(Warning, "open decode failed!");
 		return;
 	}
@@ -339,21 +342,6 @@ void Session::Close()
 		decode->Close();
 		decode = NULL;
 	}
-
-	/*dataCacheMux.lock();
-	dataCache->Clear();
-	dataCacheMux.unlock();*/
-
-	/*if (yuv[0])
-	{
-		delete yuv[0];
-		delete yuv[1];
-		delete yuv[2];
-		yuv[0] = NULL;
-		yuv[1] = NULL;
-		yuv[2] = NULL;
-		linesizeY = 0;
-	}*/
 
 	width = 0;
 	height = 0;

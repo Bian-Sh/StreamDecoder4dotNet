@@ -7,21 +7,28 @@
 #include <Session.h>
 #include "Packet.h"
 #include "DrawI420.h"
+#include <QFileDialog>
 #pragma comment(lib, "StreamDecoder.lib")
+
+#define USE_WIDGET_
 
 H264Decoder* H264Decoder::self = NULL;
 
 void H264Decoder::OnDrawFrame(DotNetFrame* frame)
 {
-	/*if (canvas == NULL)
+#ifdef USE_WIDGET
+	if (width != frame->width || height != frame->height)
 	{
-		canvas = new DrawI420();
+		width = frame->width;
+		height = frame->height;
+		canvas->resize(width, height);
 
-		canvas->resize(frame->width, frame->height);
-		canvas->show();
 		canvas->Init(frame->width, frame->height);
 	}
-	canvas->Repaint(frame);*/
+	if (canvas)
+		canvas->Repaint(frame);
+#endif
+	
 }
 
 H264Decoder::H264Decoder(QWidget *parent)
@@ -30,6 +37,16 @@ H264Decoder::H264Decoder(QWidget *parent)
 	ui.setupUi(this);
 	if (self == NULL) self = this;
 	StreamDecoderInitialize(NULL, &OnDraw);
+	SetPushFrameInterval(20);
+
+#ifdef USE_WIDGET
+	if (canvas == NULL)
+	{
+		canvas = new DrawI420();
+		canvas->show();
+	}
+#endif
+	
 }
 
 
@@ -41,14 +58,13 @@ void OnDraw(DotNetFrame* frame)
 void H264Decoder::on_createsession_clicked()
 {
 	if (session) return;
-	
-	isExit = false;
+
 	session = CreateSession();
 }
 
 void H264Decoder::on_deletesession_clicked()
 {
-	isExit = true;
+
 	if (!session) return;
 	DeleteSession(session);
 	session = NULL;
@@ -58,18 +74,13 @@ void H264Decoder::on_trydemux_clicked()
 {
 	if (!session) return;
 	qDebug() << TryDemux(session, 2000);
-	if (!isRunthread)
-	{
-		isExit = false;
-		QtConcurrent::run(this, &H264Decoder::mrun);
-	}
 		
 }
 
 void H264Decoder::on_trynetstreamdemux_clicked()
 {
 	if (!session) return;
-	TryNetStreamDemux(session, "rtmp://202.69.69.180:443/webcast/bshdlive-pc");
+	TryNetStreamDemux(session, "rtmp://192.168.30.135/live/test");
 }
 
 void H264Decoder::on_begindecode_clicked()
@@ -82,7 +93,7 @@ void H264Decoder::on_stopdecode_clicked()
 {
 	if (!session) return;
 	StopDecode(session);
-	isExit = true;
+
 }
 
 void H264Decoder::on_GetFree_clicked()
@@ -91,18 +102,46 @@ void H264Decoder::on_GetFree_clicked()
 	qDebug() << GetCacheFreeSize(session);
 }
 
+void H264Decoder::on_openFile_clicked()
+{
+	qDebug() << "open";
+	filePath = QFileDialog::getOpenFileName(this);
+	ui.filePath->setText(filePath);
+}
+
+
+void H264Decoder::on_StartSendData_clicked()
+{
+	if(isExit)
+		QtConcurrent::run(this, &H264Decoder::mrun);
+}
+
+void H264Decoder::on_EndSendData_clicked()
+{
+	isExit = true;
+}
+
 void H264Decoder::closeEvent(QCloseEvent *event)
 {
+#ifdef USE_WIDGET
+	if (canvas)
+	{
+		canvas->deleteLater();
+		canvas = NULL;
+	}
+#endif // USE_WIDGET
+
+	
 	on_deletesession_clicked();
 }
 
 void H264Decoder::mrun()
 {
-	isRunthread = true;
+	isExit = false;
 	qDebug() << "read stream thread start";
 	
-	if(!fp)
-		fp = fopen("D:/HTTPServer/Excuseme.flv", "rb");
+	if (!fp)
+		fp = fopen(filePath.toUtf8().data(), "rb");
 		
 	if (!fp)
 	{
@@ -139,7 +178,7 @@ void H264Decoder::mrun()
 	//qDebug() << "result:" << hash.result().toHex();
 	fclose(fp);
 	fp = NULL;
-	isRunthread = false;
+	isExit = true;
 	qDebug() << "read stream thread quit";
 }
 

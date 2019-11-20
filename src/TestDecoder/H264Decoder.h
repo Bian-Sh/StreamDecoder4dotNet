@@ -26,6 +26,13 @@ public slots :
 
 	void on_GetFree_clicked();
 
+	void on_openFile_clicked();
+
+	void on_StartSendData_clicked();
+
+	void on_EndSendData_clicked();
+
+
 protected:
 	void closeEvent(QCloseEvent *event);
 private:
@@ -37,9 +44,12 @@ private:
 	FILE *fp = NULL;
 	void mrun();
 
-	bool isExit = false;
-
-	bool isRunthread = false;
+	bool isExit = true;
 
 	class DrawI420* canvas = NULL;
+
+	int width;
+	int height;
+
+	QString filePath = "F:/HTTPServer/mv.mp4";
 };

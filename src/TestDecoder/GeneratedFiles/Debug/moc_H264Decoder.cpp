@@ -21,8 +21,8 @@ QT_BEGIN_MOC_NAMESPACE
 QT_WARNING_PUSH
 QT_WARNING_DISABLE_DEPRECATED
 struct qt_meta_stringdata_H264Decoder_t {
-    QByteArrayData data[9];
-    char stringdata0[176];
+    QByteArrayData data[12];
+    char stringdata0[244];
 };
 #define QT_MOC_LITERAL(idx, ofs, len) \
     Q_STATIC_BYTE_ARRAY_DATA_HEADER_INITIALIZER_WITH_OFFSET(len, \
@@ -39,14 +39,19 @@ QT_MOC_LITERAL(4, 63, 19), // "on_trydemux_clicked"
 QT_MOC_LITERAL(5, 83, 28), // "on_trynetstreamdemux_clicked"
 QT_MOC_LITERAL(6, 112, 22), // "on_begindecode_clicked"
 QT_MOC_LITERAL(7, 135, 21), // "on_stopdecode_clicked"
-QT_MOC_LITERAL(8, 157, 18) // "on_GetFree_clicked"
+QT_MOC_LITERAL(8, 157, 18), // "on_GetFree_clicked"
+QT_MOC_LITERAL(9, 176, 19), // "on_openFile_clicked"
+QT_MOC_LITERAL(10, 196, 24), // "on_StartSendData_clicked"
+QT_MOC_LITERAL(11, 221, 22) // "on_EndSendData_clicked"
 
     },
     "H264Decoder\0on_createsession_clicked\0"
     "\0on_deletesession_clicked\0on_trydemux_clicked\0"
     "on_trynetstreamdemux_clicked\0"
     "on_begindecode_clicked\0on_stopdecode_clicked\0"
-    "on_GetFree_clicked"
+    "on_GetFree_clicked\0on_openFile_clicked\0"
+    "on_StartSendData_clicked\0"
+    "on_EndSendData_clicked"
 };
 #undef QT_MOC_LITERAL
 
@@ -56,7 +61,7 @@ static const uint qt_meta_data_H264Decoder[] = {
        7,       // revision
        0,       // classname
        0,    0, // classinfo
-       7,   14, // methods
+      10,   14, // methods
        0,    0, // properties
        0,    0, // enums/sets
        0,    0, // constructors
@@ -64,15 +69,21 @@ static const uint qt_meta_data_H264Decoder[] = {
        0,       // signalCount
 
  // slots: name, argc, parameters, tag, flags
-       1,    0,   49,    2, 0x0a /* Public */,
-       3,    0,   50,    2, 0x0a /* Public */,
-       4,    0,   51,    2, 0x0a /* Public */,
-       5,    0,   52,    2, 0x0a /* Public */,
-       6,    0,   53,    2, 0x0a /* Public */,
-       7,    0,   54,    2, 0x0a /* Public */,
-       8,    0,   55,    2, 0x0a /* Public */,
+       1,    0,   64,    2, 0x0a /* Public */,
+       3,    0,   65,    2, 0x0a /* Public */,
+       4,    0,   66,    2, 0x0a /* Public */,
+       5,    0,   67,    2, 0x0a /* Public */,
+       6,    0,   68,    2, 0x0a /* Public */,
+       7,    0,   69,    2, 0x0a /* Public */,
+       8,    0,   70,    2, 0x0a /* Public */,
+       9,    0,   71,    2, 0x0a /* Public */,
+      10,    0,   72,    2, 0x0a /* Public */,
+      11,    0,   73,    2, 0x0a /* Public */,
 
  // slots: parameters
+    QMetaType::Void,
+    QMetaType::Void,
+    QMetaType::Void,
     QMetaType::Void,
     QMetaType::Void,
     QMetaType::Void,
@@ -97,6 +108,9 @@ void H264Decoder::qt_static_metacall(QObject *_o, QMetaObject::Call _c, int _id,
         case 4: _t->on_begindecode_clicked(); break;
         case 5: _t->on_stopdecode_clicked(); break;
         case 6: _t->on_GetFree_clicked(); break;
+        case 7: _t->on_openFile_clicked(); break;
+        case 8: _t->on_StartSendData_clicked(); break;
+        case 9: _t->on_EndSendData_clicked(); break;
         default: ;
         }
     }
@@ -128,13 +142,13 @@ int H264Decoder::qt_metacall(QMetaObject::Call _c, int _id, void **_a)
     if (_id < 0)
         return _id;
     if (_c == QMetaObject::InvokeMetaMethod) {
-        if (_id < 7)
+        if (_id < 10)
             qt_static_metacall(this, _c, _id, _a);
-        _id -= 7;
+        _id -= 10;
     } else if (_c == QMetaObject::RegisterMethodArgumentMetaType) {
-        if (_id < 7)
+        if (_id < 10)
             *reinterpret_cast<int*>(_a[0]) = -1;
-        _id -= 7;
+        _id -= 10;
     }
     return _id;
 }

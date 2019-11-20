@@ -94,14 +94,63 @@
   <widget class="QPushButton" name="trynetstreamdemux">
    <property name="geometry">
     <rect>
-     <x>380</x>
+     <x>450</x>
      <y>100</y>
-     <width>161</width>
+     <width>131</width>
      <height>28</height>
     </rect>
    </property>
    <property name="text">
     <string>TryNetStreamDemux</string>
+   </property>
+  </widget>
+  <widget class="QLineEdit" name="filePath">
+   <property name="geometry">
+    <rect>
+     <x>50</x>
+     <y>40</y>
+     <width>381</width>
+     <height>20</height>
+    </rect>
+   </property>
+  </widget>
+  <widget class="QPushButton" name="openFile">
+   <property name="geometry">
+    <rect>
+     <x>450</x>
+     <y>40</y>
+     <width>75</width>
+     <height>23</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>OpenFile</string>
+   </property>
+  </widget>
+  <widget class="QPushButton" name="StartSendData">
+   <property name="geometry">
+    <rect>
+     <x>330</x>
+     <y>100</y>
+     <width>91</width>
+     <height>23</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>StartSendData</string>
+   </property>
+  </widget>
+  <widget class="QPushButton" name="EndSendData">
+   <property name="geometry">
+    <rect>
+     <x>330</x>
+     <y>130</y>
+     <width>91</width>
+     <height>23</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>EndSendData</string>
    </property>
   </widget>
  </widget>

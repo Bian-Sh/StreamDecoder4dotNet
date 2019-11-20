@@ -55,6 +55,12 @@ DrawI420::DrawI420()
 
 DrawI420::~DrawI420()
 {
+	mux.lock();
+	delete datas[0];
+	delete datas[1];
+	delete datas[2];
+	datas[0] = NULL;
+	mux.unlock();
 	qDebug() << "~DrawI420";
 }
 void DrawI420::initializeGL()
@@ -219,6 +225,10 @@ bool DrawI420::Repaint(DotNetFrame* frame)
 	if (isRepainting) return false;
 
 	isRepainting = true;
+	if (!datas[0])
+	{
+		return false;
+	}
 	memcpy(datas[0], frame->frame_y, frame->width * frame->height);
 	memcpy(datas[1], frame->frame_u, frame->width * frame->height / 4);
 	memcpy(datas[2], frame->frame_v, frame->width * frame->height / 4);

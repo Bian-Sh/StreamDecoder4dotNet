@@ -14,6 +14,7 @@
 #include <QtWidgets/QApplication>
 #include <QtWidgets/QButtonGroup>
 #include <QtWidgets/QHeaderView>
+#include <QtWidgets/QLineEdit>
 #include <QtWidgets/QPushButton>
 #include <QtWidgets/QWidget>
 
@@ -29,6 +30,10 @@ public:
     QPushButton *begindecode;
     QPushButton *stopdecode;
     QPushButton *trynetstreamdemux;
+    QLineEdit *filePath;
+    QPushButton *openFile;
+    QPushButton *StartSendData;
+    QPushButton *EndSendData;
 
     void setupUi(QWidget *H264DecoderClass)
     {
@@ -55,7 +60,19 @@ public:
         stopdecode->setGeometry(QRect(210, 250, 111, 28));
         trynetstreamdemux = new QPushButton(H264DecoderClass);
         trynetstreamdemux->setObjectName(QStringLiteral("trynetstreamdemux"));
-        trynetstreamdemux->setGeometry(QRect(380, 100, 161, 28));
+        trynetstreamdemux->setGeometry(QRect(450, 100, 131, 28));
+        filePath = new QLineEdit(H264DecoderClass);
+        filePath->setObjectName(QStringLiteral("filePath"));
+        filePath->setGeometry(QRect(50, 40, 381, 20));
+        openFile = new QPushButton(H264DecoderClass);
+        openFile->setObjectName(QStringLiteral("openFile"));
+        openFile->setGeometry(QRect(450, 40, 75, 23));
+        StartSendData = new QPushButton(H264DecoderClass);
+        StartSendData->setObjectName(QStringLiteral("StartSendData"));
+        StartSendData->setGeometry(QRect(330, 100, 91, 23));
+        EndSendData = new QPushButton(H264DecoderClass);
+        EndSendData->setObjectName(QStringLiteral("EndSendData"));
+        EndSendData->setGeometry(QRect(330, 130, 91, 23));
 
         retranslateUi(H264DecoderClass);
 
@@ -72,6 +89,9 @@ public:
         begindecode->setText(QApplication::translate("H264DecoderClass", "BeginDecode", Q_NULLPTR));
         stopdecode->setText(QApplication::translate("H264DecoderClass", "StopDecode", Q_NULLPTR));
         trynetstreamdemux->setText(QApplication::translate("H264DecoderClass", "TryNetStreamDemux", Q_NULLPTR));
+        openFile->setText(QApplication::translate("H264DecoderClass", "OpenFile", Q_NULLPTR));
+        StartSendData->setText(QApplication::translate("H264DecoderClass", "StartSendData", Q_NULLPTR));
+        EndSendData->setText(QApplication::translate("H264DecoderClass", "EndSendData", Q_NULLPTR));
     } // retranslateUi
 
 };
