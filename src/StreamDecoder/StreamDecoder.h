@@ -27,11 +27,12 @@ typedef void(*PDrawFrame)(DotNetFrame* frame);
 
 class StreamDecoder
 {
-
+	
 public:
 	
 	inline static StreamDecoder* Get()
 	{
+	
 		static StreamDecoder sp;
 		return &sp;
 	}
@@ -74,7 +75,7 @@ public:
 	//主线程更新 物理时间
 	void FixedUpdate();
 private:
-	StreamDecoder() {}
+	StreamDecoder();
 	//调用回调函数（主线程同步）
 	void Log2Net(LogPacket* logpacket);
 

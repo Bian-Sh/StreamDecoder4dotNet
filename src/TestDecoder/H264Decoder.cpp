@@ -35,6 +35,7 @@ H264Decoder::H264Decoder(QWidget *parent)
 	: QWidget(parent)
 {
 	ui.setupUi(this);
+	ui.filePath->setText(filePath);
 	if (self == NULL) self = this;
 	StreamDecoderInitialize(NULL, &OnDraw);
 	SetPushFrameInterval(20);
@@ -47,6 +48,13 @@ H264Decoder::H264Decoder(QWidget *parent)
 	}
 #endif
 	
+	QTimer *timer = new QTimer(parent);
+	timer->setSingleShot(false);
+	timer->setInterval(10);
+	timer->start();
+	connect(timer, &QTimer::timeout, [this]() {
+		//on_trydemux_clicked();
+	});
 }
 
 

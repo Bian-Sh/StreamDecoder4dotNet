@@ -25,10 +25,6 @@ void Sleep(int ms)
 char* Session::logbuf = NULL;
 Session::Session(int dataCacheSize)
 {
-	av_register_all();
-	avcodec_register_all();
-	avformat_network_init();
-
 	this->dataCacheSize = dataCacheSize;
 	if (!dataCache) dataCache = new SCharList(dataCacheSize);
 	url = new char[100];
@@ -72,7 +68,7 @@ int ReadPacket(void *opaque, unsigned char *buf, int bufSize)
 		}
 		int size = session->dataCache->size();
 		session->dataCacheMux.unlock();
-		
+
 		if (size > 0)
 			break;
 
@@ -91,6 +87,7 @@ int ReadPacket(void *opaque, unsigned char *buf, int bufSize)
 		}
 		else
 		{
+			//1s读不到数据认为流中断
 			if (av_gettime() - lastT > 1000 * 1000)
 			{
 				return 0;
@@ -137,6 +134,7 @@ bool Session::TryDemux(int waitDemuxTime)
 {
 	if (!OpenDemuxThread()) return false;
 
+	memset(url, 0, 100);
 	afc = avformat_alloc_context();
 
 	std::thread th(&Session::ProbeInputBuffer, this);
@@ -172,24 +170,23 @@ bool Session::OpenDemuxThread()
 	isExit = false;
 	isRuning = true;
 	isDemuxing = true;
-
 	return true;
 }
 
 void Session::ProbeInputBuffer()
 {
 	mux.lock();
-	//这个readbuff定义为全局的会在第二次打开失败，原因未知
+
 	unsigned char* readBuff = (unsigned char*)av_malloc(BUFF_SIZE);
 
-	
-	//创建 AVIOContext:
+	//创建 AVIOContext， 使用avio_context_free()释放并置零, readBuff也会被释放;
 	if (!avio)
 		avio = avio_alloc_context(readBuff, BUFF_SIZE, 0, this, ReadPacket, NULL, NULL);
 
 	//探测流格式  
 	//TODO要不要释放？
 	AVInputFormat *piFmt = NULL;
+	// AVInputFormat* in_fmt = av_find_input_format("h265");
 
 	startTime = av_gettime();
 	int ret = av_probe_input_buffer(avio, &piFmt, NULL, NULL, 0, 0);
@@ -198,7 +195,6 @@ void Session::ProbeInputBuffer()
 	{
 		mux.unlock();
 		isRuning = false;
-		isDemuxing = false;
 		Close();
 		StreamDecoder::Get()->PushLog2Net(Warning, av_strerror2(ret));
 		return;
@@ -211,7 +207,6 @@ void Session::ProbeInputBuffer()
 	{
 		mux.unlock();
 		isRuning = false;
-		isDemuxing = false;
 		Close();
 		StreamDecoder::Get()->PushLog2Net(Warning, "avformat_alloc_context failed!");
 		return;
@@ -230,20 +225,20 @@ void Session::ProbeInputBuffer()
 void Session::Demux()
 {
 	mux.lock();
-	
+
 	//AVDictionary *opts = NULL;
 	//设置rtsp流已tcp协议打开
 	//av_dict_set(&opts, "rtsp_transport", "tcp", 0);
 	//网络延时时间
 	//av_dict_set(&opts, "max_delay", "500", 0);
 	//av_dict_set_int(&opts, "stimeout", 5000, 0);
-	int ret = avformat_open_input(&afc, url, NULL, NULL);
+
+	int ret = avformat_open_input(&afc, url[0] == 0 ? NULL : url, NULL, NULL);
 	//av_dict_free(&opts);
 	if (ret < 0)
 	{
 		mux.unlock();
 		isRuning = false;
-		isDemuxing = false;
 		Close();
 		StreamDecoder::Get()->PushLog2Net(Warning, "avformat_open_input failed!");
 		return;
@@ -255,7 +250,6 @@ void Session::Demux()
 	{
 		mux.unlock();
 		isRuning = false;
-		isDemuxing = false;
 		Close();
 		StreamDecoder::Get()->PushLog2Net(Warning, av_strerror2(ret));
 		return;
@@ -272,9 +266,8 @@ void Session::Demux()
 	videoStreamIndex = av_find_best_stream(afc, AVMEDIA_TYPE_VIDEO, -1, -1, NULL, 0);
 
 	if (decode == NULL)
-	{
 		decode = new Decode(this);
-	}
+
 	AVCodecParameters *para = avcodec_parameters_alloc();
 	avcodec_parameters_copy(para, afc->streams[videoStreamIndex]->codecpar);
 	width = para->width;
@@ -283,18 +276,15 @@ void Session::Demux()
 	{
 		mux.unlock();
 		isRuning = false;
-		isDemuxing = false;
 		Close();
 		StreamDecoder::Get()->PushLog2Net(Warning, "open decode failed!");
 		return;
 	}
-	/*DecodeEvent* trigger = new DecodeEvent(DecodeEvent::DemuxSuccess);
-	QCoreApplication::postEvent(this, trigger);*/
+
 	mux.unlock();
 	isDemuxing = false;
 	StreamDecoder::Get()->PushLog2Net(Warning, "Demux Success!");
 
-	
 }
 
 void Session::BeginDecode()
@@ -349,14 +339,16 @@ void Session::Close()
 	if (avio)
 	{
 		//释放AVIOContext 并置0
+		//会释放readBuff
 		avio_context_free(&avio);
+
 	}
 	if (afc)
 	{
 		//avformat_flush(afc);
 		avformat_close_input(&afc);
 	}
-		
+
 	mux.unlock();
 	videoStreamIndex = audioStreamIndex = -1;
 	isRuning = false;
@@ -385,26 +377,6 @@ void Session::OnDecodeOnFrame(AVFrame *frame)
 		return;
 	}
 
-	/*if (linesizeY != frame->linesize[0])
-	{
-		width = frame->width;
-		height = frame->height;
-		if (yuv[0])
-		{
-			delete yuv[0];
-			delete yuv[1];
-			delete yuv[2];
-		}
-		linesizeY = frame->linesize[0];
-
-		yuv[0] = new unsigned char[width * height];
-		yuv[1] = new unsigned char[width * height / 4];
-		yuv[2] = new unsigned char[width * height / 4];
-	}
-	memcpy(yuv[0], frame->data[0], width * height);
-	memcpy(yuv[1], frame->data[1], width * height / 4);
-	memcpy(yuv[2], frame->data[2], width * height / 4);*/
-
 	//不需要内存对齐
 	if (frame->linesize[0] == width)
 	{
@@ -413,7 +385,6 @@ void Session::OnDecodeOnFrame(AVFrame *frame)
 	}
 	else
 	{
-
 		Frame *tmpFrame = new Frame(width, height, NULL, NULL, NULL, false);
 		for (int i = 0; i < height; i++)
 		{
@@ -430,8 +401,6 @@ void Session::OnDecodeOnFrame(AVFrame *frame)
 		StreamDecoder::Get()->PushFrame2Net(tmpFrame);
 
 	}
-
-	
 
 	mux.unlock();
 	av_frame_free(&frame);
@@ -450,7 +419,7 @@ void Session::run()
 			mux.unlock();
 			break;
 		}
-			
+
 
 		AVPacket* pkt = av_packet_alloc();
 		//qDebug() << "next read";

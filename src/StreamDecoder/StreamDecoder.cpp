@@ -3,12 +3,24 @@
 #include <windows.h>
 #include <iostream>
 #include "Packet.h"
+extern "C"
+{
+#include <libavcodec/avcodec.h>
+#include <libavformat/avformat.h>
+}
 using namespace std;
 void _stdcall TimerProcess(HWND hwnd, UINT uMsg, UINT idEvent, DWORD dwTime)
 {
 	StreamDecoder::Get()->FixedUpdate();
 }
 
+StreamDecoder::StreamDecoder()
+{
+	//初始化FFmpeg
+	av_register_all();
+	avcodec_register_all();
+	avformat_network_init();
+}
 //初始化StreamDecoder 设置日志回调函数
 void StreamDecoder::StreamDecoderInitialize(PLog logfunc, PDrawFrame drawfunc)
 {
@@ -180,6 +192,9 @@ void StreamDecoder::FixedUpdate()
 	}
 	frameMux.unlock();
 }
+
+
+
 //调用回调函数（主线程同步）
 void StreamDecoder::Log2Net(LogPacket* logpacket)
 {

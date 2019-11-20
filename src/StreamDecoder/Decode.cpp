@@ -25,6 +25,7 @@ bool Decode::Open(AVCodecParameters *para)
 	if (!para) return false;
 
 	//查找解码器
+	//是否需要释放TODO
 	AVCodec *avcodec = avcodec_find_decoder(para->codec_id);
 	if (!avcodec)
 	{
@@ -45,7 +46,6 @@ bool Decode::Open(AVCodecParameters *para)
 	int ret = avcodec_open2(codec, NULL, NULL);
 	if (ret != 0)
 	{
-		
 		mux.unlock();
 		cout << Session::av_strerror2(ret) << endl;
 		return false;
@@ -80,6 +80,13 @@ void Decode::Close()
 	avcodec_close(codec);
 	//释放编解码器上下文和所有与之相关的内容，并写入NULL。
 	avcodec_free_context(&codec);
+	int size = packets.size();
+	for (int i = 0; i < size; i++)
+	{
+		AVPacket *pkt = packets.front();
+		packets.pop_front();
+		av_packet_free(&pkt);
+	}
 	mux.unlock();
 }
 

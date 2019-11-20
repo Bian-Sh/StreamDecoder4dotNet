@@ -2,6 +2,10 @@
 
 #include <mutex>
 class Decode;
+class SCharList;
+struct AVIOContext;
+struct AVFormatContext;
+struct AVFrame;
 
 //毫秒级别的sleep
 void Sleep(int ms);
@@ -13,26 +17,35 @@ public:
 	Session(int dataCacheSize);
 	~Session();
 
+	//打开字节流数据
 	bool TryDemux(int waitDemuxTime);
+	//打开rtmp
 	bool TryNetStreamDemux(char* url);
-
+	//开始解码
 	void BeginDecode();
-	//
+	//停止解码
 	void StopDecode();
-
-	void Close();
-	//添加数据流
+	
+	//获取 字节流缓冲 空余空间大小
 	int GetCacheFreeSize();
+	//添加数据流
 	bool PushStream2Cache(char* data, int len);
 
 	static char* av_strerror2(int errnum);
-
-	void OnDecodeOnFrame(struct AVFrame *frame);
+	//解码完成后Decode调用
+	void OnDecodeOnFrame(AVFrame *frame);
 	
+	//关闭Session
+	void Close();
+
+public:
+
 	//数据缓冲区大小
 	int dataCacheSize = 500000;
+
 	//删除时候清理
-	class SCharList *dataCache = NULL;
+	//需要清理
+	SCharList *dataCache = NULL;
 	std::mutex dataCacheMux;
 
 	//退出信号，true 退出线程
@@ -50,18 +63,18 @@ public:
 	int64_t startTime = 0;
 	
 
-//signals:
-//	void OnDemuxSuccessSignal(bool isSuccess, char* info);
-
 private:
+
 	void ProbeInputBuffer();
 	bool OpenDemuxThread();
 	void Demux();
 	//线程函数
 	void run();
 
-	struct AVIOContext* avio = NULL;
-	struct AVFormatContext* afc = NULL;
+	//需要清理
+	AVIOContext* avio = NULL;
+	//需要清理
+	AVFormatContext* afc = NULL;
 
 	int videoStreamIndex = -1;
 	int audioStreamIndex = -1;
@@ -73,12 +86,6 @@ private:
 	int width = 0;
 	int height = 0;
 
-	//需要清理
-	/*unsigned char* yuv[3] = {0};
-	int linesizeY = 0;*/
-
-	//bool isDecodeing = false;
-
 private:
 	//ReadPacket线程是否运行标志位
 	bool isInReadPacketThread = false;
@@ -86,7 +93,10 @@ private:
 	//是否处于解封装、解码的过程（运行过程）
 	bool isRuning = false;
 
+	//需要释放
 	static char* logbuf;
 
+	//需要释放
 	char* url = NULL;
+
 };

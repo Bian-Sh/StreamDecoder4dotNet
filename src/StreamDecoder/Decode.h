@@ -1,6 +1,9 @@
 #pragma once
 #include <mutex>
 #include <list>
+
+struct AVCodecContext;
+
 class Decode
 {
 
@@ -22,7 +25,7 @@ private:
 	std::mutex mux;
 
 	//解码器上下文，需要释放 avcodec_free_context
-	struct AVCodecContext* codec = NULL;
+	AVCodecContext* codec = NULL;
 
 	//需要清理
 	std::list<AVPacket*> packets;
