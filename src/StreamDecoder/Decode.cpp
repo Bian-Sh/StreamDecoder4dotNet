@@ -15,9 +15,7 @@ Decode::Decode(Session *session)
 
 Decode::~Decode()
 {
-	mux.lock();
-	packets.clear();
-	mux.unlock();
+	Close();
 }
 
 bool Decode::Open(AVCodecParameters *para)
@@ -27,6 +25,7 @@ bool Decode::Open(AVCodecParameters *para)
 	//查找解码器
 	//是否需要释放TODO
 	AVCodec *avcodec = avcodec_find_decoder(para->codec_id);
+
 	if (!avcodec)
 	{
 		cout << "can't find video AVCodec: id=" << para->codec_id << endl;
@@ -63,14 +62,13 @@ void Decode::Push(AVPacket *pkt)
 		continue;
 	}
 	mux.lock();
+	if (!codec)
+	{
+		mux.unlock();
+		return;
+	}
 	packets.push_back(pkt);
 	mux.unlock();
-}
-
-
-void Decode::Clear()
-{
-
 }
 
 void Decode::Close()
@@ -93,10 +91,14 @@ void Decode::Close()
 		av_packet_free(&pkt);
 	}
 	mux.unlock();
+
+	while (isRuning)
+		Tools::Get()->Sleep(1);
 }
 
 void Decode::run()
 {
+	isRuning = true;
 	while (!isExit)
 	{
 		int size = packets.size();
@@ -120,11 +122,14 @@ void Decode::run()
 			AVFrame *frame = av_frame_alloc();
 			int ret = avcodec_receive_frame(codec, frame);
 			mux.unlock();
+
 			if (ret != 0)
 			{
 				av_frame_free(&frame);
 				break;
 			}
+
+			//处理解码出来的数据
 			if (session)
 			{
 				session->OnDecodeOnFrame(frame);
@@ -133,4 +138,5 @@ void Decode::run()
 		}
 		Tools::Get()->Sleep(1);
 	}
+	isRuning = false;
 }

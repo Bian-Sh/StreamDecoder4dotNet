@@ -80,7 +80,7 @@ void StreamDecoder::DeleteSession(void* session)
 }
 
 //尝试打开解封装线程
-bool StreamDecoder::TryDemux(void* session, int waitDemuxTime)
+bool StreamDecoder::TryBitStreamDemux(void* session, int waitDemuxTime)
 {
 	Session* s = (Session*)session;
 	if (s == NULL)
@@ -254,9 +254,9 @@ void DeleteSession(void* session)
 }
 
 
-bool TryDemux(void* session, int waitDemuxTime)
+bool TryBitStreamDemux(void* session, int waitDemuxTime)
 {
-	return StreamDecoder::Get()->TryDemux(session, waitDemuxTime);
+	return StreamDecoder::Get()->TryBitStreamDemux(session, waitDemuxTime);
 }
 
 bool TryNetStreamDemux(void* session, char* url)

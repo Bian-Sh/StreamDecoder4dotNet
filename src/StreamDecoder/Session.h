@@ -87,6 +87,7 @@ private:
 private:
 	//ReadPacket线程是否运行标志位
 	bool isInReadPacketThread = false;
+	bool isInterruptRead = false;
 
 	bool isProbeBuffer = false;
 

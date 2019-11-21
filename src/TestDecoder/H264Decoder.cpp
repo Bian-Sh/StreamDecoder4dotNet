@@ -113,7 +113,7 @@ void H264Decoder::on_deletesession_clicked()
 void H264Decoder::on_trydemux_clicked()
 {
 	if (!session) return;
-	qDebug() << TryDemux(session, 10);
+	qDebug() << TryBitStreamDemux(session, 3000000);
 
 }
 

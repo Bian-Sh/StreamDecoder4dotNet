@@ -54,7 +54,7 @@ public:
 	void DeleteSession(void* session);
 
 	//尝试打开解封装线程
-	bool TryDemux(void* session, int waitDemuxTime);
+	bool TryBitStreamDemux(void* session, int waitDemuxTime);
 
 	bool TryNetStreamDemux(void* session, char* url);
 
@@ -104,7 +104,7 @@ HEAD void* _cdecl CreateSession();
 
 HEAD void _cdecl DeleteSession(void* session);
 
-HEAD bool _cdecl TryDemux(void* session, int waitDemuxTime);
+HEAD bool _cdecl TryBitStreamDemux(void* session, int waitDemuxTime);
 
 HEAD bool _cdecl TryNetStreamDemux(void* session, char* url);
 

@@ -55,21 +55,21 @@
   <widget class="QPushButton" name="trydemux">
    <property name="geometry">
     <rect>
-     <x>210</x>
+     <x>190</x>
      <y>100</y>
-     <width>111</width>
+     <width>161</width>
      <height>28</height>
     </rect>
    </property>
    <property name="text">
-    <string>TryDemux</string>
+    <string>TryBitStreamDemux</string>
    </property>
   </widget>
   <widget class="QPushButton" name="begindecode">
    <property name="geometry">
     <rect>
      <x>210</x>
-     <y>180</y>
+     <y>190</y>
      <width>111</width>
      <height>28</height>
     </rect>
@@ -94,9 +94,9 @@
   <widget class="QPushButton" name="trynetstreamdemux">
    <property name="geometry">
     <rect>
-     <x>450</x>
-     <y>100</y>
-     <width>131</width>
+     <x>190</x>
+     <y>140</y>
+     <width>161</width>
      <height>28</height>
     </rect>
    </property>
@@ -130,9 +130,9 @@
   <widget class="QPushButton" name="StartSendData">
    <property name="geometry">
     <rect>
-     <x>330</x>
+     <x>360</x>
      <y>100</y>
-     <width>91</width>
+     <width>121</width>
      <height>23</height>
     </rect>
    </property>
@@ -143,9 +143,9 @@
   <widget class="QPushButton" name="EndSendData">
    <property name="geometry">
     <rect>
-     <x>330</x>
+     <x>360</x>
      <y>130</y>
-     <width>91</width>
+     <width>121</width>
      <height>23</height>
     </rect>
    </property>

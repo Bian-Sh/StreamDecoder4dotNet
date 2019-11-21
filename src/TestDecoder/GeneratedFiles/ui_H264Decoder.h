@@ -51,16 +51,16 @@ public:
         GetFree->setGeometry(QRect(70, 250, 93, 28));
         trydemux = new QPushButton(H264DecoderClass);
         trydemux->setObjectName(QStringLiteral("trydemux"));
-        trydemux->setGeometry(QRect(210, 100, 111, 28));
+        trydemux->setGeometry(QRect(190, 100, 161, 28));
         begindecode = new QPushButton(H264DecoderClass);
         begindecode->setObjectName(QStringLiteral("begindecode"));
-        begindecode->setGeometry(QRect(210, 180, 111, 28));
+        begindecode->setGeometry(QRect(210, 190, 111, 28));
         stopdecode = new QPushButton(H264DecoderClass);
         stopdecode->setObjectName(QStringLiteral("stopdecode"));
         stopdecode->setGeometry(QRect(210, 250, 111, 28));
         trynetstreamdemux = new QPushButton(H264DecoderClass);
         trynetstreamdemux->setObjectName(QStringLiteral("trynetstreamdemux"));
-        trynetstreamdemux->setGeometry(QRect(450, 100, 131, 28));
+        trynetstreamdemux->setGeometry(QRect(190, 140, 161, 28));
         filePath = new QLineEdit(H264DecoderClass);
         filePath->setObjectName(QStringLiteral("filePath"));
         filePath->setGeometry(QRect(50, 40, 381, 20));
@@ -69,10 +69,10 @@ public:
         openFile->setGeometry(QRect(450, 40, 75, 23));
         StartSendData = new QPushButton(H264DecoderClass);
         StartSendData->setObjectName(QStringLiteral("StartSendData"));
-        StartSendData->setGeometry(QRect(330, 100, 91, 23));
+        StartSendData->setGeometry(QRect(360, 100, 121, 23));
         EndSendData = new QPushButton(H264DecoderClass);
         EndSendData->setObjectName(QStringLiteral("EndSendData"));
-        EndSendData->setGeometry(QRect(330, 130, 91, 23));
+        EndSendData->setGeometry(QRect(360, 130, 121, 23));
 
         retranslateUi(H264DecoderClass);
 
@@ -85,7 +85,7 @@ public:
         createsession->setText(QApplication::translate("H264DecoderClass", "CreateSession", Q_NULLPTR));
         deletesession->setText(QApplication::translate("H264DecoderClass", "DeleteSession", Q_NULLPTR));
         GetFree->setText(QApplication::translate("H264DecoderClass", "GetFree", Q_NULLPTR));
-        trydemux->setText(QApplication::translate("H264DecoderClass", "TryDemux", Q_NULLPTR));
+        trydemux->setText(QApplication::translate("H264DecoderClass", "TryBitStreamDemux", Q_NULLPTR));
         begindecode->setText(QApplication::translate("H264DecoderClass", "BeginDecode", Q_NULLPTR));
         stopdecode->setText(QApplication::translate("H264DecoderClass", "StopDecode", Q_NULLPTR));
         trynetstreamdemux->setText(QApplication::translate("H264DecoderClass", "TryNetStreamDemux", Q_NULLPTR));

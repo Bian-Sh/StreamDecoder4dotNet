@@ -119,10 +119,10 @@ void Session::Close()
 
 void Session::Clear()
 {
-
-	isExit = true;
-
+	
 	mux.lock();
+	
+	isExit = true;
 
 	if (afc)
 	{
@@ -130,9 +130,12 @@ void Session::Clear()
 		avformat_close_input(&afc);
 		//avformat_free_context(afc);
 	}
-	
+
 	if (avio)
 	{
+		while (isProbeBuffer)
+			Tools::Get()->Sleep(1);
+
 		av_free(avio->buffer);
 
 		//释放并置零
@@ -152,8 +155,7 @@ void Session::Clear()
 	while (isInReadPacketThread)
 		Tools::Get()->Sleep(1);
 
-	while (isProbeBuffer)
-		Tools::Get()->Sleep(1);
+	
 
 	isRuning = false;
 }
@@ -220,7 +222,7 @@ bool Session::OpenDemuxThread()
 	this->waitDemuxTime = waitDemuxTime;
 	isExit = false;
 	isRuning = true;
-	
+	isInterruptRead = false;
 	//创建AVFormatContext
 	if (afc) {
 		cout << "严重错误 afc 存在" << endl;
@@ -342,14 +344,23 @@ void Session::Demux()
 	avcodec_parameters_copy(para, afc->streams[videoStreamIndex]->codecpar);*/
 	width = afc->streams[videoStreamIndex]->codecpar->width;
 	height = afc->streams[videoStreamIndex]->codecpar->height;
-	/*if (!decode->Open(afc->streams[videoStreamIndex]->codecpar))
+
+	if (decode)
+	{
+		Clear();
+		cout << "严重错误 decode 存在" << endl;
+		isRuning = false;
+		isDemuxing = false;
+	}
+	decode = new Decode(this);
+	if (decode && !decode->Open(afc->streams[videoStreamIndex]->codecpar))
 	{
 		Clear();
 		StreamDecoder::Get()->PushLog2Net(Warning, "open decode failed!");
 		isRuning = false;
 		isDemuxing = false;
 		return;
-	}*/
+	}
 
 	isDemuxing = false;
 	StreamDecoder::Get()->PushLog2Net(Warning, "Demux Success!");
@@ -365,32 +376,51 @@ void Session::BeginDecode()
 		cout << "Please wait demuxing!" << endl;
 		return;
 	}
-	//解封装失败
+	//没有正确解封装
 	if (!isRuning)
 	{
-		cout << "Demux failed!" << endl;
+		cout << "Need demux!" << endl;
 		return;
 	}
-	if (!decode)
+
+	if (decode)
 	{
-		cout << "解码器不存在" << endl;
+		if (decode->isRuning)
+		{
+			cout << "Decoder thread is runing" << endl;
+		}
+		else
+		{
+			cout << "Begin decode thread success" << endl;
+			std::thread decode_t(&Decode::run, decode);
+			decode_t.detach();
+			
+		}
+	}
+	
+	if (isInReadPacketThread)
+	{
+		cout << "Read packet thread is runing" << endl;
 		return;
 	}
 
-	std::thread decode_t(&Decode::run, decode);
-	decode_t.detach();
-
-	std::thread t(&Session::run, this);
-	t.detach();
-
-	cout << "Begin decode success" << endl;
+	if (isInterruptRead)
+	{
+		cout << "Read packet thread is interrupt" << endl;
+	}
+	else
+	{
+		cout << "Begin read packet thread" << endl;
+		std::thread t(&Session::run, this);
+		t.detach();
+	}
 }
 
 void Session::StopDecode()
 {
 	if (!isRuning)
 	{
-		cout << "Don't need stop decode" << endl;
+		cout << "Don't need stop decode!" << endl;
 		return;
 	}
 	cout << "Stop decode" << endl;
@@ -406,10 +436,8 @@ int Session::GetCacheFreeSize()
 
 void Session::OnDecodeOnFrame(AVFrame *frame)
 {
-	mux.lock();
 	if (isExit)
 	{
-		mux.unlock();
 		av_frame_free(&frame);
 		return;
 	}
@@ -438,10 +466,7 @@ void Session::OnDecodeOnFrame(AVFrame *frame)
 		StreamDecoder::Get()->PushFrame2Net(tmpFrame);
 
 	}
-
-	mux.unlock();
 	av_frame_free(&frame);
-
 }
 
 
@@ -461,15 +486,22 @@ void Session::run()
 
 
 		AVPacket* pkt = av_packet_alloc();
-		//qDebug() << "next read";
-		int ret = av_read_frame(afc, pkt);
-		//qDebug() << "read a frame";
+		int ret = 0;
+		if (!afc)
+		{
+			cout << "afc 已经释放" << endl;
+			mux.unlock();
+			break;
+		}
+		ret = av_read_frame(afc, pkt);
+		//cout << "read a frame" << endl;
 		if (ret != 0)
 		{
 			mux.unlock();
 			//读取到结尾
 			cout << "read end!!" << endl;
 			av_packet_free(&pkt);
+			isInterruptRead = true;
 			cout << Tools::Get()->av_strerror2(ret) << endl;
 			break;
 		}
