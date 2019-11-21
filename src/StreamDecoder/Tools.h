@@ -11,6 +11,7 @@ public:
 
 	char* av_strerror2(int errnum);
 
+	void Sleep(int ms);
 	~Tools();
 
 private:

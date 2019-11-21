@@ -62,8 +62,7 @@ char* StreamDecoder::GetStreamDecoderVersion()
 void* StreamDecoder::CreateSession()
 {
 	PushLog2Net(Info, "Create Session Success");
-	//创建一个缓冲1M的Session
-	return new Session(1000000);
+	return new Session();
 }
 
 //删除一个Session

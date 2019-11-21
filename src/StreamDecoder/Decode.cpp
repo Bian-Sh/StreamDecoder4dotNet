@@ -59,7 +59,7 @@ void Decode::Push(AVPacket *pkt)
 {
 	while (packets.size() > 10)
 	{
-		Sleep(1);
+		Tools::Get()->Sleep(1);
 		continue;
 	}
 	mux.lock();
@@ -102,7 +102,7 @@ void Decode::run()
 		int size = packets.size();
 		if (size <= 0)
 		{
-			Sleep(1);
+			Tools::Get()->Sleep(1);
 			continue;
 		}
 		mux.lock();
@@ -129,8 +129,8 @@ void Decode::run()
 			{
 				session->OnDecodeOnFrame(frame);
 			}
-			Sleep(1);
+			Tools::Get()->Sleep(1);
 		}
-		Sleep(1);
+		Tools::Get()->Sleep(1);
 	}
 }

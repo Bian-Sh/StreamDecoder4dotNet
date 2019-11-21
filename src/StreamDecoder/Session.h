@@ -7,14 +7,11 @@ struct AVIOContext;
 struct AVFormatContext;
 struct AVFrame;
 
-//毫秒级别的sleep
-void Sleep(int ms);
-
 class Session
 {
 
 public:
-	Session(int dataCacheSize);
+	Session(int dataCacheSize = 1000000);
 	~Session();
 
 	//打开字节流数据
@@ -37,8 +34,8 @@ public:
 
 public:
 
-	//数据缓冲区大小
-	int dataCacheSize = 500000;
+	//数据缓冲区大小 默认1M
+	int dataCacheSize = 1000000;
 
 	//删除时候清理
 	//需要清理

@@ -67,21 +67,21 @@ H264Decoder::H264Decoder(QWidget *parent)
 
 	QTimer *timer = new QTimer(parent);
 	timer->setSingleShot(false);
-	timer->setInterval(100);
+	timer->setInterval(1);
 	//timer->start();
 
-	on_createsession_clicked();
+	//on_createsession_clicked();
 	connect(timer, &QTimer::timeout, [this]() {
 		//on_trydemux_clicked();
 		static bool b = true;
 		if (b)
 		{
-			//on_createsession_clicked();
-			on_trydemux_clicked();
+			on_createsession_clicked();
+			//on_trydemux_clicked();
 		}
 		else
 		{
-			//on_deletesession_clicked();
+			on_deletesession_clicked();
 		}
 		b = !b;
 	});

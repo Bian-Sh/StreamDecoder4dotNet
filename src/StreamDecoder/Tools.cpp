@@ -1,5 +1,7 @@
 #include "Tools.h"
 #include <iostream>
+#include <thread>
+using namespace std;
 extern "C"
 {
 #include <libavcodec/avcodec.h>
@@ -17,4 +19,9 @@ char* Tools::av_strerror2(int errnum)
 	return logbuf;
 }
 
+void Tools::Sleep(int ms)
+{
+	chrono::milliseconds du(ms);
+	this_thread::sleep_for(du);
+}
 
