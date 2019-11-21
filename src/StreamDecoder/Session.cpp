@@ -4,6 +4,7 @@
 #include "Packet.h"
 #include <thread>
 #include <iostream>
+#include "Tools.h"
 using namespace std;
 extern "C"
 {
@@ -12,7 +13,8 @@ extern "C"
 #include <libavutil/error.h>
 #include <libavutil/time.h>
 }
-#define BUFF_SIZE 65536
+#define BUFF_SIZE 655360
+#define  URL_LENGTH 128
 #pragma comment(lib, "avcodec.lib")
 #pragma comment(lib, "avformat.lib")
 #pragma comment(lib, "avutil.lib")
@@ -22,38 +24,10 @@ void Sleep(int ms)
 	chrono::milliseconds du(ms);
 	this_thread::sleep_for(du);
 }
-char* Session::logbuf = NULL;
-Session::Session(int dataCacheSize)
-{
-	this->dataCacheSize = dataCacheSize;
-	if (!dataCache) dataCache = new SCharList(dataCacheSize);
-	url = new char[100];
-	memset(url, 0, 100);
-}
-
-Session::~Session()
-{
-	if (logbuf)
-	{
-		delete logbuf;
-		logbuf = NULL;
-	}
-	dataCacheMux.lock();
-	delete dataCache;
-	dataCache = NULL;
-	dataCacheMux.unlock();
-	Close();
-	//wait();
-	while (isInReadPacketThread)
-		Sleep(1);
-
-	cout << "~Session" << endl;
-}
-
-
 int ReadPacket(void *opaque, unsigned char *buf, int bufSize)
 {
 	Session* session = (Session*)opaque;
+	if (!session) return 0;
 	size_t lastT = av_gettime();
 	while (true)
 	{
@@ -76,12 +50,15 @@ int ReadPacket(void *opaque, unsigned char *buf, int bufSize)
 		//超时退出
 		if (session->isDemuxing)
 		{
+			
 			if (av_gettime() - session->startTime > session->waitDemuxTime * 1000)
 			{
+				//cout << "return 0" << endl;
 				return 0;
 			}
 			else
 			{
+				//cout << "continue" << endl;
 				continue;
 			}
 		}
@@ -108,6 +85,105 @@ int ReadPacket(void *opaque, unsigned char *buf, int bufSize)
 	return size;
 }
 
+Session::Session(int dataCacheSize)
+{
+	//初始化 数据流 缓冲
+	this->dataCacheSize = dataCacheSize;
+	if (!dataCache) dataCache = new SCharList(dataCacheSize);
+
+	//初始化 视频流地址 数组
+	url = new char[URL_LENGTH];
+	memset(url, 0, URL_LENGTH);
+
+	//创建AVFormatContext
+	afc = avformat_alloc_context();
+	if (!afc)
+	{
+		StreamDecoder::Get()->PushLog2Net(Warning, "avformat_alloc_context failed!");
+		return;
+	}
+
+	unsigned char* readBuff = (unsigned char*)av_malloc(BUFF_SIZE);
+
+	//创建 AVIOContext， 使用avio_context_free()释放并置零, readBuff释放用av_free(avio->buffer) 不要定义全局的变量存储，释放会出错
+	avio = avio_alloc_context(readBuff, BUFF_SIZE, 0, this, ReadPacket, NULL, NULL);
+	afc->pb = avio;
+	
+	//The caller has supplied a custom AVIOContext, don't avio_close() it.
+	//AVFMT_FLAG_CUSTOM_IO
+	afc->flags = AVFMT_FLAG_CUSTOM_IO;
+
+	//初始化解码器
+	decode = new Decode(this);
+
+}
+
+Session::~Session()
+{
+	Close();
+	cout << "~Session" << endl;
+}
+void Session::Close()
+{
+	Clear();
+	dataCacheMux.lock();
+	delete dataCache;
+	dataCache = NULL;
+	dataCacheMux.unlock();
+
+	mux.lock();
+	delete url;
+	url = NULL;
+
+
+	//清理缓冲
+	avformat_flush(afc);
+	//释放并置零 内部会调用avformat_free_context
+	avformat_close_input(&afc);
+	//avformat_free_context(afc);
+
+	av_free(avio->buffer);
+
+	//释放并置零
+	avio_context_free(&avio);
+	
+	delete decode;
+	decode = NULL;
+	mux.unlock();
+
+}
+
+void Session::Clear()
+{
+	if (isExit) return;
+	isExit = true;
+
+	mux.lock();
+
+	decode->Clear();
+
+	width = 0;
+	height = 0;
+
+	//清理读取缓冲
+	avformat_flush(afc);
+
+	avio->pos = 0;
+	avio_flush(avio);
+
+	videoStreamIndex = audioStreamIndex = -1;
+	mux.unlock();
+
+	//等待线程退出
+	while (isInReadPacketThread)
+		Sleep(1);
+
+	while (isProbeBuffer)
+		Sleep(1);
+
+	isRuning = false;
+}
+
 //添加数据流
 bool Session::PushStream2Cache(char* data, int len)
 {
@@ -129,23 +205,25 @@ int interrupt_cb(void *ctx)
 	return 0;
 }
 
-
-bool Session::TryDemux(int waitDemuxTime)
+//尝试打开bit流解封装线程
+bool Session::TryBitStreamDemux(int waitDemuxTime)
 {
 	if (!OpenDemuxThread()) return false;
+	if (avio) {}
+	avio->buffer_size = 0;
+	//把url清空
+	memset(url, 0, URL_LENGTH);
 
-	memset(url, 0, 100);
-	afc = avformat_alloc_context();
+	std::thread t(&Session::ProbeInputBuffer, this);
+	t.detach();
 
-	std::thread th(&Session::ProbeInputBuffer, this);
-	th.detach();
 	return true;
 }
-
+//尝试打开网络流解封装线程
 bool Session::TryNetStreamDemux(char* url)
 {
 	if (!OpenDemuxThread()) return false;
-	memset(this->url, 0, 100);
+	memset(this->url, 0, URL_LENGTH);
 	memcpy(this->url, url, strlen(url));
 	StreamDecoder::Get()->PushLog2Net(Info, this->url);
 	afc = avformat_alloc_context();
@@ -162,61 +240,45 @@ bool Session::OpenDemuxThread()
 	//启动解封装线程失败， 线程正在运行
 	if (isRuning)
 	{
-		StreamDecoder::Get()->PushLog2Net(LogLevel::Warning, "demux thread is run, please wait!");
+		StreamDecoder::Get()->PushLog2Net(LogLevel::Warning, "Current session is runing, please wait!");
 		return false;
 	}
 	dataCache->Clear();
 	this->waitDemuxTime = waitDemuxTime;
 	isExit = false;
 	isRuning = true;
-	isDemuxing = true;
+	
 	return true;
 }
 
 void Session::ProbeInputBuffer()
 {
-	mux.lock();
-
-	unsigned char* readBuff = (unsigned char*)av_malloc(BUFF_SIZE);
-
-	//创建 AVIOContext， 使用avio_context_free()释放并置零, readBuff也会被释放;
-	if (!avio)
-		avio = avio_alloc_context(readBuff, BUFF_SIZE, 0, this, ReadPacket, NULL, NULL);
+	isDemuxing = true;
 
 	//探测流格式  
 	//TODO要不要释放？
 	AVInputFormat *piFmt = NULL;
-	// AVInputFormat* in_fmt = av_find_input_format("h265");
+	//AVInputFormat* in_fmt = av_find_input_format("h265");
 
 	startTime = av_gettime();
+	isProbeBuffer = true;
 	int ret = av_probe_input_buffer(avio, &piFmt, NULL, NULL, 0, 0);
-
+	isProbeBuffer = false;
+	isUseReadBuff = true;
 	if (ret < 0)
 	{
-		mux.unlock();
+		Clear();
+		StreamDecoder::Get()->PushLog2Net(Warning, Tools::Get()->av_strerror2(ret));
+		cout << Tools::Get()->av_strerror2(ret) << endl;
 		isRuning = false;
-		Close();
-		StreamDecoder::Get()->PushLog2Net(Warning, av_strerror2(ret));
+		isDemuxing = false;
 		return;
 	}
+
 	char info[100];
 	sprintf(info, "format:%s[%s]", piFmt->name, piFmt->long_name);
 	StreamDecoder::Get()->PushLog2Net(Warning, info);
 
-	if (!afc)
-	{
-		mux.unlock();
-		isRuning = false;
-		Close();
-		StreamDecoder::Get()->PushLog2Net(Warning, "avformat_alloc_context failed!");
-		return;
-	}
-	afc->pb = avio;
-	//The caller has supplied a custom AVIOContext, don't avio_close() it.
-	//AVFMT_FLAG_CUSTOM_IO
-	afc->flags = 0x0080;
-
-	mux.unlock();
 	Demux();
 }
 
@@ -224,7 +286,6 @@ void Session::ProbeInputBuffer()
 
 void Session::Demux()
 {
-	mux.lock();
 
 	//AVDictionary *opts = NULL;
 	//设置rtsp流已tcp协议打开
@@ -237,51 +298,50 @@ void Session::Demux()
 	//av_dict_free(&opts);
 	if (ret < 0)
 	{
-		mux.unlock();
-		isRuning = false;
-		Close();
+		Clear();
 		StreamDecoder::Get()->PushLog2Net(Warning, "avformat_open_input failed!");
+		isRuning = false;
+		isDemuxing = false;
 		return;
 	}
-	cout << "open Success" << endl;
-	//获取流信息
+	cout << "avformat_open_input open Success" << endl;
+	//读取一段视频 获取流信息
 	ret = avformat_find_stream_info(afc, NULL);
 	if (ret < 0)
 	{
-		mux.unlock();
+		Clear();
+		StreamDecoder::Get()->PushLog2Net(Warning, Tools::Get()->av_strerror2(ret));
 		isRuning = false;
-		Close();
-		StreamDecoder::Get()->PushLog2Net(Warning, av_strerror2(ret));
+		isDemuxing = false;
 		return;
 	}
-	//打印流详细信息
-	//av_dump_format(afc, 0, NULL, 0);
 
-	if (afc->nb_streams == 2)
+	//打印流详细信息
+	av_dump_format(afc, 0, NULL, 0);
+
+	if (afc->nb_streams >= 2)
 	{
 		audioStreamIndex = av_find_best_stream(afc, AVMEDIA_TYPE_AUDIO, -1, -1, NULL, 0);
-		StreamDecoder::Get()->PushLog2Net(Warning, "this stream is containt AudioStream");
+		if(audioStreamIndex != -1)
+			StreamDecoder::Get()->PushLog2Net(Warning, "this stream is containt AudioStream");
 	}
 
 	videoStreamIndex = av_find_best_stream(afc, AVMEDIA_TYPE_VIDEO, -1, -1, NULL, 0);
 
-	if (decode == NULL)
-		decode = new Decode(this);
 
-	AVCodecParameters *para = avcodec_parameters_alloc();
-	avcodec_parameters_copy(para, afc->streams[videoStreamIndex]->codecpar);
-	width = para->width;
-	height = para->height;
-	if (!decode->Open(para))
+	/*AVCodecParameters *para = avcodec_parameters_alloc();
+	avcodec_parameters_copy(para, afc->streams[videoStreamIndex]->codecpar);*/
+	width = afc->streams[videoStreamIndex]->codecpar->width;
+	height = afc->streams[videoStreamIndex]->codecpar->height;
+	if (!decode->Open(afc->streams[videoStreamIndex]->codecpar))
 	{
-		mux.unlock();
-		isRuning = false;
-		Close();
+		Clear();
 		StreamDecoder::Get()->PushLog2Net(Warning, "open decode failed!");
+		isRuning = false;
+		isDemuxing = false;
 		return;
 	}
 
-	mux.unlock();
 	isDemuxing = false;
 	StreamDecoder::Get()->PushLog2Net(Warning, "Demux Success!");
 
@@ -289,82 +349,49 @@ void Session::Demux()
 
 void Session::BeginDecode()
 {
+	//正在解封装
 	if (isDemuxing)
 	{
-		cout << "demuxing please wait!" << endl;
+		cout << "Please wait demuxing!" << endl;
 		return;
 	}
+	//解封装失败
 	if (!isRuning)
 	{
-		cout << "demux not ok!" << endl;
+		cout << "Demux failed!" << endl;
 		return;
 	}
-	if (isInReadPacketThread)
+	/*if (isInReadPacketThread)
 	{
-		cout << "decodeing please wait" << endl;
+		cout << "Decoder is run, please wait!" << endl;
 		return;
-	}
+	}*/
 
-	std::thread dth(&Decode::run, decode);
-	dth.detach();
+	std::thread decode_t(&Decode::run, decode);
+	decode_t.detach();
 
-	std::thread th(&Session::run, this);
-	th.detach();
-	cout << "begin decode success" << endl;
+	std::thread t(&Session::run, this);
+	t.detach();
+
+	cout << "Begin decode success" << endl;
 }
 
 void Session::StopDecode()
 {
-	if (!isInReadPacketThread) return;
-	cout << "stop decode" << endl;
-
-	Close();
+	if (!isRuning)
+	{
+		cout << "Don't need stop decode" << endl;
+		return;
+	}
+	cout << "Stop decode" << endl;
+	Clear();
 }
 
-void Session::Close()
-{
-	isExit = true;
 
-	mux.lock();
-
-	if (decode)
-	{
-		decode->Close();
-		decode = NULL;
-	}
-
-	width = 0;
-	height = 0;
-
-	if (avio)
-	{
-		//释放AVIOContext 并置0
-		//会释放readBuff
-		avio_context_free(&avio);
-
-	}
-	if (afc)
-	{
-		//avformat_flush(afc);
-		avformat_close_input(&afc);
-	}
-
-	mux.unlock();
-	videoStreamIndex = audioStreamIndex = -1;
-	isRuning = false;
-}
 
 int Session::GetCacheFreeSize()
 {
 	return dataCacheSize - dataCache->size();
-}
-
-char* Session::av_strerror2(int errnum)
-{
-	if (logbuf == NULL) logbuf = new char[1024];
-	memset(logbuf, 0, 1024);
-	av_strerror(errnum, logbuf, 1023);
-	return logbuf;
 }
 
 void Session::OnDecodeOnFrame(AVFrame *frame)
@@ -407,6 +434,8 @@ void Session::OnDecodeOnFrame(AVFrame *frame)
 
 }
 
+
+
 void Session::run()
 {
 	isInReadPacketThread = true;
@@ -431,7 +460,7 @@ void Session::run()
 			//读取到结尾
 			cout << "read end!!" << endl;
 			av_packet_free(&pkt);
-			cout << av_strerror2(ret) << endl;
+			cout << Tools::Get()->av_strerror2(ret) << endl;
 			break;
 		}
 		//丢弃音频
@@ -445,7 +474,7 @@ void Session::run()
 		//读取到一个AVPacket
 		if (decode)
 		{
-			decode->Push(pkt);
+			//decode->Push(pkt);
 		}
 		else
 		{
@@ -456,6 +485,6 @@ void Session::run()
 		Sleep(1);
 
 	}
-	cout << "read packet end" << endl;
+	cout << "Session Thread Quit" << endl;
 	isInReadPacketThread = false;
 }

@@ -89,7 +89,7 @@ bool StreamDecoder::TryDemux(void* session, int waitDemuxTime)
 		PushLog2Net(Error, "TryDemux exception, session is null");
 		return false;
 	}
-	return s->TryDemux(waitDemuxTime);
+	return s->TryBitStreamDemux(waitDemuxTime);
 }
 
 bool StreamDecoder::TryNetStreamDemux(void* session, char* url)
@@ -124,7 +124,7 @@ void StreamDecoder::StopDecode(void* session)
 		PushLog2Net(Error, "CloseSession exception, session is null");
 		return;
 	}
-	s->Close();
+	s->StopDecode();
 }
 
 //获取 数据流缓冲区 可用空间（字节）
@@ -285,7 +285,7 @@ bool PushStream2Cache(void* session, char* data, int len)
 	return StreamDecoder::Get()->PushStream2Cache(session, data, len);
 }
 
-HEAD void _cdecl SetPushFrameInterval(int wait)
+void SetPushFrameInterval(int wait)
 {
 	StreamDecoder::Get()->SetPushFrameInterval(wait);
 }

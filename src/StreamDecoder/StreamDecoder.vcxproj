@@ -100,6 +100,7 @@
     <ClCompile Include="Decode.cpp" />
     <ClCompile Include="Session.cpp" />
     <ClCompile Include="StreamDecoder.cpp" />
+    <ClCompile Include="Tools.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Decode.h" />
@@ -109,6 +110,7 @@
       <IncludePath Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">.\..\..\include;.\GeneratedFiles;.;$(QTDIR)\include;.\GeneratedFiles\$(ConfigurationName)\.;$(QTDIR)\include\QtCore</IncludePath>
       <IncludePath Condition="'$(Configuration)|$(Platform)'=='Release|x64'">.\..\..\include;.\GeneratedFiles;.;$(QTDIR)\include;.\GeneratedFiles\$(ConfigurationName)\.;$(QTDIR)\include\QtCore</IncludePath>
     </ClInclude>
+    <ClInclude Include="Tools.h" />
   </ItemGroup>
   <ItemGroup>
   </ItemGroup>

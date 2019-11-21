@@ -1,5 +1,6 @@
 #include "Decode.h"
 #include "Session.h"
+#include "Tools.h"
 #include <iostream>
 using namespace std;
 extern "C"
@@ -19,7 +20,6 @@ Decode::~Decode()
 	mux.unlock();
 }
 
-//无论打开与否都释放 AVCodecParameters
 bool Decode::Open(AVCodecParameters *para)
 {
 	if (!para) return false;
@@ -30,7 +30,7 @@ bool Decode::Open(AVCodecParameters *para)
 	if (!avcodec)
 	{
 		cout << "can't find video AVCodec: id=" << para->codec_id << endl;
-		avcodec_parameters_free(&para);
+		//avcodec_parameters_free(&para);
 		return false;
 	}
 	mux.lock();
@@ -40,14 +40,14 @@ bool Decode::Open(AVCodecParameters *para)
 	//复制解码器上下文参数
 	avcodec_parameters_to_context(codec, para);
 	//释放参数
-	avcodec_parameters_free(&para);
+	//avcodec_parameters_free(&para);
 	//打开解码器
 	codec->thread_count = CODEC_THREAD_COUNT;
 	int ret = avcodec_open2(codec, NULL, NULL);
 	if (ret != 0)
 	{
 		mux.unlock();
-		cout << Session::av_strerror2(ret) << endl;
+		cout << Tools::Get()->av_strerror2(ret) << endl;
 		return false;
 	}
 	cout << "open codec success!" << endl;
@@ -67,6 +67,11 @@ void Decode::Push(AVPacket *pkt)
 	mux.unlock();
 }
 
+
+void Decode::Clear()
+{
+
+}
 
 void Decode::Close()
 {

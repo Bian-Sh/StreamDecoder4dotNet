@@ -16,10 +16,13 @@ public:
 
 	void Push(struct AVPacket *pkt);
 
+	void Clear();
 	//清理解码器上下文，并关闭，指针置为NULL
 	void Close();
 
 	void run();
+
+	
 
 private:
 	std::mutex mux;

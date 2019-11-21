@@ -35,6 +35,9 @@
     <ClCompile Include="Session.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="Tools.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="StreamDecoder.h">
@@ -47,6 +50,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Packet.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Tools.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

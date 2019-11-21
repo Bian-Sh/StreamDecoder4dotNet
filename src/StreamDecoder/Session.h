@@ -18,7 +18,7 @@ public:
 	~Session();
 
 	//打开字节流数据
-	bool TryDemux(int waitDemuxTime);
+	bool TryBitStreamDemux(int waitDemuxTime);
 	//打开rtmp
 	bool TryNetStreamDemux(char* url);
 	//开始解码
@@ -31,12 +31,9 @@ public:
 	//添加数据流
 	bool PushStream2Cache(char* data, int len);
 
-	static char* av_strerror2(int errnum);
 	//解码完成后Decode调用
 	void OnDecodeOnFrame(AVFrame *frame);
 	
-	//关闭Session
-	void Close();
 
 public:
 
@@ -70,6 +67,10 @@ private:
 	void Demux();
 	//线程函数
 	void run();
+	//清理数据
+	void Clear();
+	//关闭Session
+	void Close();
 
 	//需要清理
 	AVIOContext* avio = NULL;
@@ -90,13 +91,14 @@ private:
 	//ReadPacket线程是否运行标志位
 	bool isInReadPacketThread = false;
 
+	bool isProbeBuffer = false;
+
 	//是否处于解封装、解码的过程（运行过程）
 	bool isRuning = false;
 
 	//需要释放
-	static char* logbuf;
-
-	//需要释放
 	char* url = NULL;
+
+	bool isUseReadBuff = false;
 
 };

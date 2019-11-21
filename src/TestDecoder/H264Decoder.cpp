@@ -28,9 +28,26 @@ void H264Decoder::OnDrawFrame(DotNetFrame* frame)
 	if (canvas)
 		canvas->Repaint(frame);
 #endif
-	
+
 }
 
+struct test
+{
+	char* name;
+	int len;
+	long size;
+};
+//void av_freep(void *arg)
+//{
+//	void *val;
+//
+//	memcpy(&val, arg, sizeof(val));
+//	//memcpy(arg, &((void*)(NULL)), sizeof(val));
+//	/*delete arg;
+//	arg = NULL;*/
+//	memset(arg, 0, sizeof(val));
+//	free(val);
+//}
 H264Decoder::H264Decoder(QWidget *parent)
 	: QWidget(parent)
 {
@@ -47,15 +64,31 @@ H264Decoder::H264Decoder(QWidget *parent)
 		canvas->show();
 	}
 #endif
-	
+
 	QTimer *timer = new QTimer(parent);
 	timer->setSingleShot(false);
-	timer->setInterval(10);
-	timer->start();
+	timer->setInterval(100);
+	//timer->start();
+
+	on_createsession_clicked();
 	connect(timer, &QTimer::timeout, [this]() {
 		//on_trydemux_clicked();
+		static bool b = true;
+		if (b)
+		{
+			//on_createsession_clicked();
+			on_trydemux_clicked();
+		}
+		else
+		{
+			//on_deletesession_clicked();
+		}
+		b = !b;
 	});
+
 }
+
+
 
 
 void OnDraw(DotNetFrame* frame)
@@ -66,7 +99,6 @@ void OnDraw(DotNetFrame* frame)
 void H264Decoder::on_createsession_clicked()
 {
 	if (session) return;
-
 	session = CreateSession();
 }
 
@@ -81,14 +113,14 @@ void H264Decoder::on_deletesession_clicked()
 void H264Decoder::on_trydemux_clicked()
 {
 	if (!session) return;
-	qDebug() << TryDemux(session, 2000);
-		
+	qDebug() << TryDemux(session, 10);
+
 }
 
 void H264Decoder::on_trynetstreamdemux_clicked()
 {
 	if (!session) return;
-	TryNetStreamDemux(session, "rtmp://192.168.30.135/live/test");
+	TryNetStreamDemux(session, filePath.toUtf8().data());
 }
 
 void H264Decoder::on_begindecode_clicked()
@@ -120,7 +152,7 @@ void H264Decoder::on_openFile_clicked()
 
 void H264Decoder::on_StartSendData_clicked()
 {
-	if(isExit)
+	if (isExit)
 		QtConcurrent::run(this, &H264Decoder::mrun);
 }
 
@@ -139,7 +171,7 @@ void H264Decoder::closeEvent(QCloseEvent *event)
 	}
 #endif // USE_WIDGET
 
-	
+
 	on_deletesession_clicked();
 }
 
@@ -147,10 +179,10 @@ void H264Decoder::mrun()
 {
 	isExit = false;
 	qDebug() << "read stream thread start";
-	
+
 	if (!fp)
 		fp = fopen(filePath.toUtf8().data(), "rb");
-		
+
 	if (!fp)
 	{
 		qDebug() << "open file failed";
@@ -165,7 +197,7 @@ void H264Decoder::mrun()
 	while (!isExit)
 	{
 		if (!session || !fp || feof(fp)) break;
-		
+
 		int len = fread(readBuff, 1, 1024, fp);
 		if (len <= 0)
 		{
