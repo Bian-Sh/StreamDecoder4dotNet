@@ -58,6 +58,7 @@ void Decode::Push(AVPacket *pkt)
 {
 	while (packets.size() > 10)
 	{
+		if (isExit) return;
 		Tools::Get()->Sleep(1);
 		continue;
 	}

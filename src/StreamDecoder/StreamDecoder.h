@@ -40,7 +40,7 @@ public:
 	//初始化StreamDecoder 设置日志回调函数
 	void StreamDecoderInitialize(PLog logfunc, PDrawFrame drawfunc);
 
-	void SetPushFrameInterval(int wait);
+	//void SetPushFrameInterval(int wait);
 
 	//注销StreamDecoder 预留函数
 	void StreamDecoderDeInitialize();
@@ -54,7 +54,7 @@ public:
 	void DeleteSession(void* session);
 
 	//尝试打开解封装线程
-	bool TryBitStreamDemux(void* session, int waitDemuxTime);
+	bool TryBitStreamDemux(void* session);
 
 	bool TryNetStreamDemux(void* session, char* url);
 
@@ -67,6 +67,9 @@ public:
 	int GetCacheFreeSize(void* session);
 	//向 数据流缓冲区 追加数据
 	bool PushStream2Cache(void* session, char* data, int len);
+
+	//设置参数
+	void SetOption(void* session, int optionType, int value);
 
 	//把消息追加到队列，通过主线程发送
 	void PushLog2Net(LogLevel level, char* log);
@@ -91,7 +94,7 @@ private:
 	std::list<LogPacket*> logpackets;
 	std::list<Frame*> framepackets;
 
-	int waitPushFrameTime = 0;
+	//int waitPushFrameTime = 0;
 };
 
 HEAD void _cdecl StreamDecoderInitialize(PLog logfunc, PDrawFrame drawfunc);
@@ -104,7 +107,7 @@ HEAD void* _cdecl CreateSession();
 
 HEAD void _cdecl DeleteSession(void* session);
 
-HEAD bool _cdecl TryBitStreamDemux(void* session, int waitDemuxTime);
+HEAD bool _cdecl TryBitStreamDemux(void* session);
 
 HEAD bool _cdecl TryNetStreamDemux(void* session, char* url);
 
@@ -116,4 +119,6 @@ HEAD int _cdecl GetCacheFreeSize(void* session);
 
 HEAD bool _cdecl PushStream2Cache(void* session, char* data, int len);
 
-HEAD void _cdecl SetPushFrameInterval(int wait);
+//HEAD void _cdecl SetPushFrameInterval(int wait);
+
+HEAD void _cdecl SetOption(void* session, int optionType, int value);

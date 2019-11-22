@@ -151,3 +151,11 @@ struct DotNetFrame
 	char* frame_u;
 	char* frame_v;
 };
+
+enum OptionType
+{
+	DemuxTimeout = 1,
+	PushFrameInterval,
+	AlwaysWaitBitStream,
+	WaitBitStreamTimeout,
+};

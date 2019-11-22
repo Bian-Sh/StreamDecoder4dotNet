@@ -34,10 +34,10 @@ void StreamDecoder::StreamDecoderInitialize(PLog logfunc, PDrawFrame drawfunc)
 	SetTimer(NULL, 1, 25, (TIMERPROC)TimerProcess);
 }
 
-void StreamDecoder::SetPushFrameInterval(int wait)
-{
-	waitPushFrameTime = wait;
-}
+//void StreamDecoder::SetPushFrameInterval(int wait)
+//{
+//	waitPushFrameTime = wait;
+//}
 
 //注销StreamDecoder 预留函数
 void StreamDecoder::StreamDecoderDeInitialize()
@@ -80,15 +80,15 @@ void StreamDecoder::DeleteSession(void* session)
 }
 
 //尝试打开解封装线程
-bool StreamDecoder::TryBitStreamDemux(void* session, int waitDemuxTime)
+bool StreamDecoder::TryBitStreamDemux(void* session)
 {
 	Session* s = (Session*)session;
 	if (s == NULL)
 	{
-		PushLog2Net(Error, "TryDemux exception, session is null");
+		PushLog2Net(Error, "TryBitStreamDemux exception, session is null");
 		return false;
 	}
-	return s->TryBitStreamDemux(waitDemuxTime);
+	return s->TryBitStreamDemux();
 }
 
 bool StreamDecoder::TryNetStreamDemux(void* session, char* url)
@@ -150,6 +150,18 @@ bool StreamDecoder::PushStream2Cache(void* session, char* data, int len)
 	}
 	return s->PushStream2Cache(data, len);
 }
+
+void StreamDecoder::SetOption(void* session, int optionType, int value)
+{
+	Session* s = (Session*)session;
+	if (s == NULL)
+	{
+		PushLog2Net(Error, "SetOption exception, session is null");
+		return;
+	}
+	s->SetOption(optionType, value);
+}
+
 //把消息追加到队列，通过主线程发送
 void StreamDecoder::PushLog2Net(LogLevel level, char* log)
 {
@@ -161,10 +173,10 @@ void StreamDecoder::PushLog2Net(LogLevel level, char* log)
 
 void StreamDecoder::PushFrame2Net(Frame* frame)
 {
-	if (waitPushFrameTime > 0)
-	{
-		Sleep(waitPushFrameTime);
-	}
+	//if (waitPushFrameTime > 0)
+	//{
+	//	Sleep(waitPushFrameTime);
+	//}
 	frameMux.lock();
 	framepackets.push_back(frame);
 	frameMux.unlock();
@@ -254,9 +266,9 @@ void DeleteSession(void* session)
 }
 
 
-bool TryBitStreamDemux(void* session, int waitDemuxTime)
+bool TryBitStreamDemux(void* session)
 {
-	return StreamDecoder::Get()->TryBitStreamDemux(session, waitDemuxTime);
+	return StreamDecoder::Get()->TryBitStreamDemux(session);
 }
 
 bool TryNetStreamDemux(void* session, char* url)
@@ -284,7 +296,12 @@ bool PushStream2Cache(void* session, char* data, int len)
 	return StreamDecoder::Get()->PushStream2Cache(session, data, len);
 }
 
-void SetPushFrameInterval(int wait)
+//void SetPushFrameInterval(int wait)
+//{
+//	StreamDecoder::Get()->SetPushFrameInterval(wait);
+//}
+
+void SetOption(void* session, int optionType, int value)
 {
-	StreamDecoder::Get()->SetPushFrameInterval(wait);
+	StreamDecoder::Get()->SetOption(session, optionType, value);
 }

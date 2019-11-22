@@ -10,7 +10,7 @@
 #include <QFileDialog>
 #pragma comment(lib, "StreamDecoder.lib")
 
-#define USE_WIDGET_
+#define USE_WIDGET
 
 H264Decoder* H264Decoder::self = NULL;
 
@@ -55,7 +55,6 @@ H264Decoder::H264Decoder(QWidget *parent)
 	ui.filePath->setText(filePath);
 	if (self == NULL) self = this;
 	StreamDecoderInitialize(NULL, &OnDraw);
-	SetPushFrameInterval(20);
 
 #ifdef USE_WIDGET
 	if (canvas == NULL)
@@ -100,6 +99,10 @@ void H264Decoder::on_createsession_clicked()
 {
 	if (session) return;
 	session = CreateSession();
+	SetOption(session, DemuxTimeout, 5000);
+	SetOption(session, PushFrameInterval, 0);
+	SetOption(session, WaitBitStreamTimeout, 2000);
+	SetOption(session, AlwaysWaitBitStream, 0);
 }
 
 void H264Decoder::on_deletesession_clicked()
@@ -113,14 +116,17 @@ void H264Decoder::on_deletesession_clicked()
 void H264Decoder::on_trydemux_clicked()
 {
 	if (!session) return;
-	qDebug() << TryBitStreamDemux(session, 3000000);
+	qDebug() << TryBitStreamDemux(session);
 
 }
 
 void H264Decoder::on_trynetstreamdemux_clicked()
 {
 	if (!session) return;
-	TryNetStreamDemux(session, filePath.toUtf8().data());
+	//TryNetStreamDemux(session, "rtmp://192.168.30.135/live/test");
+	//TryNetStreamDemux(session, "rtmp://202.69.69.180:443/webcast/bshdlive-pc");
+	//TryNetStreamDemux(session, "rtmp://58.200.131.2:1935/livetv/hunantv");
+	TryNetStreamDemux(session, "rtmp://192.168.30.135/live/test2");
 }
 
 void H264Decoder::on_begindecode_clicked()

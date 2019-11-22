@@ -44,8 +44,8 @@ int ReadPacket(void *opaque, unsigned char *buf, int bufSize)
 		//超时退出
 		if (session->isDemuxing)
 		{
-			
-			if (av_gettime() - session->startTime > session->waitDemuxTime * 1000)
+			Tools::Get()->Sleep(1);
+			if (av_gettime() - session->startTime > session->demuxTimeout * 1000)
 			{
 				//cout << "return 0" << endl;
 				return 0;
@@ -58,14 +58,22 @@ int ReadPacket(void *opaque, unsigned char *buf, int bufSize)
 		}
 		else
 		{
-			//1s读不到数据认为流中断
-			if (av_gettime() - lastT > 1000 * 1000)
+			Tools::Get()->Sleep(1);
+			if (session->alwaysWaitBitStream)
 			{
-				return 0;
+				continue;
 			}
 			else
 			{
-				continue;
+				//超时读不到数据认为流中断
+				if (av_gettime() - lastT > session->waitBitStreamTimeout * 1000)
+				{
+					return 0;
+				}
+				else
+				{
+					continue;
+				}
 			}
 		}
 	}
@@ -117,12 +125,21 @@ void Session::Close()
 
 }
 
+//用户手动会调用
 void Session::Clear()
 {
 	
 	mux.lock();
 	
+	if (isExit)
+	{
+		mux.unlock();
+		return;
+	}
 	isExit = true;
+
+	while (isDemuxing)
+		Tools::Get()->Sleep(1);
 
 	if (afc)
 	{
@@ -133,9 +150,6 @@ void Session::Clear()
 
 	if (avio)
 	{
-		while (isProbeBuffer)
-			Tools::Get()->Sleep(1);
-
 		av_free(avio->buffer);
 
 		//释放并置零
@@ -177,12 +191,19 @@ int interrupt_cb(void *ctx)
 {
 	Session *session = (Session*)ctx;
 	if (session->isExit) return 1;
+	if (session->isDemuxing)
+	{
+		if (av_gettime() - session->startTime > session->demuxTimeout * 1000)
+		{
+			return 1;
+		}
+	}
 	//cout << "interrupt_cb" << endl;
 	return 0;
 }
 
 //尝试打开bit流解封装线程
-bool Session::TryBitStreamDemux(int waitDemuxTime)
+bool Session::TryBitStreamDemux()
 {
 	if (!OpenDemuxThread()) return false;
 
@@ -202,6 +223,7 @@ bool Session::TryNetStreamDemux(char* url)
 	memcpy(this->url, url, strlen(url));
 	StreamDecoder::Get()->PushLog2Net(Info, this->url);
 	afc = avformat_alloc_context();
+
 	afc->interrupt_callback.opaque = this;
 	afc->interrupt_callback.callback = interrupt_cb;
 
@@ -219,7 +241,6 @@ bool Session::OpenDemuxThread()
 		return false;
 	}
 	dataCache->Clear();
-	this->waitDemuxTime = waitDemuxTime;
 	isExit = false;
 	isRuning = true;
 	isInterruptRead = false;
@@ -234,12 +255,13 @@ bool Session::OpenDemuxThread()
 		StreamDecoder::Get()->PushLog2Net(Warning, "avformat_alloc_context failed!");
 		return false;
 	}
+	isDemuxing = true;
+	startTime = av_gettime();
 	return true;
 }
 
 void Session::ProbeInputBuffer()
 {
-	isDemuxing = true;
 
 	//探测流格式  
 	//TODO要不要释放？
@@ -251,19 +273,21 @@ void Session::ProbeInputBuffer()
 	//创建 AVIOContext， 使用avio_context_free()释放并置零, readBuff释放用av_free(avio->buffer) 不要定义全局的变量存储，释放全局的会出错
 	if (avio)
 	{
-		Clear();
+		
 		cout << "严重错误 avio 存在" << endl;
 		isRuning = false;
 		isDemuxing = false;
+		Clear();
 		return;
 	}
 	avio = avio_alloc_context(readBuff, BUFF_SIZE, 0, this, ReadPacket, NULL, NULL);
 	if (!avio)
 	{
-		Clear();
+		
 		StreamDecoder::Get()->PushLog2Net(Warning, "avio_alloc_context failed!");
 		isRuning = false;
 		isDemuxing = false;
+		Clear();
 		return;
 	}
 	afc->pb = avio;
@@ -272,17 +296,16 @@ void Session::ProbeInputBuffer()
 	//AVFMT_FLAG_CUSTOM_IO
 	afc->flags = AVFMT_FLAG_CUSTOM_IO;
 
-	startTime = av_gettime();
-	isProbeBuffer = true;
+	//isProbeBuffer = true;
 	int ret = av_probe_input_buffer(avio, &piFmt, NULL, NULL, 0, 0);
-	isProbeBuffer = false;
-	isUseReadBuff = true;
+	//isProbeBuffer = false;
 	if (ret < 0)
 	{
-		Clear();
+		
 		StreamDecoder::Get()->PushLog2Net(Warning, Tools::Get()->av_strerror2(ret));
 		isRuning = false;
 		isDemuxing = false;
+		Clear();
 		return;
 	}
 
@@ -309,10 +332,11 @@ void Session::Demux()
 	//av_dict_free(&opts);
 	if (ret < 0)
 	{
-		Clear();
+		
 		StreamDecoder::Get()->PushLog2Net(Warning, "avformat_open_input failed!");
 		isRuning = false;
 		isDemuxing = false;
+		Clear();
 		return;
 	}
 	cout << "avformat_open_input open Success" << endl;
@@ -320,10 +344,11 @@ void Session::Demux()
 	ret = avformat_find_stream_info(afc, NULL);
 	if (ret < 0)
 	{
-		Clear();
+		
 		StreamDecoder::Get()->PushLog2Net(Warning, Tools::Get()->av_strerror2(ret));
 		isRuning = false;
 		isDemuxing = false;
+		Clear();
 		return;
 	}
 
@@ -347,18 +372,20 @@ void Session::Demux()
 
 	if (decode)
 	{
-		Clear();
+	
 		cout << "严重错误 decode 存在" << endl;
 		isRuning = false;
 		isDemuxing = false;
+		Clear();
 	}
 	decode = new Decode(this);
 	if (decode && !decode->Open(afc->streams[videoStreamIndex]->codecpar))
 	{
-		Clear();
+	
 		StreamDecoder::Get()->PushLog2Net(Warning, "open decode failed!");
 		isRuning = false;
 		isDemuxing = false;
+		Clear();
 		return;
 	}
 
@@ -467,9 +494,38 @@ void Session::OnDecodeOnFrame(AVFrame *frame)
 
 	}
 	av_frame_free(&frame);
+
+	//会造成Session::run的阻塞
+	if (pushFrameInterval > 0)
+	{
+		Tools::Get()->Sleep(pushFrameInterval);
+	}
 }
 
 
+
+void Session::SetOption(int optionType, int value)
+{
+	//安全校验
+	if (value < 0) value = 0;
+
+	if ((OptionType)optionType == OptionType::DemuxTimeout)
+	{
+		demuxTimeout = value;
+	}
+	else if((OptionType)optionType == OptionType::PushFrameInterval)
+	{
+		pushFrameInterval = value;
+	}
+	else if ((OptionType)optionType == OptionType::AlwaysWaitBitStream)
+	{
+		alwaysWaitBitStream = value == 0 ? false : true;
+	}
+	else if ((OptionType)optionType == OptionType::WaitBitStreamTimeout)
+	{
+		waitBitStreamTimeout = value;
+	}
+}
 
 void Session::run()
 {

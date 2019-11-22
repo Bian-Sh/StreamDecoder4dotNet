@@ -15,7 +15,7 @@ public:
 	~Session();
 
 	//打开字节流数据
-	bool TryBitStreamDemux(int waitDemuxTime);
+	bool TryBitStreamDemux();
 	//打开rtmp
 	bool TryNetStreamDemux(char* url);
 	//开始解码
@@ -32,6 +32,8 @@ public:
 	void OnDecodeOnFrame(AVFrame *frame);
 	
 
+	//设置选项 
+	void SetOption(int optionType, int value);
 public:
 
 	//数据缓冲区大小 默认1M
@@ -49,13 +51,16 @@ public:
 	
 
 	//解封装等待时间
-	int waitDemuxTime = 2000;
+	int demuxTimeout = 2000;
+	int pushFrameInterval = 0;
+	bool alwaysWaitBitStream = false;
+	int waitBitStreamTimeout = 1000;
+
 	//是否处于Demux状态 重要的作用在ReadPacket的回调函数中
 	bool isDemuxing = false;
 
 	//解封装前的时间戳ns
 	int64_t startTime = 0;
-	
 
 private:
 
@@ -89,14 +94,12 @@ private:
 	bool isInReadPacketThread = false;
 	bool isInterruptRead = false;
 
-	bool isProbeBuffer = false;
+	//bool isProbeBuffer = false;
 
 	//是否处于解封装、解码的过程（运行过程）
 	bool isRuning = false;
 
 	//需要释放
 	char* url = NULL;
-
-	bool isUseReadBuff = false;
 
 };
