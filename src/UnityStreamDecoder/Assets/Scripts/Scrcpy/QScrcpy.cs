@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.IO;
 using System.Net;
 using System.Net.Sockets;
 using System.Text.RegularExpressions;
@@ -34,9 +35,11 @@ public class QScrcpy : MonoBehaviour
         adbController = new AdbController();
         instance = this;
     }
+    private FileStream fs;
     // Use this for initialization
     void Start()
     {
+        fs = new FileStream("D:/device.h264", FileMode.CreateNew);
         ADBStart();
     }
     private void OnDestroy()
@@ -50,12 +53,14 @@ public class QScrcpy : MonoBehaviour
         //        Debug.Log("关闭client");
         //    }
         //}
-
+        fs.Close();
         ADBKill();
 
         isExit = true;
     }
     bool isFirst = true;
+
+   
     // Update is called once per frame
     void Update()
     {
@@ -72,14 +77,17 @@ public class QScrcpy : MonoBehaviour
                 byte[] ba = dataCache.ToArray();
                 string devicename = System.Text.Encoding.Default.GetString(ba, 0, 64);
                 Debug.Log("device name:" + devicename);
-                Debug.Log("width:" + System.BitConverter.ToUInt16(new byte[2] { ba[65], ba[64] }, 0));
-                Debug.Log("height:" + System.BitConverter.ToInt16(new byte[2] { ba[67], ba[66] }, 0));
+                Debug.Log("width:" + BitConverter.ToUInt16(new byte[2] { ba[65], ba[64] }, 0));
+                Debug.Log("height:" + BitConverter.ToInt16(new byte[2] { ba[67], ba[66] }, 0));
                 dataCache.RemoveRange(0, 64);
             }
            
         }
+
         lock(dataCache)
         {
+            byte[] arr = dataCache.ToArray();
+            fs.Write(arr, 0, arr.Length);
             dataCache.Clear();
         }
         
@@ -177,6 +185,7 @@ public class QScrcpy : MonoBehaviour
                 }
 
                 //打开QScrcpy
+                //StartQScrcpyServer();
             }
             else
             {
@@ -248,7 +257,7 @@ public class QScrcpy : MonoBehaviour
 
     private void StartQScrcpyServer()
     {
-        adbController.StartQScrcpyServer(deviceSerialInput.text, 0, 10000000);
+        adbController.StartQScrcpyServer(deviceSerialInput.text, 0, 20000000);
     }
 
 }

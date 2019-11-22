@@ -2084,7 +2084,7 @@ MonoBehaviour:
   readBuffSize: 5000
   tipText: {fileID: 488605589}
   localPath: F:/HTTPServer/faded10s.h264
-  netUrl: rtmp://192.168.30.135/live/test2
+  netUrl: rtmp://202.69.69.180:443/webcast/bshdlive-pc
   rimg: {fileID: 504296491}
   demuxTimeout: 4000
   pushFrameInterval: 20

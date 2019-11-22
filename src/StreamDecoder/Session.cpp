@@ -376,7 +376,7 @@ void Session::Demux()
 	avcodec_parameters_copy(para, afc->streams[videoStreamIndex]->codecpar);*/
 	width = afc->streams[videoStreamIndex]->codecpar->width;
 	height = afc->streams[videoStreamIndex]->codecpar->height;
-
+	if (width > height) isLandscape = true;
 	if (decode)
 	{
 	
@@ -474,6 +474,16 @@ void Session::OnDecodeOnFrame(AVFrame *frame)
 	{
 		av_frame_free(&frame);
 		return;
+	}
+
+	int width = frame->width;
+	int height = frame->height;
+	bool landscape = width > height ? true : false;
+	if (landscape != isLandscape)
+	{
+		//屏幕反转了
+		width = this->height;
+		height = this->width;
 	}
 
 	//不需要内存对齐

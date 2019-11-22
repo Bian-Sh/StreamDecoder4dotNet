@@ -6,6 +6,7 @@
 #include <QThread>
 #include <QMutex>
 
+
 void OnDraw(struct DotNetFrame* frame);
 class H264Decoder : public QWidget
 {
@@ -33,6 +34,7 @@ public slots :
 	void on_EndSendData_clicked();
 
 
+	void OnRead();
 protected:
 	void closeEvent(QCloseEvent *event);
 private:
@@ -51,5 +53,13 @@ private:
 	int width;
 	int height;
 
-	QString filePath = "F:/HTTPServer/faded10s.h264";
+	//QString filePath = "F:/HTTPServer/faded10s.h264";
+	QString filePath = "D:/device.h264";
+
+private:
+	class QTcpServer* mServer = NULL;
+	class QTcpSocket* mSocket = NULL;
+
+	bool GetDeviceInfoOnConnect(QString &deviceName, QSize &size);
+
 };

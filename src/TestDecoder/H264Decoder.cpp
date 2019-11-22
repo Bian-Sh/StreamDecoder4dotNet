@@ -8,6 +8,9 @@
 #include "Packet.h"
 #include "DrawI420.h"
 #include <QFileDialog>
+#include <QTcpServer>
+#include <QTcpSocket>
+#include <QHostAddress>
 #pragma comment(lib, "StreamDecoder.lib")
 
 #define USE_WIDGET
@@ -54,6 +57,26 @@ H264Decoder::H264Decoder(QWidget *parent)
 	}
 #endif
 
+	mServer = new QTcpServer(this);
+
+	connect(mServer, &QTcpServer::newConnection, [this]() {
+		mSocket = mServer->nextPendingConnection();
+		QString deviceName;
+		QSize size;
+		if (GetDeviceInfoOnConnect(deviceName, size))
+		{
+			qDebug() << deviceName;
+			qDebug() << size;
+		}
+		//connect(mSocket, &QTcpSocket::readyRead, this, &H264Decoder::OnRead);
+	});
+
+	/*if (mServer->listen(QHostAddress("127.0.0.1"), 5555))
+	{
+		qDebug() << "Server start success";
+	}*/
+
+
 	QTimer *timer = new QTimer(parent);
 	timer->setSingleShot(false);
 	timer->setInterval(1);
@@ -77,6 +100,11 @@ H264Decoder::H264Decoder(QWidget *parent)
 
 }
 
+void H264Decoder::OnRead()
+{
+	QByteArray msg = mSocket->readAll();
+	qDebug() << msg;
+}
 
 
 
@@ -98,9 +126,9 @@ void H264Decoder::on_CreateSession_clicked()
 void H264Decoder::on_DeleteSession_clicked()
 {
 
-	//if (!session) return;
+	if (!session) return;
 	DeleteSession(session);
-	//session = NULL;
+	session = NULL;
 }
 
 void H264Decoder::on_TryBitStreamDemux_clicked()
@@ -156,6 +184,7 @@ void H264Decoder::on_EndSendData_clicked()
 {
 	isExit = true;
 }
+
 
 void H264Decoder::closeEvent(QCloseEvent *event)
 {
@@ -218,3 +247,28 @@ void H264Decoder::mrun()
 	qDebug() << "read stream thread quit";
 }
 
+
+bool H264Decoder::GetDeviceInfoOnConnect(QString &deviceName, QSize &size)
+{
+	// abk001----------0xaaaa 0xbbbb
+	// 64字节设备名称   2字节宽 2字节高
+	unsigned char buf[68];
+	if (mSocket->bytesAvailable() <= (68))
+	{
+		//等待300毫秒
+		mSocket->waitForReadyRead(300);
+	}
+	qint64 len = mSocket->read((char*)buf, sizeof(buf));
+	if (len < 68)
+	{
+		qInfo("Could not retrieve device infomation");
+		return false;
+	}
+	buf[63] = '\0';
+	deviceName = (char*)buf;
+	//0x0438
+	//第64个是0x04  左移8位为0x0400
+	size.setWidth((buf[64] << 8) | buf[64 + 1]);
+	size.setHeight(buf[64 + 2] << 8 | buf[64 + 3]);
+	return true;
+}

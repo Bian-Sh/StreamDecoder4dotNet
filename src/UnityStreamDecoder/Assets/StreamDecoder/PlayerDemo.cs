@@ -6,7 +6,7 @@ using UnityEngine.UI;
 using System.Threading;
 using System.IO;
 
-public class GameManager : MonoBehaviour
+public class PlayerDemo : MonoBehaviour
 {
 
     private StreamPlayer player;

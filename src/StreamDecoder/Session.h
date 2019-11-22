@@ -106,4 +106,6 @@ private:
 
 	int playerID;
 
+	bool isLandscape = false;
+
 };
