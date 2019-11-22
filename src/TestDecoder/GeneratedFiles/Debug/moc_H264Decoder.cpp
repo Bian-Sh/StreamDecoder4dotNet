@@ -22,7 +22,7 @@ QT_WARNING_PUSH
 QT_WARNING_DISABLE_DEPRECATED
 struct qt_meta_stringdata_H264Decoder_t {
     QByteArrayData data[12];
-    char stringdata0[244];
+    char stringdata0[253];
 };
 #define QT_MOC_LITERAL(idx, ofs, len) \
     Q_STATIC_BYTE_ARRAY_DATA_HEADER_INITIALIZER_WITH_OFFSET(len, \
@@ -32,24 +32,25 @@ struct qt_meta_stringdata_H264Decoder_t {
 static const qt_meta_stringdata_H264Decoder_t qt_meta_stringdata_H264Decoder = {
     {
 QT_MOC_LITERAL(0, 0, 11), // "H264Decoder"
-QT_MOC_LITERAL(1, 12, 24), // "on_createsession_clicked"
+QT_MOC_LITERAL(1, 12, 24), // "on_CreateSession_clicked"
 QT_MOC_LITERAL(2, 37, 0), // ""
-QT_MOC_LITERAL(3, 38, 24), // "on_deletesession_clicked"
-QT_MOC_LITERAL(4, 63, 19), // "on_trydemux_clicked"
-QT_MOC_LITERAL(5, 83, 28), // "on_trynetstreamdemux_clicked"
-QT_MOC_LITERAL(6, 112, 22), // "on_begindecode_clicked"
-QT_MOC_LITERAL(7, 135, 21), // "on_stopdecode_clicked"
-QT_MOC_LITERAL(8, 157, 18), // "on_GetFree_clicked"
-QT_MOC_LITERAL(9, 176, 19), // "on_openFile_clicked"
-QT_MOC_LITERAL(10, 196, 24), // "on_StartSendData_clicked"
-QT_MOC_LITERAL(11, 221, 22) // "on_EndSendData_clicked"
+QT_MOC_LITERAL(3, 38, 24), // "on_DeleteSession_clicked"
+QT_MOC_LITERAL(4, 63, 28), // "on_TryBitStreamDemux_clicked"
+QT_MOC_LITERAL(5, 92, 28), // "on_TryNetStreamDemux_clicked"
+QT_MOC_LITERAL(6, 121, 22), // "on_BeginDecode_clicked"
+QT_MOC_LITERAL(7, 144, 21), // "on_StopDecode_clicked"
+QT_MOC_LITERAL(8, 166, 18), // "on_GetFree_clicked"
+QT_MOC_LITERAL(9, 185, 19), // "on_OpenFile_clicked"
+QT_MOC_LITERAL(10, 205, 24), // "on_StartSendData_clicked"
+QT_MOC_LITERAL(11, 230, 22) // "on_EndSendData_clicked"
 
     },
-    "H264Decoder\0on_createsession_clicked\0"
-    "\0on_deletesession_clicked\0on_trydemux_clicked\0"
-    "on_trynetstreamdemux_clicked\0"
-    "on_begindecode_clicked\0on_stopdecode_clicked\0"
-    "on_GetFree_clicked\0on_openFile_clicked\0"
+    "H264Decoder\0on_CreateSession_clicked\0"
+    "\0on_DeleteSession_clicked\0"
+    "on_TryBitStreamDemux_clicked\0"
+    "on_TryNetStreamDemux_clicked\0"
+    "on_BeginDecode_clicked\0on_StopDecode_clicked\0"
+    "on_GetFree_clicked\0on_OpenFile_clicked\0"
     "on_StartSendData_clicked\0"
     "on_EndSendData_clicked"
 };
@@ -101,14 +102,14 @@ void H264Decoder::qt_static_metacall(QObject *_o, QMetaObject::Call _c, int _id,
         H264Decoder *_t = static_cast<H264Decoder *>(_o);
         Q_UNUSED(_t)
         switch (_id) {
-        case 0: _t->on_createsession_clicked(); break;
-        case 1: _t->on_deletesession_clicked(); break;
-        case 2: _t->on_trydemux_clicked(); break;
-        case 3: _t->on_trynetstreamdemux_clicked(); break;
-        case 4: _t->on_begindecode_clicked(); break;
-        case 5: _t->on_stopdecode_clicked(); break;
+        case 0: _t->on_CreateSession_clicked(); break;
+        case 1: _t->on_DeleteSession_clicked(); break;
+        case 2: _t->on_TryBitStreamDemux_clicked(); break;
+        case 3: _t->on_TryNetStreamDemux_clicked(); break;
+        case 4: _t->on_BeginDecode_clicked(); break;
+        case 5: _t->on_StopDecode_clicked(); break;
         case 6: _t->on_GetFree_clicked(); break;
-        case 7: _t->on_openFile_clicked(); break;
+        case 7: _t->on_OpenFile_clicked(); break;
         case 8: _t->on_StartSendData_clicked(); break;
         case 9: _t->on_EndSendData_clicked(); break;
         default: ;

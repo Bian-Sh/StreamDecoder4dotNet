@@ -97,6 +97,7 @@ struct LogPacket
 
 struct Frame
 {
+	int playerID;
 	int width;
 	int height;
 	int size_y;
@@ -106,8 +107,9 @@ struct Frame
 	char* frame_u;
 	char* frame_v;
 	
-	Frame(int width, int height, char* y, char* u, char* v, bool isLineAlign = true)
+	Frame(int playerID, int width, int height, char* y, char* u, char* v, bool isLineAlign = true)
 	{
+		this->playerID = playerID;
 		this->width = width;
 		this->height = height;
 		this->size_y = width * height;
@@ -145,6 +147,7 @@ struct Frame
 
 struct DotNetFrame
 {
+	int playerID;
 	int width;
 	int height;
 	char* frame_y;

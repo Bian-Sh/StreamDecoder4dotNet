@@ -49,7 +49,7 @@ public:
 	//获取版本号
 	char* GetStreamDecoderVersion();
 	//创建一个Session
-	void* CreateSession();
+	void* CreateSession(int playerID, int dataCacheSize);
 	//删除一个Session
 	void DeleteSession(void* session);
 
@@ -77,6 +77,9 @@ public:
 	void PushFrame2Net(Frame* frame);
 	//主线程更新 物理时间
 	void FixedUpdate();
+
+//public:
+//	int callTime = 0;
 private:
 	StreamDecoder();
 	//调用回调函数（主线程同步）
@@ -97,13 +100,14 @@ private:
 	//int waitPushFrameTime = 0;
 };
 
+//Global
 HEAD void _cdecl StreamDecoderInitialize(PLog logfunc, PDrawFrame drawfunc);
-
+//Global
 HEAD void _cdecl StreamDecoderDeInitialize();
-
+//Global
 HEAD char* _cdecl GetStreamDecoderVersion();
 
-HEAD void* _cdecl CreateSession();
+HEAD void* _cdecl CreateSession(int playerID, int dataCacheSize);
 
 HEAD void _cdecl DeleteSession(void* session);
 
@@ -122,3 +126,5 @@ HEAD bool _cdecl PushStream2Cache(void* session, char* data, int len);
 //HEAD void _cdecl SetPushFrameInterval(int wait);
 
 HEAD void _cdecl SetOption(void* session, int optionType, int value);
+
+//HEAD int _cdecl Test();

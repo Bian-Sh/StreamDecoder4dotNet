@@ -37,17 +37,7 @@ struct test
 	int len;
 	long size;
 };
-//void av_freep(void *arg)
-//{
-//	void *val;
-//
-//	memcpy(&val, arg, sizeof(val));
-//	//memcpy(arg, &((void*)(NULL)), sizeof(val));
-//	/*delete arg;
-//	arg = NULL;*/
-//	memset(arg, 0, sizeof(val));
-//	free(val);
-//}
+
 H264Decoder::H264Decoder(QWidget *parent)
 	: QWidget(parent)
 {
@@ -75,12 +65,12 @@ H264Decoder::H264Decoder(QWidget *parent)
 		static bool b = true;
 		if (b)
 		{
-			on_createsession_clicked();
+			on_CreateSession_clicked();
 			//on_trydemux_clicked();
 		}
 		else
 		{
-			on_deletesession_clicked();
+			on_DeleteSession_clicked();
 		}
 		b = !b;
 	});
@@ -95,32 +85,32 @@ void OnDraw(DotNetFrame* frame)
 	H264Decoder::self->OnDrawFrame(frame);
 }
 
-void H264Decoder::on_createsession_clicked()
+void H264Decoder::on_CreateSession_clicked()
 {
 	if (session) return;
-	session = CreateSession();
+	session = CreateSession(1, 1000000);
 	SetOption(session, DemuxTimeout, 5000);
-	SetOption(session, PushFrameInterval, 0);
-	SetOption(session, WaitBitStreamTimeout, 2000);
-	SetOption(session, AlwaysWaitBitStream, 0);
+	SetOption(session, PushFrameInterval, 20);
+	SetOption(session, WaitBitStreamTimeout, 1000);
+	SetOption(session, AlwaysWaitBitStream, 1);
 }
 
-void H264Decoder::on_deletesession_clicked()
+void H264Decoder::on_DeleteSession_clicked()
 {
 
-	if (!session) return;
+	//if (!session) return;
 	DeleteSession(session);
-	session = NULL;
+	//session = NULL;
 }
 
-void H264Decoder::on_trydemux_clicked()
+void H264Decoder::on_TryBitStreamDemux_clicked()
 {
 	if (!session) return;
 	qDebug() << TryBitStreamDemux(session);
 
 }
 
-void H264Decoder::on_trynetstreamdemux_clicked()
+void H264Decoder::on_TryNetStreamDemux_clicked()
 {
 	if (!session) return;
 	//TryNetStreamDemux(session, "rtmp://192.168.30.135/live/test");
@@ -129,13 +119,13 @@ void H264Decoder::on_trynetstreamdemux_clicked()
 	TryNetStreamDemux(session, "rtmp://192.168.30.135/live/test2");
 }
 
-void H264Decoder::on_begindecode_clicked()
+void H264Decoder::on_BeginDecode_clicked()
 {
 	if (!session) return;
 	BeginDecode(session);
 }
 
-void H264Decoder::on_stopdecode_clicked()
+void H264Decoder::on_StopDecode_clicked()
 {
 	if (!session) return;
 	StopDecode(session);
@@ -148,7 +138,7 @@ void H264Decoder::on_GetFree_clicked()
 	qDebug() << GetCacheFreeSize(session);
 }
 
-void H264Decoder::on_openFile_clicked()
+void H264Decoder::on_OpenFile_clicked()
 {
 	qDebug() << "open";
 	filePath = QFileDialog::getOpenFileName(this);
@@ -178,7 +168,7 @@ void H264Decoder::closeEvent(QCloseEvent *event)
 #endif // USE_WIDGET
 
 
-	on_deletesession_clicked();
+	on_DeleteSession_clicked();
 }
 
 void H264Decoder::mrun()

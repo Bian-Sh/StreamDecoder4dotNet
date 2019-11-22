@@ -13,7 +13,7 @@
   <property name="windowTitle">
    <string>H264Decoder</string>
   </property>
-  <widget class="QPushButton" name="createsession">
+  <widget class="QPushButton" name="CreateSession">
    <property name="geometry">
     <rect>
      <x>52</x>
@@ -26,7 +26,7 @@
     <string>CreateSession</string>
    </property>
   </widget>
-  <widget class="QPushButton" name="deletesession">
+  <widget class="QPushButton" name="DeleteSession">
    <property name="geometry">
     <rect>
      <x>52</x>
@@ -52,7 +52,7 @@
     <string>GetFree</string>
    </property>
   </widget>
-  <widget class="QPushButton" name="trydemux">
+  <widget class="QPushButton" name="TryBitStreamDemux">
    <property name="geometry">
     <rect>
      <x>190</x>
@@ -65,7 +65,7 @@
     <string>TryBitStreamDemux</string>
    </property>
   </widget>
-  <widget class="QPushButton" name="begindecode">
+  <widget class="QPushButton" name="BeginDecode">
    <property name="geometry">
     <rect>
      <x>210</x>
@@ -78,7 +78,7 @@
     <string>BeginDecode</string>
    </property>
   </widget>
-  <widget class="QPushButton" name="stopdecode">
+  <widget class="QPushButton" name="StopDecode">
    <property name="geometry">
     <rect>
      <x>210</x>
@@ -91,7 +91,7 @@
     <string>StopDecode</string>
    </property>
   </widget>
-  <widget class="QPushButton" name="trynetstreamdemux">
+  <widget class="QPushButton" name="TryNetStreamDemux">
    <property name="geometry">
     <rect>
      <x>190</x>
@@ -114,7 +114,7 @@
     </rect>
    </property>
   </widget>
-  <widget class="QPushButton" name="openFile">
+  <widget class="QPushButton" name="OpenFile">
    <property name="geometry">
     <rect>
      <x>450</x>

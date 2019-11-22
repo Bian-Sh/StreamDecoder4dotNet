@@ -59,15 +59,16 @@ char* StreamDecoder::GetStreamDecoderVersion()
 }
 
 //创建一个Session
-void* StreamDecoder::CreateSession()
+void* StreamDecoder::CreateSession(int playerID, int dataCacheSize)
 {
 	PushLog2Net(Info, "Create Session Success");
-	return new Session();
+	return new Session(playerID, dataCacheSize);
 }
 
 //删除一个Session
 void StreamDecoder::DeleteSession(void* session)
 {
+	//if(IsBadReadPtr(this, sizeof(Session)))
 	Session* s = (Session*)session;
 	if (s == NULL)
 	{
@@ -185,6 +186,7 @@ void StreamDecoder::PushFrame2Net(Frame* frame)
 //主线程更新 物理时间
 void StreamDecoder::FixedUpdate()
 {
+	//callTime++;
 	logMux.lock();
 	int size = logpackets.size();
 	for (int i = 0; i < size; i++)
@@ -223,6 +225,7 @@ void StreamDecoder::DrawFrame2dotNet(Frame* frame)
 	if (DrawFrame)
 	{
 		DotNetFrame* dotNetFrame = new DotNetFrame();
+		dotNetFrame->playerID = frame->playerID;
 		dotNetFrame->width = frame->width;
 		dotNetFrame->height = frame->height;
 		dotNetFrame->frame_y = frame->frame_y;
@@ -255,9 +258,9 @@ char* GetStreamDecoderVersion()
 	return StreamDecoder::Get()->GetStreamDecoderVersion();
 }
 
-void* CreateSession()
+void* CreateSession(int playerID, int dataCacheSize)
 {
-	return StreamDecoder::Get()->CreateSession();
+	return StreamDecoder::Get()->CreateSession(playerID, dataCacheSize);
 }
 
 void DeleteSession(void* session)
@@ -305,3 +308,8 @@ void SetOption(void* session, int optionType, int value)
 {
 	StreamDecoder::Get()->SetOption(session, optionType, value);
 }
+
+//int Test()
+//{
+//	return StreamDecoder::Get()->callTime;
+//}

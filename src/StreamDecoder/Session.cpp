@@ -58,6 +58,10 @@ int ReadPacket(void *opaque, unsigned char *buf, int bufSize)
 		}
 		else
 		{
+			if (session->waitQuitSignal)
+			{
+				return 0;
+			}
 			Tools::Get()->Sleep(1);
 			if (session->alwaysWaitBitStream)
 			{
@@ -87,8 +91,10 @@ int ReadPacket(void *opaque, unsigned char *buf, int bufSize)
 	return size;
 }
 
-Session::Session(int dataCacheSize)
+Session::Session(int playerID, int dataCacheSize)
 {
+	this->playerID = playerID;
+	if (dataCacheSize <= 100000) dataCacheSize = 100000;
 	//初始化 数据流 缓冲
 	this->dataCacheSize = dataCacheSize;
 	if (!dataCache) dataCache = new SCharList(this->dataCacheSize);
@@ -128,7 +134,7 @@ void Session::Close()
 //用户手动会调用
 void Session::Clear()
 {
-	
+	waitQuitSignal = true;
 	mux.lock();
 	
 	if (isExit)
@@ -244,6 +250,7 @@ bool Session::OpenDemuxThread()
 	isExit = false;
 	isRuning = true;
 	isInterruptRead = false;
+	waitQuitSignal = false;
 	//创建AVFormatContext
 	if (afc) {
 		cout << "严重错误 afc 存在" << endl;
@@ -311,7 +318,7 @@ void Session::ProbeInputBuffer()
 
 	char info[100];
 	sprintf(info, "format:%s[%s]", piFmt->name, piFmt->long_name);
-	StreamDecoder::Get()->PushLog2Net(Warning, info);
+	StreamDecoder::Get()->PushLog2Net(Info, info);
 
 	Demux();
 }
@@ -390,7 +397,7 @@ void Session::Demux()
 	}
 
 	isDemuxing = false;
-	StreamDecoder::Get()->PushLog2Net(Warning, "Demux Success!");
+	StreamDecoder::Get()->PushLog2Net(Info, "Demux Success!");
 
 }
 
@@ -400,13 +407,13 @@ void Session::BeginDecode()
 	//正在解封装
 	if (isDemuxing)
 	{
-		cout << "Please wait demuxing!" << endl;
+		StreamDecoder::Get()->PushLog2Net(Warning, "Please wait demuxing!");
 		return;
 	}
 	//没有正确解封装
 	if (!isRuning)
 	{
-		cout << "Need demux!" << endl;
+		StreamDecoder::Get()->PushLog2Net(Warning, "Need demux!");
 		return;
 	}
 
@@ -414,11 +421,11 @@ void Session::BeginDecode()
 	{
 		if (decode->isRuning)
 		{
-			cout << "Decoder thread is runing" << endl;
+			StreamDecoder::Get()->PushLog2Net(Warning, "Decoder thread is runing!");
 		}
 		else
 		{
-			cout << "Begin decode thread success" << endl;
+			StreamDecoder::Get()->PushLog2Net(Warning, "Begin decode thread success!");
 			std::thread decode_t(&Decode::run, decode);
 			decode_t.detach();
 			
@@ -427,17 +434,17 @@ void Session::BeginDecode()
 	
 	if (isInReadPacketThread)
 	{
-		cout << "Read packet thread is runing" << endl;
+		StreamDecoder::Get()->PushLog2Net(Warning, "Read packet thread is runing!");
 		return;
 	}
 
 	if (isInterruptRead)
 	{
-		cout << "Read packet thread is interrupt" << endl;
+		StreamDecoder::Get()->PushLog2Net(Warning, "Read packet thread is interrupt!");
 	}
 	else
 	{
-		cout << "Begin read packet thread" << endl;
+		StreamDecoder::Get()->PushLog2Net(Warning, "Begin read packet thread!");
 		std::thread t(&Session::run, this);
 		t.detach();
 	}
@@ -447,10 +454,10 @@ void Session::StopDecode()
 {
 	if (!isRuning)
 	{
-		cout << "Don't need stop decode!" << endl;
+		StreamDecoder::Get()->PushLog2Net(Warning, "Don't need stop decode!");
 		return;
 	}
-	cout << "Stop decode" << endl;
+	StreamDecoder::Get()->PushLog2Net(Warning, "Stop decode!");
 	Clear();
 }
 
@@ -472,12 +479,12 @@ void Session::OnDecodeOnFrame(AVFrame *frame)
 	//不需要内存对齐
 	if (frame->linesize[0] == width)
 	{
-		Frame *tmpFrame = new Frame(frame->width, frame->height, (char*)frame->data[0], (char*)frame->data[1], (char*)frame->data[2]);
+		Frame *tmpFrame = new Frame(playerID, frame->width, frame->height, (char*)frame->data[0], (char*)frame->data[1], (char*)frame->data[2]);
 		StreamDecoder::Get()->PushFrame2Net(tmpFrame);
 	}
 	else
 	{
-		Frame *tmpFrame = new Frame(width, height, NULL, NULL, NULL, false);
+		Frame *tmpFrame = new Frame(playerID, width, height, NULL, NULL, NULL, false);
 		for (int i = 0; i < height; i++)
 		{
 			memcpy(tmpFrame->frame_y + width * i, frame->data[0] + frame->linesize[0] * i, width);
@@ -558,7 +565,8 @@ void Session::run()
 			cout << "read end!!" << endl;
 			av_packet_free(&pkt);
 			isInterruptRead = true;
-			cout << Tools::Get()->av_strerror2(ret) << endl;
+			//cout << Tools::Get()->av_strerror2(ret) << endl;
+			StreamDecoder::Get()->PushLog2Net(Warning, Tools::Get()->av_strerror2(ret));
 			break;
 		}
 		//丢弃音频

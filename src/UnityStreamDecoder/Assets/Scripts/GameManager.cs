@@ -1,7 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using StreamDecoderManager;
+using SStreamDecoder;
 using UnityEngine.UI;
 using System.Threading;
 using System.IO;
@@ -9,14 +9,14 @@ using System.IO;
 public class GameManager : MonoBehaviour
 {
 
-    private DecodeSession session;
+    private StreamPlayer player;
+    public int bitStreamCacheSize = 1000000;
     public int readBuffSize = 1024;
-    public int pushFrameInterval = 20;
     public Text tipText;
-    public string path = "F:/HTTPServer/Faded.mp4";
-    private bool isRunthread = false;
+    public string localPath = "F:/HTTPServer/Faded.mp4";
+    public string netUrl = "rtmp://192.168.30.135/live/test";
     private bool isExit = false;
-    private FileStream file;
+    
     public RawImage rimg;
     private Material mat;
     private int width = 0;
@@ -38,10 +38,9 @@ public class GameManager : MonoBehaviour
             tipText.text = "FFmpeg动态链接库加载失败";
             return;
         }
-        StreamDecoder.InitializeStreamDecoder();
-        StreamDecoder.SetStreamDecoderPushFrameInterval(pushFrameInterval);
-        StreamDecoder.logEvent += StreamDecoderLog;
-        StreamDecoder.drawEvent += OnDrawFrame;
+        //StreamDecoder.InitStreamDecoder();
+        //StreamDecoder.logEvent += StreamDecoderLog;
+        //StreamDecoder.drawEvent += OnDrawFrame;
 
         mat = rimg.material;
 
@@ -51,58 +50,101 @@ public class GameManager : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-
+        if (Input.GetKeyDown(KeyCode.Space))
+        {
+           
+        }
     }
     private void OnDestroy()
     {
         isExit = true;
-        //确保关闭
         DeleteSession();
-        StreamDecoder.DeInitializeStreamDecoder();
         //释放动态库
         StreamDecoder.FreeLibrary();
     }
 
+    [Space]
+    [Space]
+    [SerializeField]
+    private int demuxTimeout = 2000;
+    [SerializeField]
+    private int pushFrameInterval = 20;
+    [SerializeField]
+    private int waitBitStreamTimeout = 1000;
+    [SerializeField]
+    private bool alwaysWaitBitStream = true;
     public void CreateSession()
     {
-        if (session != null) return;
-        session = DecodeSession.CreateSession();
-
+        if (player != null) return;
+        //唯一ID
+        player = StreamPlayer.CreateSession(1, bitStreamCacheSize, OnDrawFrame);
+        player.SetOption(OptionType.DemuxTimeout, demuxTimeout);
+        player.SetOption(OptionType.PushFrameInterval, pushFrameInterval);
+        player.SetOption(OptionType.WaitBitStreamTimeout, waitBitStreamTimeout);
+        player.SetOption(OptionType.AlwaysWaitBitStream, alwaysWaitBitStream ? 1 : 0);
     }
     public void DeleteSession()
     {
-        if (session == null) return;
-        isExit = true;
-        DecodeSession.DeleteSession(ref session);
+        if (player == null) return;
+
+        StreamPlayer.DeleteSession(ref player);
     }
 
-    public void TryDemux()
+    public void TryBitStreamDemux()
     {
-        if (session == null) return;
-        Debug.Log(session.TryDemux(2000));
-        if (isRunthread) return;
-        isExit = false;
+        if (player == null) return;
+        Debug.Log(player.TryBitStreamDemux());
+    }
+    public void TryNetStreamDemux()
+    {
+        if (player == null) return;
+        Debug.Log(player.TryNetStreamDemux(netUrl));
+    }
+
+  
+    public void BeginDecode()
+    {
+        if (player == null) return;
+        player.BeginDecode();
+    }
+    public void StopDecode()
+    {
+        if (player == null) return;
+        player.StopDecode();
+    }
+    public void GetCacheFreeSize()
+    {
+        if (player == null) return;
+        Debug.Log(player.GetCacheFreeSize());
+    }
+
+    #region Send Data
+    private bool isSending = false;
+    public void StartSendData()
+    {
+        if (isSending) return;
+        isSending = true;
         new Thread(run).Start();
     }
-    public void TryNetStreamDemux(string url)
+    public void EndSendData()
     {
-        if (session == null) return;
-        Debug.Log(session.TryNetStreamDemux(url));
+        if (!isSending) return;
+        isSending = false;
     }
 
     private void run()
     {
-        Debug.Log("begin run");
-        if(!File.Exists(path))
+        Debug.Log("Begin send Data");
+
+        if (!File.Exists(localPath))
         {
-            Debug.Log(path + " not exists");
+            Debug.Log(localPath + " not exists");
             return;
         }
-        file = new FileStream(path, FileMode.Open);
-        isRunthread = true;
+        FileStream file = new FileStream(localPath, FileMode.Open);
         byte[] readBuff = new byte[readBuffSize];
         int count = 0;
-        while(!isExit)
+        while (!isExit && isSending)
         {
             int ret = 0;
             try
@@ -114,16 +156,20 @@ public class GameManager : MonoBehaviour
                 Debug.LogWarning(ex);
                 return;
             }
-            if(ret <= 0)
+            if (ret <= 0)
             {
                 break;
             }
             count += ret;
             //处理数据
-            while(!isExit)
+            while (!isExit && isSending)
             {
-                if(session.PushStream2Cache(readBuff, ret)) break;
-               
+                if(player == null)
+                {
+                    break;
+                }
+                if (player.PushStream2Cache(readBuff, ret)) break;
+              
                 Thread.Sleep(1);
                 continue;
             }
@@ -131,44 +177,28 @@ public class GameManager : MonoBehaviour
         }
         file.Dispose();
         file.Close();
-        isRunthread = false;
-        Debug.Log("stop run");
+        Debug.Log("Stop send data");
     }
-    public void BeginDecode()
-    {
-        if (session == null) return;
-        session.BeginDecode();
-    }
-    public void StopDecode()
-    {
-        if (session == null) return;
-        session.StopDecode();
-        isExit = true;
-    }
-    public void GetCacheFreeSize()
-    {
-        if (session == null) return;
-        Debug.Log(session.GetCacheFreeSize());
-    }
+    #endregion
 
-    private void StreamDecoderLog(int level, string log)
-    {
-        if (level == 0)
-        {
-            tipText.text = string.Format("<color=#ffffff>{0}</color>", log);
-            Debug.Log(log);
-        }
-        else if (level == 1)
-        {
-            tipText.text = string.Format("<color=#ffff00>{0}</color>", log);
-            Debug.LogWarning(log);
-        }
-        else
-        {
-            tipText.text = string.Format("<color=#ff0000>{0}</color>", log);
-            Debug.LogError(log);
-        }
-    }
+    //private void StreamDecoderLog(int level, string log)
+    //{
+    //    if (level == 0)
+    //    {
+    //        tipText.text = string.Format("<color=#ffffff>{0}</color>", log);
+    //        Debug.Log(log);
+    //    }
+    //    else if (level == 1)
+    //    {
+    //        tipText.text = string.Format("<color=#ffff00>{0}</color>", log);
+    //        Debug.LogWarning(log);
+    //    }
+    //    else
+    //    {
+    //        tipText.text = string.Format("<color=#ff0000>{0}</color>", log);
+    //        Debug.LogError(log);
+    //    }
+    //}
     public void OnDrawFrame(DotNetFrame frame)
     {
 

@@ -6,10 +6,19 @@ using System.Threading;
 using UnityEngine;
 
 
-namespace StreamDecoderManager
+namespace SStreamDecoder
 {
+    public enum OptionType
+    {
+        DemuxTimeout = 1,
+        PushFrameInterval,
+        AlwaysWaitBitStream,
+        WaitBitStreamTimeout,
+    }
+
     public struct DotNetFrame
     {
+        public int playerID;
         public int width;
         public int height;
         public IntPtr frame_y;
@@ -18,6 +27,8 @@ namespace StreamDecoderManager
     };
     public static class StreamDecoder
     {
+        private static bool isInit = false;
+        public static bool IsInit { get { return isInit; } }
         public static string dllPath = "";
 
         private static IntPtr avutil_dll;
@@ -25,42 +36,107 @@ namespace StreamDecoderManager
         private static IntPtr swscale_dll;
         private static IntPtr avcodec_dll;
         private static IntPtr avformat_dll;
-        //private static IntPtr qt5core_dll;
-        //private static IntPtr qt5cored_dll;
 
         public static IntPtr streamDecoder_dll;
 
+        /// <summary>
+        /// 初始化StreamDecoder 设置日志回调函数 委托
+        /// </summary>
+        /// <param name="pfun"></param>
+        /// <param name="pDraw"></param>
         private delegate void StreamDecoderInitialize(DLL_Debug_Log pfun, DLL_Draw_Frame pDraw);
-        private delegate void SetPushFrameInterval(int wait);
+
+        /// <summary>
+        /// 注销StreamDecoder委托
+        /// </summary>
         private delegate void StreamDecoderDeInitialize();
 
-        public delegate IntPtr GetStreamDecoderVersion();
+        /// <summary>
+        /// 获取版本信息委托
+        /// </summary>
+        /// <returns></returns>
+        private delegate IntPtr GetStreamDecoderVersion();
 
-        public delegate IntPtr CreateSession();
+        /// <summary>
+        /// 创建一个Session委托
+        /// </summary>
+        /// <returns></returns>
+        public delegate IntPtr CreateSession(int playerID, int dataCacheSize);
 
+        /// <summary>
+        /// 删除一个Session委托
+        /// </summary>
+        /// <param name="session"></param>
         public delegate void DeleteSession(IntPtr session);
 
-        public delegate bool TryDemux(IntPtr session, int waitDemuxTime);
+        /// <summary>
+        /// 尝试解封装字节流数据委托
+        /// </summary>
+        /// <param name="session"></param>
+        /// <returns></returns>
+        public delegate bool TryBitStreamDemux(IntPtr session);
 
+        /// <summary>
+        /// 尝试解封装网络流数据委托
+        /// </summary>
+        /// <param name="session"></param>
+        /// <param name="url"></param>
+        /// <returns></returns>
         public delegate bool TryNetStreamDemux(IntPtr session, string url);
 
-
+        /// <summary>
+        /// 开始解码委托
+        /// </summary>
+        /// <param name="session"></param>
         public delegate void BeginDecode(IntPtr session);
 
+        /// <summary>
+        /// 停止解码委托
+        /// </summary>
+        /// <param name="session"></param>
         public delegate void StopDecode(IntPtr session);
 
+        /// <summary>
+        /// 获取 数据流缓冲区 可用空间（字节） 委托
+        /// </summary>
+        /// <param name="session"></param>
+        /// <returns></returns>
         public delegate int GetCacheFreeSize(IntPtr session);
 
+        /// <summary>
+        /// 向 数据流缓冲区 追加数据 委托
+        /// </summary>
+        /// <param name="session"></param>
+        /// <param name="data"></param>
+        /// <param name="len"></param>
+        /// <returns></returns>
         public delegate bool PushStream2Cache(IntPtr session, byte[] data, int len);
 
+        /// <summary>
+        /// 设置session 配置属性 委托
+        /// </summary>
+        /// <param name="session"></param>
+        /// <param name="type"></param>
+        /// <param name="value"></param>
+        public delegate void SetOption(IntPtr session, OptionType type, int value);
+
+
+        
+
+        /// <summary>
+        /// C++ 回调函数 Log 委托
+        /// </summary>
+        /// <param name="level"></param>
+        /// <param name="log"></param>
         [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
         private delegate void DLL_Debug_Log(int level, IntPtr log);
 
+        /// <summary>
+        /// C++ 回调函数 绘制图像 委托
+        /// </summary>
+        /// <param name="frame"></param>
         [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
         private delegate void DLL_Draw_Frame(DotNetFrame frame);
-
-
-
 
 
         public static event Action<int, string> logEvent;
@@ -117,18 +193,21 @@ namespace StreamDecoderManager
         }
         #endregion
 
-        //使用前初始化
-        public static void InitializeStreamDecoder()
+        /// <summary>
+        /// 必须调用的初始化函数
+        /// </summary>
+        public static void InitStreamDecoder()
         {
+            isInit = true;
             DLL_Debug_Log log = StreamDecoderLog;
             DLL_Draw_Frame draw = OnDrawFrame;
             Native.Invoke<StreamDecoderInitialize>(streamDecoder_dll, log, draw);
         }
-        public static void SetStreamDecoderPushFrameInterval(int wait)
-        {
-            Native.Invoke<SetPushFrameInterval>(streamDecoder_dll, wait);
-        }
-        public static void DeInitializeStreamDecoder()
+
+        /// <summary>
+        /// 清理函数
+        /// </summary>
+        public static void DeInitStreamDecoder()
         {
             Native.Invoke<StreamDecoderDeInitialize>(streamDecoder_dll);
         }
@@ -138,7 +217,7 @@ namespace StreamDecoderManager
         /// </summary>
         /// <param name="level"></param>
         /// <param name="log"></param>
-        public static void StreamDecoderLog(int level, IntPtr log)
+        private static void StreamDecoderLog(int level, IntPtr log)
         {
             //string logStr = ;
             string _log = "<b>" + Marshal.PtrToStringAnsi(log) + "</b>";
@@ -155,11 +234,28 @@ namespace StreamDecoderManager
             }
         }
 
-        public static void OnDrawFrame(DotNetFrame frame)
+        private static void OnDrawFrame(DotNetFrame frame)
         {
             if (drawEvent == null) return;
             drawEvent(frame);
         }
+
+
+        /// <summary>
+        /// 获取版本信息
+        /// </summary>
+        /// <returns></returns>
+        public static string StreamDecoderVersion()
+        {
+            IntPtr versionPtr = Native.Invoke<IntPtr, GetStreamDecoderVersion>(streamDecoder_dll);
+            return Marshal.PtrToStringAnsi(versionPtr);
+        }
+
+        //private delegate int Test();
+        //public static int Count()
+        //{
+        //    return Native.Invoke<int, Test>(streamDecoder_dll);
+        //}
 
     }
 }

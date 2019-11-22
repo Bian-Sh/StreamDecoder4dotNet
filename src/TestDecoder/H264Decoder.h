@@ -17,16 +17,16 @@ public:
 	static H264Decoder* self;
 	void OnDrawFrame(DotNetFrame* frame);
 public slots :
-	void on_createsession_clicked();
-	void on_deletesession_clicked();
-	void on_trydemux_clicked();
-	void on_trynetstreamdemux_clicked();
-	void on_begindecode_clicked();
-	void on_stopdecode_clicked();
+	void on_CreateSession_clicked();
+	void on_DeleteSession_clicked();
+	void on_TryBitStreamDemux_clicked();
+	void on_TryNetStreamDemux_clicked();
+	void on_BeginDecode_clicked();
+	void on_StopDecode_clicked();
 
 	void on_GetFree_clicked();
 
-	void on_openFile_clicked();
+	void on_OpenFile_clicked();
 
 	void on_StartSendData_clicked();
 

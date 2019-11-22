@@ -11,7 +11,7 @@ class Session
 {
 
 public:
-	Session(int dataCacheSize = 1000000);
+	Session(int playerID, int dataCacheSize = 1000000);
 	~Session();
 
 	//打开字节流数据
@@ -62,6 +62,8 @@ public:
 	//解封装前的时间戳ns
 	int64_t startTime = 0;
 
+	bool waitQuitSignal = false;
+
 private:
 
 	void ProbeInputBuffer();
@@ -101,5 +103,7 @@ private:
 
 	//需要释放
 	char* url = NULL;
+
+	int playerID;
 
 };
