@@ -8,9 +8,7 @@ using System.IO;
 
 public class PlayerDemo : MonoBehaviour
 {
-
-    private StreamPlayer player;
-    public int bitStreamCacheSize = 1000000;
+   
     public int readBuffSize = 1024;
     public Text tipText;
     public string localPath = "F:/HTTPServer/Faded.mp4";
@@ -22,6 +20,21 @@ public class PlayerDemo : MonoBehaviour
     private int width = 0;
     private int height = 0;
     private Texture2D ytex, utex, vtex;
+
+   
+    private StreamPlayer player;
+    [Space]
+    [Header("StreamPlayer Parameters")]
+    [SerializeField]
+    private int bitStreamCacheSize = 1000000;
+    [SerializeField]
+    private int demuxTimeout = 2000;
+    [SerializeField]
+    private int pushFrameInterval = 20;
+    [SerializeField]
+    private int waitBitStreamTimeout = 1000;
+    [SerializeField]
+    private bool alwaysWaitBitStream = true;
     // Use this for initialization
     void Start()
     {
@@ -38,9 +51,6 @@ public class PlayerDemo : MonoBehaviour
             tipText.text = "FFmpeg动态链接库加载失败";
             return;
         }
-        //StreamDecoder.InitStreamDecoder();
-        //StreamDecoder.logEvent += StreamDecoderLog;
-        //StreamDecoder.drawEvent += OnDrawFrame;
 
         mat = rimg.material;
 
@@ -50,10 +60,7 @@ public class PlayerDemo : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        if (Input.GetKeyDown(KeyCode.Space))
-        {
-           
-        }
+
     }
     private void OnDestroy()
     {
@@ -63,16 +70,7 @@ public class PlayerDemo : MonoBehaviour
         StreamDecoder.FreeLibrary();
     }
 
-    [Space]
-    [Space]
-    [SerializeField]
-    private int demuxTimeout = 2000;
-    [SerializeField]
-    private int pushFrameInterval = 20;
-    [SerializeField]
-    private int waitBitStreamTimeout = 1000;
-    [SerializeField]
-    private bool alwaysWaitBitStream = true;
+  
     public void CreateSession()
     {
         if (player != null) return;
@@ -83,13 +81,38 @@ public class PlayerDemo : MonoBehaviour
         player.SetOption(OptionType.WaitBitStreamTimeout, waitBitStreamTimeout);
         player.SetOption(OptionType.AlwaysWaitBitStream, alwaysWaitBitStream ? 1 : 0);
     }
-    public void OnEvent(EType et)
+    private void OnEvent(EType et)
     {
         if(et == EType.DemuxSuccess)
         {
             Debug.Log("Demux Success");
             player.BeginDecode();
         }
+    }
+    public void OnDrawFrame(DotNetFrame frame)
+    {
+        if(mat == null)
+        {
+            Debug.LogWarning("mat is null");
+            return;
+        }
+        if (width != frame.width || height != frame.height)
+        {
+            width = frame.width;
+            height = frame.height;
+            ytex = new Texture2D(width, height, TextureFormat.R8, false);
+            utex = new Texture2D(width / 2, height / 2, TextureFormat.R8, false);
+            vtex = new Texture2D(width / 2, height / 2, TextureFormat.R8, false);
+        }
+        ytex.LoadRawTextureData(frame.frame_y, width * height);
+        ytex.Apply();
+        utex.LoadRawTextureData(frame.frame_u, width * height / 4);
+        utex.Apply();
+        vtex.LoadRawTextureData(frame.frame_v, width * height / 4);
+        vtex.Apply();
+        mat.SetTexture("_YTex", ytex);
+        mat.SetTexture("_UTex", utex);
+        mat.SetTexture("_VTex", vtex);
     }
     public void DeleteSession()
     {
@@ -188,44 +211,4 @@ public class PlayerDemo : MonoBehaviour
         Debug.Log("Stop send data");
     }
     #endregion
-
-    //private void StreamDecoderLog(int level, string log)
-    //{
-    //    if (level == 0)
-    //    {
-    //        tipText.text = string.Format("<color=#ffffff>{0}</color>", log);
-    //        Debug.Log(log);
-    //    }
-    //    else if (level == 1)
-    //    {
-    //        tipText.text = string.Format("<color=#ffff00>{0}</color>", log);
-    //        Debug.LogWarning(log);
-    //    }
-    //    else
-    //    {
-    //        tipText.text = string.Format("<color=#ff0000>{0}</color>", log);
-    //        Debug.LogError(log);
-    //    }
-    //}
-    public void OnDrawFrame(DotNetFrame frame)
-    {
-
-        if (width != frame.width || height != frame.height)
-        {
-            width = frame.width;
-            height = frame.height;
-            ytex = new Texture2D(width, height, TextureFormat.R8, false);
-            utex = new Texture2D(width / 2, height / 2, TextureFormat.R8, false);
-            vtex = new Texture2D(width / 2, height / 2, TextureFormat.R8, false);
-        }
-        ytex.LoadRawTextureData(frame.frame_y, width * height);
-        ytex.Apply();
-        utex.LoadRawTextureData(frame.frame_u, width * height / 4);
-        utex.Apply();
-        vtex.LoadRawTextureData(frame.frame_v, width * height / 4);
-        vtex.Apply();
-        mat.SetTexture("_YTex", ytex);
-        mat.SetTexture("_UTex", utex);
-        mat.SetTexture("_VTex", vtex);
-    }
 }

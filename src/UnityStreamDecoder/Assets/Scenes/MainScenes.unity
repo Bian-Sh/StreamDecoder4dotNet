@@ -2080,12 +2080,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e6ada6c607b276149bbc15988b8f3e28, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  bitStreamCacheSize: 1000000
   readBuffSize: 10240
   tipText: {fileID: 488605589}
-  localPath: D:/HTTPServer/4K.mp4
-  netUrl: rtmp://202.69.69.180:443/webcast/bshdlive-pc
+  localPath: D:/device.h264
+  netUrl: rtmp://192.168.0.104/live/test
   rimg: {fileID: 504296491}
+  bitStreamCacheSize: 1000000
   demuxTimeout: 4000
   pushFrameInterval: 0
   waitBitStreamTimeout: 1000

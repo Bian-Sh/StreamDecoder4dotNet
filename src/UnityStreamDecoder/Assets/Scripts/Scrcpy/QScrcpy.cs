@@ -1,13 +1,11 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
-using System.IO;
 using System.Net;
 using System.Net.Sockets;
-using System.Text.RegularExpressions;
 using UnityEngine;
 using UnityEngine.UI;
 using SStreamDecoder;
+using System.IO;
 
 public class QScrcpy : MonoBehaviour
 {
@@ -31,14 +29,17 @@ public class QScrcpy : MonoBehaviour
         get { return instance; }
     }
 
-    private event System.Action UpdateEvent;
+    private event Action UpdateEvent;
 
+    public bool writeToLocal = false;
+    public string fileName = "D:/device.h264";
     private void Awake()
     {
         adbController = new AdbController();
         instance = this;
+        
     }
-    //private FileStream fs;
+    FileStream fs;
     // Use this for initialization
     void Start()
     {
@@ -48,9 +49,13 @@ public class QScrcpy : MonoBehaviour
         StreamDecoder.dllPath = Application.streamingAssetsPath + "/../../../../../bin/";
 #endif
         adbController.adbPath = StreamDecoder.dllPath + "adb.exe";
-        //fs = new FileStream("D:/device.h264", FileMode.CreateNew);
+        if(writeToLocal)
+        {
+            fs = new FileStream(fileName, FileMode.Create);
+        }
+     
         StreamDecoder.LoadLibrary();
-        player = StreamPlayer.CreateSession(2, 1000000, null, onDraw);
+        player = StreamPlayer.CreateSession(2, 1000000, OnEvent, onDraw);
         player.SetOption(OptionType.DemuxTimeout, 5000);
         player.SetOption(OptionType.PushFrameInterval, 10);
         //player.SetOption(OptionType.WaitBitStreamTimeout, waitBitStreamTimeout);
@@ -60,16 +65,11 @@ public class QScrcpy : MonoBehaviour
     }
     private void OnDestroy()
     {
-        //if(client != null)
-        //{
-        //    if(client.Connected)
-        //    {
-        //        client.Shutdown(SocketShutdown.Both);
-        //        client.Close();
-        //        Debug.Log("关闭client");
-        //    }
-        //}
-        //fs.Close();
+        if(writeToLocal)
+        {
+            fs.Close();
+        }
+       
         StreamPlayer.DeleteSession(ref player);
         StreamDecoder.FreeLibrary();
         ADBKill();
@@ -81,8 +81,22 @@ public class QScrcpy : MonoBehaviour
     private int width = 0;
     private int height = 0;
     private Texture2D ytex, utex, vtex;
+
+    private void OnEvent(EType et)
+    {
+        if (et == EType.DemuxSuccess)
+        {
+            Debug.Log("Demux Success");
+            player.BeginDecode();
+        }
+    }
     void onDraw(DotNetFrame frame)
     {
+        if (mat == null)
+        {
+            Debug.LogWarning("mat is null");
+            return;
+        }
         if (width != frame.width || height != frame.height)
         {
             width = frame.width;
@@ -103,7 +117,8 @@ public class QScrcpy : MonoBehaviour
     }
     bool isFirst = true;
 
-   
+
+    public int _len;
     // Update is called once per frame
     void Update()
     {
@@ -133,10 +148,19 @@ public class QScrcpy : MonoBehaviour
         {
             //byte[] arr = dataCache.ToArray();
             //fs.Write(arr, 0, arr.Length);
+            //dataCache.Clear();
+
             byte[] arr = dataCache.ToArray();
             int size = Mathf.Min(player.GetCacheFreeSize(), arr.Length);
-            player.PushStream2Cache(arr, size);
-            dataCache.RemoveRange(0, size);
+            if (player.PushStream2Cache(arr, size))
+            {
+                if(writeToLocal)
+                {
+                    fs.Write(arr, 0, size);
+                }
+                _len += size;
+                dataCache.RemoveRange(0, size);
+            }
         }
         
       
@@ -174,6 +198,13 @@ public class QScrcpy : MonoBehaviour
     }
     public void ADBKill()
     {
+        lock(dataCache)
+        {
+            dataCache.Clear();
+            isFirst = true;
+            if(player != null)
+                player.StopDecode();
+        }
         adbController.AdbKillServer();
     }
 

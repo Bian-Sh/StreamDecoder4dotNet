@@ -1766,6 +1766,8 @@ MonoBehaviour:
   deviceIPInput: {fileID: 736052015}
   isWifi: {fileID: 1692369778}
   reverserPort: 5555
+  writeToLocal: 1
+  fileName: D:/device.h264
   rimg: {fileID: 1709275985}
 --- !u!4 &1551522791
 Transform:

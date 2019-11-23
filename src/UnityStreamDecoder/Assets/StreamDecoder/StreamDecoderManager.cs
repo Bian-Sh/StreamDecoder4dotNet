@@ -150,7 +150,7 @@ namespace SStreamDecoder
         private delegate void DLL_Decode_Event(int playerID, int eventType);
 
 
-        public static event Action<int, string> logEvent;
+        private static event Action<int, string> logEvent;
         public static event Action<DotNetFrame> drawEvent;
         public static event Action<int, EType> decodeEvent;
 

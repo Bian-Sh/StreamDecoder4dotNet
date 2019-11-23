@@ -58,6 +58,7 @@ public:
 
 	//是否处于Demux状态 重要的作用在ReadPacket的回调函数中
 	bool isDemuxing = false;
+	//bool isStreamInfoFinding = false;
 
 	//解封装前的时间戳ns
 	int64_t startTime = 0;

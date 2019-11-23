@@ -13,7 +13,7 @@
 #include <QHostAddress>
 #pragma comment(lib, "StreamDecoder.lib")
 
-#define USE_WIDGET_
+#define USE_WIDGET
 
 H264Decoder* H264Decoder::self = NULL;
 
@@ -152,9 +152,9 @@ void H264Decoder::on_TryNetStreamDemux_clicked()
 {
 	if (!session) return;
 	//TryNetStreamDemux(session, "rtmp://192.168.30.135/live/test");
-	//TryNetStreamDemux(session, "rtmp://202.69.69.180:443/webcast/bshdlive-pc");
+	TryNetStreamDemux(session, "rtmp://202.69.69.180:443/webcast/bshdlive-pc");
 	//TryNetStreamDemux(session, "rtmp://58.200.131.2:1935/livetv/hunantv");
-	TryNetStreamDemux(session, "rtmp://192.168.0.104/live/test");
+	//TryNetStreamDemux(session, "rtmp://192.168.0.104/live/test");
 }
 
 void H264Decoder::on_BeginDecode_clicked()

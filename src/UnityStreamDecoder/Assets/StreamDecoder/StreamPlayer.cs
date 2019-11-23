@@ -14,7 +14,15 @@ public class StreamPlayer {
     private int playerID;
     private Action<DotNetFrame> drawCb;
     private Action<EType> onEvent;
-    //创建一个StreamPlayer
+    
+    /// <summary>
+    /// 创建一个StreamDecoder
+    /// </summary>
+    /// <param name="playerID">唯一ID</param>
+    /// <param name="dataCacheSize">player 流缓冲大小</param>
+    /// <param name="onReceiveEventCb">事件回调</param>
+    /// <param name="onReceiveOneFrameCb">绘制回调</param>
+    /// <returns></returns>
     public static StreamPlayer CreateSession(int playerID, int dataCacheSize, Action<EType> onReceiveEventCb, Action<DotNetFrame> onReceiveOneFrameCb)
     {
         if(!StreamDecoder.IsInit)
