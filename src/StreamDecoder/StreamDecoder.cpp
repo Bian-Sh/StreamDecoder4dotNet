@@ -7,6 +7,7 @@ extern "C"
 {
 #include <libavcodec/avcodec.h>
 #include <libavformat/avformat.h>
+
 }
 using namespace std;
 void _stdcall TimerProcess(HWND hwnd, UINT uMsg, UINT idEvent, DWORD dwTime)
@@ -22,7 +23,7 @@ StreamDecoder::StreamDecoder()
 	avformat_network_init();
 }
 //初始化StreamDecoder 设置日志回调函数
-void StreamDecoder::StreamDecoderInitialize(PLog logfunc, PDrawFrame drawfunc)
+void StreamDecoder::StreamDecoderInitialize(PLog logfunc, PDrawFrame drawfunc, PEvent ev)
 {
 	logMux.lock();
 	if (!Log) Log = logfunc;
@@ -31,13 +32,13 @@ void StreamDecoder::StreamDecoderInitialize(PLog logfunc, PDrawFrame drawfunc)
 	frameMux.lock();
 	if (!DrawFrame) DrawFrame = drawfunc;
 	frameMux.unlock();
+
+	eventMux.lock();
+	if (!Event)Event = ev;
+	eventMux.unlock();
+	
 	SetTimer(NULL, 1, 25, (TIMERPROC)TimerProcess);
 }
-
-//void StreamDecoder::SetPushFrameInterval(int wait)
-//{
-//	waitPushFrameTime = wait;
-//}
 
 //注销StreamDecoder 预留函数
 void StreamDecoder::StreamDecoderDeInitialize()
@@ -174,13 +175,17 @@ void StreamDecoder::PushLog2Net(LogLevel level, char* log)
 
 void StreamDecoder::PushFrame2Net(Frame* frame)
 {
-	//if (waitPushFrameTime > 0)
-	//{
-	//	Sleep(waitPushFrameTime);
-	//}
 	frameMux.lock();
 	framepackets.push_back(frame);
 	frameMux.unlock();
+}
+
+void StreamDecoder::PushEvent2Net(int playerID, int eventType)
+{
+	DEvent * ev = new DEvent(playerID, eventType);
+	eventMux.lock();
+	eventpackets.push_back(ev);
+	eventMux.unlock();
 }
 
 //主线程更新 物理时间
@@ -204,6 +209,15 @@ void StreamDecoder::FixedUpdate()
 		framepackets.pop_front();
 	}
 	frameMux.unlock();
+
+	eventMux.lock();
+	size = eventpackets.size();
+	for (int i = 0; i < size; i++)
+	{
+		Event2Net(eventpackets.front());
+		eventpackets.pop_front();
+	}
+	eventMux.unlock();
 }
 
 
@@ -241,11 +255,18 @@ void StreamDecoder::DrawFrame2dotNet(Frame* frame)
 	frame = NULL;
 }
 
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-void StreamDecoderInitialize(PLog logfunc, PDrawFrame drawfunc)
+void StreamDecoder::Event2Net(DEvent* ev)
 {
-	StreamDecoder::Get()->StreamDecoderInitialize(logfunc, drawfunc);
+	if (Event) Event(ev->playerID, ev->eventType);
+	delete ev;
+	ev = NULL;
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+void StreamDecoderInitialize(PLog logfunc, PDrawFrame drawfunc, PEvent ev)
+{
+	StreamDecoder::Get()->StreamDecoderInitialize(logfunc, drawfunc, ev);
 }
 
 void StreamDecoderDeInitialize()
@@ -299,17 +320,8 @@ bool PushStream2Cache(void* session, char* data, int len)
 	return StreamDecoder::Get()->PushStream2Cache(session, data, len);
 }
 
-//void SetPushFrameInterval(int wait)
-//{
-//	StreamDecoder::Get()->SetPushFrameInterval(wait);
-//}
-
 void SetOption(void* session, int optionType, int value)
 {
 	StreamDecoder::Get()->SetOption(session, optionType, value);
 }
 
-//int Test()
-//{
-//	return StreamDecoder::Get()->callTime;
-//}

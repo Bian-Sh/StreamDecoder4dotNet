@@ -13,16 +13,16 @@ public class StreamPlayer {
     private IntPtr session = IntPtr.Zero;
     private int playerID;
     private Action<DotNetFrame> drawCb;
-
+    private Action<EType> onEvent;
     //创建一个StreamPlayer
-    public static StreamPlayer CreateSession(int playerID, int dataCacheSize, Action<DotNetFrame> onReceiveOneFrameCb)
+    public static StreamPlayer CreateSession(int playerID, int dataCacheSize, Action<EType> onReceiveEventCb, Action<DotNetFrame> onReceiveOneFrameCb)
     {
         if(!StreamDecoder.IsInit)
         {
             StreamDecoder.InitStreamDecoder();
         }
         IntPtr s = Native.Invoke<IntPtr, StreamDecoder.CreateSession>(StreamDecoder.streamDecoder_dll, playerID, dataCacheSize);
-        return new StreamPlayer(s, playerID, onReceiveOneFrameCb);
+        return new StreamPlayer(s, playerID, onReceiveEventCb, onReceiveOneFrameCb);
     }
     /// <summary>
     /// 关闭并删除一个Session
@@ -39,13 +39,14 @@ public class StreamPlayer {
     private void DestructorStreamPlayer()
     {
         StreamDecoder.drawEvent -= ReceiveOneFrame;
+        StreamDecoder.decodeEvent -= OnEvent;
     }
 
     /// <summary>
     /// 构造StreamPlayer
     /// </summary>
     /// <param name="session"></param>
-    private StreamPlayer(IntPtr session, int playerID, Action<DotNetFrame> onReceiveOneFrameCb)
+    private StreamPlayer(IntPtr session, int playerID, Action<EType> onReceiveEventCb, Action<DotNetFrame> onReceiveOneFrameCb)
     {
         if(session == IntPtr.Zero)
         {
@@ -53,9 +54,11 @@ public class StreamPlayer {
             return;
         }
         StreamDecoder.drawEvent += ReceiveOneFrame;
+        StreamDecoder.decodeEvent += OnEvent;
         this.playerID = playerID;
         this.session = session;
         if (onReceiveOneFrameCb != null) this.drawCb = onReceiveOneFrameCb;
+        if (onReceiveEventCb != null) this.onEvent = onReceiveEventCb;
     }
 
     //尝试打开解封装线程
@@ -122,5 +125,11 @@ public class StreamPlayer {
     {
         if (frame.playerID != playerID) return;
         if (drawCb != null) drawCb(frame);
+    }
+
+    private void OnEvent(int playerID, EType et)
+    {
+        if (this.playerID != playerID) return;
+        if (onEvent != null) onEvent(et);
     }
 }

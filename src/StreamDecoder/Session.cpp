@@ -12,11 +12,13 @@ extern "C"
 #include <libavutil/error.h>
 #include <libavutil/time.h>
 }
-#define BUFF_SIZE 655360
+#define BUFF_SIZE 65536
 #define  URL_LENGTH 128
 #pragma comment(lib, "avcodec.lib")
 #pragma comment(lib, "avformat.lib")
 #pragma comment(lib, "avutil.lib")
+
+#define USE_DECODER_
 
 int ReadPacket(void *opaque, unsigned char *buf, int bufSize)
 {
@@ -126,7 +128,7 @@ void Session::Close()
 	url = NULL;
 
 
-	
+
 	mux.unlock();
 
 }
@@ -136,7 +138,7 @@ void Session::Clear()
 {
 	waitQuitSignal = true;
 	mux.lock();
-	
+
 	if (isExit)
 	{
 		mux.unlock();
@@ -161,12 +163,15 @@ void Session::Clear()
 		//释放并置零
 		avio_context_free(&avio);
 	}
-	
+
+#ifdef USE_DECODER
 	if (decode)
 	{
 		delete decode;
 		decode = NULL;
 	}
+#endif // USE_DECODER
+	
 
 	videoStreamIndex = audioStreamIndex = -1;
 	mux.unlock();
@@ -175,7 +180,7 @@ void Session::Clear()
 	while (isInReadPacketThread)
 		Tools::Get()->Sleep(1);
 
-	
+
 
 	isRuning = false;
 }
@@ -280,7 +285,7 @@ void Session::ProbeInputBuffer()
 	//创建 AVIOContext， 使用avio_context_free()释放并置零, readBuff释放用av_free(avio->buffer) 不要定义全局的变量存储，释放全局的会出错
 	if (avio)
 	{
-		
+
 		cout << "严重错误 avio 存在" << endl;
 		isRuning = false;
 		isDemuxing = false;
@@ -290,7 +295,7 @@ void Session::ProbeInputBuffer()
 	avio = avio_alloc_context(readBuff, BUFF_SIZE, 0, this, ReadPacket, NULL, NULL);
 	if (!avio)
 	{
-		
+
 		StreamDecoder::Get()->PushLog2Net(Warning, "avio_alloc_context failed!");
 		isRuning = false;
 		isDemuxing = false;
@@ -298,7 +303,7 @@ void Session::ProbeInputBuffer()
 		return;
 	}
 	afc->pb = avio;
-	
+
 	//The caller has supplied a custom AVIOContext, don't avio_close() it.
 	//AVFMT_FLAG_CUSTOM_IO
 	afc->flags = AVFMT_FLAG_CUSTOM_IO;
@@ -308,7 +313,7 @@ void Session::ProbeInputBuffer()
 	//isProbeBuffer = false;
 	if (ret < 0)
 	{
-		
+
 		StreamDecoder::Get()->PushLog2Net(Warning, Tools::Get()->av_strerror2(ret));
 		isRuning = false;
 		isDemuxing = false;
@@ -327,19 +332,19 @@ void Session::ProbeInputBuffer()
 
 void Session::Demux()
 {
-
-	//AVDictionary *opts = NULL;
+	mux.lock();
+	AVDictionary *opts = NULL;
 	//设置rtsp流已tcp协议打开
-	//av_dict_set(&opts, "rtsp_transport", "tcp", 0);
+	av_dict_set(&opts, "rtsp_transport", "tcp", 0);
 	//网络延时时间
-	//av_dict_set(&opts, "max_delay", "500", 0);
+	av_dict_set(&opts, "max_delay", "500", 0);
 	//av_dict_set_int(&opts, "stimeout", 5000, 0);
 
-	int ret = avformat_open_input(&afc, url, NULL, NULL);
-	//av_dict_free(&opts);
+	int ret = avformat_open_input(&afc, url, NULL, &opts);
+	av_dict_free(&opts);
 	if (ret < 0)
 	{
-		
+		mux.unlock();
 		StreamDecoder::Get()->PushLog2Net(Warning, "avformat_open_input failed!");
 		isRuning = false;
 		isDemuxing = false;
@@ -351,7 +356,7 @@ void Session::Demux()
 	ret = avformat_find_stream_info(afc, NULL);
 	if (ret < 0)
 	{
-		
+		mux.unlock();
 		StreamDecoder::Get()->PushLog2Net(Warning, Tools::Get()->av_strerror2(ret));
 		isRuning = false;
 		isDemuxing = false;
@@ -365,45 +370,52 @@ void Session::Demux()
 	if (afc->nb_streams >= 2)
 	{
 		audioStreamIndex = av_find_best_stream(afc, AVMEDIA_TYPE_AUDIO, -1, -1, NULL, 0);
-		if(audioStreamIndex != -1)
+		if (audioStreamIndex != -1)
 			StreamDecoder::Get()->PushLog2Net(Warning, "this stream is containt AudioStream");
 	}
 
 	videoStreamIndex = av_find_best_stream(afc, AVMEDIA_TYPE_VIDEO, -1, -1, NULL, 0);
 
 
-	/*AVCodecParameters *para = avcodec_parameters_alloc();
-	avcodec_parameters_copy(para, afc->streams[videoStreamIndex]->codecpar);*/
-	width = afc->streams[videoStreamIndex]->codecpar->width;
-	height = afc->streams[videoStreamIndex]->codecpar->height;
+	AVCodecParameters *para = avcodec_parameters_alloc();
+	avcodec_parameters_copy(para, afc->streams[videoStreamIndex]->codecpar);
+	width = para->width;
+	height = para->height;
 	if (width > height) isLandscape = true;
+
+#ifdef USE_DECODER
 	if (decode)
 	{
-	
+		mux.unlock();
 		cout << "严重错误 decode 存在" << endl;
 		isRuning = false;
 		isDemuxing = false;
 		Clear();
 	}
 	decode = new Decode(this);
-	if (decode && !decode->Open(afc->streams[videoStreamIndex]->codecpar))
+	if (decode && !decode->Open(para))
 	{
-	
+		mux.unlock();
 		StreamDecoder::Get()->PushLog2Net(Warning, "open decode failed!");
 		isRuning = false;
 		isDemuxing = false;
 		Clear();
 		return;
 	}
+#endif // USE_DECODER
 
+	
+	mux.unlock();
 	isDemuxing = false;
 	StreamDecoder::Get()->PushLog2Net(Info, "Demux Success!");
+	StreamDecoder::Get()->PushEvent2Net(playerID, DemuxSuccess);
 
+	BeginDecode();
 }
 
 void Session::BeginDecode()
 {
-	
+
 	//正在解封装
 	if (isDemuxing)
 	{
@@ -417,6 +429,8 @@ void Session::BeginDecode()
 		return;
 	}
 
+#ifdef USE_DECODER
+
 	if (decode)
 	{
 		if (decode->isRuning)
@@ -428,10 +442,11 @@ void Session::BeginDecode()
 			StreamDecoder::Get()->PushLog2Net(Warning, "Begin decode thread success!");
 			std::thread decode_t(&Decode::run, decode);
 			decode_t.detach();
-			
+
 		}
 	}
-	
+#endif // USE_DECODER
+
 	if (isInReadPacketThread)
 	{
 		StreamDecoder::Get()->PushLog2Net(Warning, "Read packet thread is runing!");
@@ -530,7 +545,7 @@ void Session::SetOption(int optionType, int value)
 	{
 		demuxTimeout = value;
 	}
-	else if((OptionType)optionType == OptionType::PushFrameInterval)
+	else if ((OptionType)optionType == OptionType::PushFrameInterval)
 	{
 		pushFrameInterval = value;
 	}
@@ -567,7 +582,7 @@ void Session::run()
 			break;
 		}
 		ret = av_read_frame(afc, pkt);
-		//cout << "read a frame" << endl;
+		cout << "read a frame" << endl;
 		if (ret != 0)
 		{
 			mux.unlock();
@@ -587,6 +602,7 @@ void Session::run()
 			Tools::Get()->Sleep(1);
 			continue;
 		}
+
 		//读取到一个AVPacket
 		if (decode)
 		{

@@ -1,6 +1,6 @@
 @echo off
 ::设置FFMpeg路径
-set dllpath=C:\FFMPEG
+set dllpath=C:\Library\FFMPEG
 if not exist avcodec-57.dll (copy %dllpath%\avcodec-57.dll .\)
 if not exist avdevice-57.dll (copy %dllpath%\avdevice-57.dll .\)
 if not exist avfilter-6.dll (copy %dllpath%\avfilter-6.dll .\)

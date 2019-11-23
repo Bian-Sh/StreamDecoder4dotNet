@@ -15,7 +15,10 @@ namespace SStreamDecoder
         AlwaysWaitBitStream,
         WaitBitStreamTimeout,
     }
-
+    public enum EType
+    {
+        DemuxSuccess = 1,
+    }
     public struct DotNetFrame
     {
         public int playerID;
@@ -44,7 +47,7 @@ namespace SStreamDecoder
         /// </summary>
         /// <param name="pfun"></param>
         /// <param name="pDraw"></param>
-        private delegate void StreamDecoderInitialize(DLL_Debug_Log pfun, DLL_Draw_Frame pDraw);
+        private delegate void StreamDecoderInitialize(DLL_Debug_Log pLog, DLL_Draw_Frame pDraw, DLL_Decode_Event pEvent);
 
         /// <summary>
         /// 注销StreamDecoder委托
@@ -138,9 +141,18 @@ namespace SStreamDecoder
         [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
         private delegate void DLL_Draw_Frame(DotNetFrame frame);
 
+        /// <summary>
+        /// C++ 回调函数 解码时间 委托
+        /// </summary>
+        /// <param name="playerID"></param>
+        /// <param name="eventType"></param>
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+        private delegate void DLL_Decode_Event(int playerID, int eventType);
+
 
         public static event Action<int, string> logEvent;
         public static event Action<DotNetFrame> drawEvent;
+        public static event Action<int, EType> decodeEvent;
 
         #region 加载卸载动态链接库
         public static bool LoadLibrary()
@@ -201,7 +213,8 @@ namespace SStreamDecoder
             isInit = true;
             DLL_Debug_Log log = StreamDecoderLog;
             DLL_Draw_Frame draw = OnDrawFrame;
-            Native.Invoke<StreamDecoderInitialize>(streamDecoder_dll, log, draw);
+            DLL_Decode_Event ev = OnEvent;
+            Native.Invoke<StreamDecoderInitialize>(streamDecoder_dll, log, draw, ev);
         }
 
         /// <summary>
@@ -238,6 +251,13 @@ namespace SStreamDecoder
         {
             if (drawEvent == null) return;
             drawEvent(frame);
+        }
+
+        private static void OnEvent(int playerID, int et)
+        {
+            
+            if (decodeEvent == null) return;
+            decodeEvent(playerID, (EType)et);
         }
 
 

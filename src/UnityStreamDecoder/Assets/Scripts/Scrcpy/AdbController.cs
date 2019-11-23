@@ -8,7 +8,7 @@ public class AdbController
 {
 
     private string deviceLocal = "/sdcard/scrcpy-server.jar";
-
+    public string adbPath;
     /// <summary>
     /// 获取设备信息
     /// </summary>
@@ -333,6 +333,6 @@ public class AdbController
     /// <param name="cb"></param>
     private void Execute(string cmd, Action<Process, Process.ExecuteState> cb)
     {
-        new Process(QScrcpy.Instance.SetEvent).Execute("adb", cmd, cb);
+        new Process(QScrcpy.Instance.SetEvent).Execute(adbPath, cmd, cb);
     }
 }

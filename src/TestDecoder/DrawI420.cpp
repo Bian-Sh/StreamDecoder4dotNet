@@ -3,7 +3,6 @@
 #include <QDebug>
 #include <QThread>
 #include "Session.h"
-#include "DecodeEvent.h"
 #include <QCoreApplication>
 #include "StreamDecoder.h"
 #include "Packet.h"

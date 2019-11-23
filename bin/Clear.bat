@@ -22,3 +22,8 @@ if exist Qt5OpenGL.dll (del Qt5OpenGL.dll)
 if exist Qt5OpenGLd.dll (del Qt5OpenGLd.dll)
 if exist Qt5Widgets.dll (del Qt5Widgets.dll)
 if exist Qt5Widgetsd.dll (del Qt5Widgetsd.dll)
+
+if exist adb.exe (del adb.exe)
+if exist AdbWinApi.dll (del AdbWinApi.dll)
+if exist AdbWinUsbApi.dll (del AdbWinUsbApi.dll)
+if exist scrcpy-server.jar (del scrcpy-server.jar)

@@ -8,6 +8,7 @@
 
 
 void OnDraw(struct DotNetFrame* frame);
+void OnEvent(int playerID, int eventType);
 class H264Decoder : public QWidget
 {
 	Q_OBJECT
@@ -17,6 +18,7 @@ public:
 
 	static H264Decoder* self;
 	void OnDrawFrame(DotNetFrame* frame);
+	void OnEventPkt(int playerID, int eventType);
 public slots :
 	void on_CreateSession_clicked();
 	void on_DeleteSession_clicked();

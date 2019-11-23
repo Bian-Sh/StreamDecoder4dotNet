@@ -7,6 +7,7 @@ using System.Net.Sockets;
 using System.Text.RegularExpressions;
 using UnityEngine;
 using UnityEngine.UI;
+using SStreamDecoder;
 
 public class QScrcpy : MonoBehaviour
 {
@@ -23,6 +24,8 @@ public class QScrcpy : MonoBehaviour
     private AdbController adbController;
 
     private Socket tcpServer;
+
+    private StreamPlayer player;
     public static QScrcpy Instance
     {
         get { return instance; }
@@ -35,11 +38,24 @@ public class QScrcpy : MonoBehaviour
         adbController = new AdbController();
         instance = this;
     }
-    private FileStream fs;
+    //private FileStream fs;
     // Use this for initialization
     void Start()
     {
-        fs = new FileStream("D:/device.h264", FileMode.CreateNew);
+#if UNITY_EDITOR
+        StreamDecoder.dllPath = Application.streamingAssetsPath + "/../../../../bin/";
+#else
+        StreamDecoder.dllPath = Application.streamingAssetsPath + "/../../../../../bin/";
+#endif
+        adbController.adbPath = StreamDecoder.dllPath + "adb.exe";
+        //fs = new FileStream("D:/device.h264", FileMode.CreateNew);
+        StreamDecoder.LoadLibrary();
+        player = StreamPlayer.CreateSession(2, 1000000, null, onDraw);
+        player.SetOption(OptionType.DemuxTimeout, 5000);
+        player.SetOption(OptionType.PushFrameInterval, 10);
+        //player.SetOption(OptionType.WaitBitStreamTimeout, waitBitStreamTimeout);
+        player.SetOption(OptionType.AlwaysWaitBitStream, 1);
+        mat = rimg.material;
         ADBStart();
     }
     private void OnDestroy()
@@ -53,10 +69,37 @@ public class QScrcpy : MonoBehaviour
         //        Debug.Log("关闭client");
         //    }
         //}
-        fs.Close();
+        //fs.Close();
+        StreamPlayer.DeleteSession(ref player);
+        StreamDecoder.FreeLibrary();
         ADBKill();
 
         isExit = true;
+    }
+    public RawImage rimg;
+    private Material mat;
+    private int width = 0;
+    private int height = 0;
+    private Texture2D ytex, utex, vtex;
+    void onDraw(DotNetFrame frame)
+    {
+        if (width != frame.width || height != frame.height)
+        {
+            width = frame.width;
+            height = frame.height;
+            ytex = new Texture2D(width, height, TextureFormat.R8, false);
+            utex = new Texture2D(width / 2, height / 2, TextureFormat.R8, false);
+            vtex = new Texture2D(width / 2, height / 2, TextureFormat.R8, false);
+        }
+        ytex.LoadRawTextureData(frame.frame_y, width * height);
+        ytex.Apply();
+        utex.LoadRawTextureData(frame.frame_u, width * height / 4);
+        utex.Apply();
+        vtex.LoadRawTextureData(frame.frame_v, width * height / 4);
+        vtex.Apply();
+        mat.SetTexture("_YTex", ytex);
+        mat.SetTexture("_UTex", utex);
+        mat.SetTexture("_VTex", vtex);
     }
     bool isFirst = true;
 
@@ -64,6 +107,7 @@ public class QScrcpy : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
+
         if (UpdateEvent != null)
             UpdateEvent();
 
@@ -80,17 +124,22 @@ public class QScrcpy : MonoBehaviour
                 Debug.Log("width:" + BitConverter.ToUInt16(new byte[2] { ba[65], ba[64] }, 0));
                 Debug.Log("height:" + BitConverter.ToInt16(new byte[2] { ba[67], ba[66] }, 0));
                 dataCache.RemoveRange(0, 64);
+                player.TryBitStreamDemux();
             }
            
         }
 
         lock(dataCache)
         {
+            //byte[] arr = dataCache.ToArray();
+            //fs.Write(arr, 0, arr.Length);
             byte[] arr = dataCache.ToArray();
-            fs.Write(arr, 0, arr.Length);
-            dataCache.Clear();
+            int size = Mathf.Min(player.GetCacheFreeSize(), arr.Length);
+            player.PushStream2Cache(arr, size);
+            dataCache.RemoveRange(0, size);
         }
         
+      
     }
     public void SetEvent(bool isAdd, System.Action ac)
     {
@@ -257,7 +306,7 @@ public class QScrcpy : MonoBehaviour
 
     private void StartQScrcpyServer()
     {
-        adbController.StartQScrcpyServer(deviceSerialInput.text, 0, 20000000);
+        adbController.StartQScrcpyServer(deviceSerialInput.text, 0, 10000000);
     }
 
 }

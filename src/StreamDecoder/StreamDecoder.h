@@ -1,6 +1,7 @@
 #pragma once
 #include <mutex>
 #include <list>
+
 #ifdef __cplusplus
 #define EXTERNC extern "C"
 #else
@@ -22,9 +23,10 @@ enum LogLevel
 struct LogPacket;
 struct Frame;
 struct DotNetFrame;
+struct DEvent;
 typedef void(*PLog)(int level, char* log);
 typedef void(*PDrawFrame)(DotNetFrame* frame);
-
+typedef void(*PEvent)(int playerID, int eventType);
 class StreamDecoder
 {
 	
@@ -38,9 +40,7 @@ public:
 	}
 
 	//初始化StreamDecoder 设置日志回调函数
-	void StreamDecoderInitialize(PLog logfunc, PDrawFrame drawfunc);
-
-	//void SetPushFrameInterval(int wait);
+	void StreamDecoderInitialize(PLog logfunc, PDrawFrame drawfunc, PEvent ev);
 
 	//注销StreamDecoder 预留函数
 	void StreamDecoderDeInitialize();
@@ -75,11 +75,12 @@ public:
 	void PushLog2Net(LogLevel level, char* log);
 	//
 	void PushFrame2Net(Frame* frame);
+
+	void PushEvent2Net(int playerID, int eventType);
+
 	//主线程更新 物理时间
 	void FixedUpdate();
 
-//public:
-//	int callTime = 0;
 private:
 	StreamDecoder();
 	//调用回调函数（主线程同步）
@@ -87,6 +88,7 @@ private:
 
 	void DrawFrame2dotNet(Frame* frame);
 
+	void Event2Net(DEvent* ev);
 private:
 	std::mutex logMux;
 	PLog Log = NULL;
@@ -94,14 +96,17 @@ private:
 	std::mutex frameMux;
 	PDrawFrame DrawFrame = NULL;
 
+	std::mutex eventMux;
+	PEvent Event = NULL;
+
 	std::list<LogPacket*> logpackets;
 	std::list<Frame*> framepackets;
-
+	std::list<DEvent*> eventpackets;
 	//int waitPushFrameTime = 0;
 };
 
 //Global
-HEAD void _cdecl StreamDecoderInitialize(PLog logfunc, PDrawFrame drawfunc);
+HEAD void _cdecl StreamDecoderInitialize(PLog logfunc, PDrawFrame drawfunc, PEvent ev);
 //Global
 HEAD void _cdecl StreamDecoderDeInitialize();
 //Global
@@ -123,8 +128,4 @@ HEAD int _cdecl GetCacheFreeSize(void* session);
 
 HEAD bool _cdecl PushStream2Cache(void* session, char* data, int len);
 
-//HEAD void _cdecl SetPushFrameInterval(int wait);
-
 HEAD void _cdecl SetOption(void* session, int optionType, int value);
-
-//HEAD int _cdecl Test();

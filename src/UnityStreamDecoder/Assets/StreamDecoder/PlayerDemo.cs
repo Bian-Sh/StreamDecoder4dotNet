@@ -77,11 +77,19 @@ public class PlayerDemo : MonoBehaviour
     {
         if (player != null) return;
         //唯一ID
-        player = StreamPlayer.CreateSession(1, bitStreamCacheSize, OnDrawFrame);
+        player = StreamPlayer.CreateSession(1, bitStreamCacheSize, OnEvent, OnDrawFrame);
         player.SetOption(OptionType.DemuxTimeout, demuxTimeout);
         player.SetOption(OptionType.PushFrameInterval, pushFrameInterval);
         player.SetOption(OptionType.WaitBitStreamTimeout, waitBitStreamTimeout);
         player.SetOption(OptionType.AlwaysWaitBitStream, alwaysWaitBitStream ? 1 : 0);
+    }
+    public void OnEvent(EType et)
+    {
+        if(et == EType.DemuxSuccess)
+        {
+            Debug.Log("Demux Success");
+            player.BeginDecode();
+        }
     }
     public void DeleteSession()
     {

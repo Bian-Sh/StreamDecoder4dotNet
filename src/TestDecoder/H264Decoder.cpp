@@ -13,7 +13,7 @@
 #include <QHostAddress>
 #pragma comment(lib, "StreamDecoder.lib")
 
-#define USE_WIDGET
+#define USE_WIDGET_
 
 H264Decoder* H264Decoder::self = NULL;
 
@@ -34,6 +34,11 @@ void H264Decoder::OnDrawFrame(DotNetFrame* frame)
 
 }
 
+void H264Decoder::OnEventPkt(int playerID, int eventType)
+{
+	//BeginDecode(session);
+}
+
 struct test
 {
 	char* name;
@@ -47,7 +52,7 @@ H264Decoder::H264Decoder(QWidget *parent)
 	ui.setupUi(this);
 	ui.filePath->setText(filePath);
 	if (self == NULL) self = this;
-	StreamDecoderInitialize(NULL, &OnDraw);
+	StreamDecoderInitialize(NULL, &OnDraw, &OnEvent);
 
 #ifdef USE_WIDGET
 	if (canvas == NULL)
@@ -113,12 +118,17 @@ void OnDraw(DotNetFrame* frame)
 	H264Decoder::self->OnDrawFrame(frame);
 }
 
+void OnEvent(int playerID, int eventType)
+{
+	H264Decoder::self->OnEventPkt(playerID, eventType);
+}
+
 void H264Decoder::on_CreateSession_clicked()
 {
 	if (session) return;
 	session = CreateSession(1, 1000000);
 	SetOption(session, DemuxTimeout, 5000);
-	SetOption(session, PushFrameInterval, 20);
+	SetOption(session, PushFrameInterval, 0);
 	SetOption(session, WaitBitStreamTimeout, 1000);
 	SetOption(session, AlwaysWaitBitStream, 1);
 }
@@ -144,7 +154,7 @@ void H264Decoder::on_TryNetStreamDemux_clicked()
 	//TryNetStreamDemux(session, "rtmp://192.168.30.135/live/test");
 	//TryNetStreamDemux(session, "rtmp://202.69.69.180:443/webcast/bshdlive-pc");
 	//TryNetStreamDemux(session, "rtmp://58.200.131.2:1935/livetv/hunantv");
-	TryNetStreamDemux(session, "rtmp://192.168.30.135/live/test2");
+	TryNetStreamDemux(session, "rtmp://192.168.0.104/live/test");
 }
 
 void H264Decoder::on_BeginDecode_clicked()
@@ -206,7 +216,7 @@ void H264Decoder::mrun()
 	qDebug() << "read stream thread start";
 
 	if (!fp)
-		fp = fopen(filePath.toUtf8().data(), "rb");
+		fp = fopen(filePath.toLatin1(), "rb");
 
 	if (!fp)
 	{
@@ -215,7 +225,7 @@ void H264Decoder::mrun()
 	}
 
 	if (!readBuff)
-		readBuff = new char[1024];
+		readBuff = new char[10240];
 
 	//QCryptographicHash hash(QCryptographicHash::Md5);
 	int s = 0;
@@ -223,7 +233,7 @@ void H264Decoder::mrun()
 	{
 		if (!session || !fp || feof(fp)) break;
 
-		int len = fread(readBuff, 1, 1024, fp);
+		int len = fread(readBuff, 1, 10240, fp);
 		if (len <= 0)
 		{
 			qDebug() << "read ok";

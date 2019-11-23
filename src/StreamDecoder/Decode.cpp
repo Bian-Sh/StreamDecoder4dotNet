@@ -29,7 +29,7 @@ bool Decode::Open(AVCodecParameters *para)
 	if (!avcodec)
 	{
 		cout << "can't find video AVCodec: id=" << para->codec_id << endl;
-		//avcodec_parameters_free(&para);
+		avcodec_parameters_free(&para);
 		return false;
 	}
 	mux.lock();
@@ -39,7 +39,7 @@ bool Decode::Open(AVCodecParameters *para)
 	//复制解码器上下文参数
 	avcodec_parameters_to_context(codec, para);
 	//释放参数
-	//avcodec_parameters_free(&para);
+	avcodec_parameters_free(&para);
 	//打开解码器
 	codec->thread_count = CODEC_THREAD_COUNT;
 	int ret = avcodec_open2(codec, NULL, NULL);

@@ -162,3 +162,18 @@ enum OptionType
 	AlwaysWaitBitStream,
 	WaitBitStreamTimeout,
 };
+
+enum EventType
+{
+	DemuxSuccess = 1,
+};
+struct DEvent
+{
+	int playerID;
+	int eventType;
+	DEvent(int playerID, int eventType)
+	{
+		this->playerID = playerID;
+		this->eventType = eventType;
+	}
+};
