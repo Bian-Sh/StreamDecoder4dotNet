@@ -124,7 +124,7 @@ void H264Decoder::on_CreateSession_clicked()
 	SetOption(session, DemuxTimeout, 5000);
 	SetOption(session, PushFrameInterval, 0);
 	SetOption(session, WaitBitStreamTimeout, 1000);
-	SetOption(session, AlwaysWaitBitStream, 1);
+	SetOption(session, AlwaysWaitBitStream, false);
 }
 
 void H264Decoder::on_DeleteSession_clicked()

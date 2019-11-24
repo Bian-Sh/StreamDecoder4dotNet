@@ -2,11 +2,13 @@
 #include <mutex>
 struct AVIOContext;
 struct AVFormatContext;
+struct AVCodecParameters;
 class SCharList;
+class Session;
 class Demux
 {
 public:
-	Demux(int cacheSize, int demuxTimeout, bool alwaysWaitBitStream, int waitBitStreamTimeout);
+	Demux(Session* session, int cacheSize, int demuxTimeout, bool alwaysWaitBitStream, int waitBitStreamTimeout);
 	~Demux();
 
 	//多线程安全
@@ -14,6 +16,12 @@ public:
 
 	bool PushStream2Cache(char* data, int len);
 
+	void Start();
+
+	int GetCacheFreeSize();
+
+	AVCodecParameters* GetVideoPara();
+	AVCodecParameters* GetAudioPara();
 public:
 
 	SCharList *dataCache = NULL;
@@ -39,6 +47,8 @@ private:
 
 	void DemuxSuccess();
 
+	void ReadAVPacket();
+
 private:
 	//需要清理
 	AVIOContext* avio = NULL;
@@ -58,8 +68,16 @@ private:
 	bool demuxed = false;
 	//和isDemuxing基本一致，生命周期不同
 	bool isInOpenFunc = false;
+	bool isInReadAVPacketFunc = false;
+	//标记流是否中断，中断需要重新解封装
+	bool isInterruptRead = false;
 
 	int dataCacheSize = 1000000;
+
+	Session* session = NULL;
+
+	int videoStreamIndex = -1;
+	int audioStreamIndex = -1;
 };
 //url
 //avio

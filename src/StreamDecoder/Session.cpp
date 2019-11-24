@@ -61,10 +61,15 @@ bool Session::PushStream2Cache(char* data, int len)
 }
 
 
+void Session::OnReadOneAVPacket(AVPacket* packet, bool isAudio)
+{
+	av_packet_free(&packet);
+}
+
 //尝试打开网络流解封装线程
 void Session::TryStreamDemux(char* url)
 {
-	if(!demux) demux = new Demux(dataCacheSize, demuxTimeout, alwaysWaitBitStream, waitBitStreamTimeout);
+	if(!demux) demux = new Demux(this, dataCacheSize, demuxTimeout, alwaysWaitBitStream, waitBitStreamTimeout);
 	std::thread t(&Session::OpenDemuxThread, this, url);
 	t.detach();
 }
@@ -80,54 +85,12 @@ void Session::OpenDemuxThread(char* url)
 
 void Session::BeginDecode()
 {
-
-	//正在解封装
-	if (isDemuxing)
+	if (!demux)
 	{
-		StreamDecoder::Get()->PushLog2Net(Warning, "Please wait demuxing!");
+		cout << "解封装器不存在" << endl;
 		return;
 	}
-	//没有正确解封装
-	if (!isRuning)
-	{
-		StreamDecoder::Get()->PushLog2Net(Warning, "Need demux!");
-		return;
-	}
-
-#ifdef USE_DECODER
-
-	if (decode)
-	{
-		if (decode->isRuning)
-		{
-			StreamDecoder::Get()->PushLog2Net(Warning, "Decoder thread is runing!");
-		}
-		else
-		{
-			StreamDecoder::Get()->PushLog2Net(Warning, "Begin decode thread success!");
-			std::thread decode_t(&Decode::run, decode);
-			decode_t.detach();
-
-		}
-	}
-#endif // USE_DECODER
-
-	if (isInReadPacketThread)
-	{
-		StreamDecoder::Get()->PushLog2Net(Warning, "Read packet thread is runing!");
-		return;
-	}
-
-	if (isInterruptRead)
-	{
-		StreamDecoder::Get()->PushLog2Net(Warning, "Read packet thread is interrupt!");
-	}
-	else
-	{
-		StreamDecoder::Get()->PushLog2Net(Warning, "Begin read packet thread!");
-		std::thread t(&Session::run, this);
-		t.detach();
-	}
+	demux->Start();
 }
 
 void Session::StopDecode()
@@ -139,16 +102,17 @@ void Session::StopDecode()
 
 int Session::GetCacheFreeSize()
 {
+	if (demux) return demux->GetCacheFreeSize();
 	return 0;
 }
 
-void Session::OnDecodeOnFrame(AVFrame *frame)
+void Session::OnDecodeOneAVFrame(AVFrame *frame)
 {
-	if (isExit)
+	/*if (isExit)
 	{
 		av_frame_free(&frame);
 		return;
-	}
+	}*/
 
 	int width = frame->width;
 	int height = frame->height;
@@ -221,67 +185,5 @@ void Session::SetOption(int optionType, int value)
 
 void Session::run()
 {
-//	isInReadPacketThread = true;
-//	while (!isExit)
-//	{
-//
-//		mux.lock();
-//		if (!afc)
-//		{
-//			mux.unlock();
-//			break;
-//		}
-//
-//
-//		AVPacket* pkt = av_packet_alloc();
-//		int ret = 0;
-//		if (!afc)
-//		{
-//			cout << "afc 已经释放" << endl;
-//			mux.unlock();
-//			break;
-//		}
-//		ret = av_read_frame(afc, pkt);
-//		//cout << "read a frame" << endl;
-//		if (ret != 0)
-//		{
-//			mux.unlock();
-//			//读取到结尾
-//			cout << "read end!!" << endl;
-//			av_packet_free(&pkt);
-//			isInterruptRead = true;
-//			//cout << Tools::Get()->av_strerror2(ret) << endl;
-//			StreamDecoder::Get()->PushLog2Net(Warning, Tools::Get()->av_strerror2(ret));
-//			break;
-//		}
-//		//丢弃音频
-//		if (audioStreamIndex >= 0 && pkt->stream_index == audioStreamIndex)
-//		{
-//			mux.unlock();
-//			av_packet_free(&pkt);
-//			Tools::Get()->Sleep(1);
-//			continue;
-//		}
-//
-//		//读取到一个AVPacket
-//#ifdef USE_DECODER
-//		if (decode)
-//		{
-//			decode->Push(pkt);
-//		}
-//		else
-//		{
-//			av_packet_free(&pkt);
-//		}
-//#else
-//		av_packet_free(&pkt);
-//#endif
-//	
-//		mux.unlock();
-//		//av_packet_free(&pkt);
-//		Tools::Get()->Sleep(1);
-//
-//	}
-//	cout << "Session Thread Quit" << endl;
-//	isInReadPacketThread = false;
+
 }

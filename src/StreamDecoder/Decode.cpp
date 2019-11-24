@@ -133,7 +133,7 @@ void Decode::run()
 			//处理解码出来的数据
 			if (session)
 			{
-				session->OnDecodeOnFrame(frame);
+				session->OnDecodeOneAVFrame(frame);
 			}
 			Tools::Get()->Sleep(1);
 		}

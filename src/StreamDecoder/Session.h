@@ -3,10 +3,8 @@
 #include <mutex>
 class Demux;
 class Decode;
-class SCharList;
-struct AVIOContext;
-struct AVFormatContext;
 struct AVFrame;
+struct AVPacket;
 
 class Session
 {
@@ -27,8 +25,9 @@ public:
 	//添加数据流
 	bool PushStream2Cache(char* data, int len);
 
+	void OnReadOneAVPacket(AVPacket* packet, bool isAudio);
 	//解码完成后Decode调用
-	void OnDecodeOnFrame(AVFrame *frame);
+	void OnDecodeOneAVFrame(AVFrame *frame);
 	
 
 	//设置选项 
@@ -38,25 +37,21 @@ public:
 	std::mutex dataCacheMux;
 
 	//退出信号，true 退出线程
-	bool isExit = false;
+	//bool isExit = false;
 
 	std::mutex mux;
-	
 
-
-
-	//是否处于Demux状态 重要的作用在ReadPacket的回调函数中
-	bool isDemuxing = false;
-	//bool isStreamInfoFinding = false;
-
-	//解封装前的时间戳ns
-	int64_t startTime = 0;
 
 	bool waitQuitSignal = false;
 
 private:
+	void OpenDemuxThread(char* url);
 
-
+	//清理数据
+	void Clear();
+	//关闭Session
+	void Close();
+private:
 	Demux* demux = NULL;
 
 	int dataCacheSize = 1000000;
@@ -68,18 +63,11 @@ private:
 	int waitBitStreamTimeout = 1000;
 
 #pragma region 老
-	void OpenDemuxThread(char* url);
+	
 
 	//线程函数
 	void run();
-	//清理数据
-	void Clear();
-	//关闭Session
-	void Close();
-
-
-	int videoStreamIndex = -1;
-	int audioStreamIndex = -1;
+	
 	//QMutex yuvMux;
 
 	//需要清理

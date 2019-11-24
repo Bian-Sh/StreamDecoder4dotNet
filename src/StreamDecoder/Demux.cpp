@@ -3,6 +3,7 @@
 #include "StreamDecoder.h"
 #include "Tools.h"
 #include "Packet.h"
+#include "Session.h"
 extern "C"
 {
 #include <libavcodec/avcodec.h>
@@ -13,12 +14,13 @@ extern "C"
 #define BUFF_SIZE 65536
 #define  URL_LENGTH 1280
 using namespace  std;
-Demux::Demux(int cacheSize, int demuxTimeout, bool alwaysWaitBitStream, int waitBitStreamTimeout)
+Demux::Demux(Session* session, int cacheSize, int demuxTimeout, bool alwaysWaitBitStream, int waitBitStreamTimeout)
 {
+	this->session = session;
 	this->dataCacheSize = cacheSize;
 	this->demuxTimeout = demuxTimeout;
 	this->alwaysWaitBitStream = alwaysWaitBitStream;
-	this->alwaysWaitBitStream = waitBitStreamTimeout;
+	this->waitBitStreamTimeout = waitBitStreamTimeout;
 	//初始化 视频流地址 数组
 	url = new char[URL_LENGTH];
 	memset(url, 0, URL_LENGTH);
@@ -41,7 +43,7 @@ void Demux::Clear()
 		Tools::Get()->Sleep(1);
 	}
 	mux.lock();
-	
+
 	if (afc)
 	{
 		//释放并置零 内部会调用avformat_free_context
@@ -58,16 +60,19 @@ void Demux::Clear()
 		avio = NULL;
 	}
 
-	if(dataCache)
+	if (dataCache)
 		dataCache->Clear();
 
 	mux.unlock();
+
+	audioStreamIndex = -1;
+	videoStreamIndex = -1;
 }
 
 //析构调用
 void Demux::Close()
 {
-	
+
 	Clear();
 	mux.lock();
 	delete url;
@@ -99,6 +104,7 @@ bool Demux::Open(char* url)
 	//进入到解封装
 	isDemuxing = true;
 	quitSignal = false;
+	isInterruptRead = false;
 	dataCache->Clear();
 
 	mux.lock();
@@ -126,7 +132,7 @@ bool Demux::Open(char* url)
 	if (url == NULL)
 	{
 		memset(this->url, 0, URL_LENGTH);
-	
+
 		isSuccess = ProbeInputBuffer();
 
 	}
@@ -138,7 +144,7 @@ bool Demux::Open(char* url)
 		afc->interrupt_callback.opaque = this;
 		afc->interrupt_callback.callback = interrupt_cb;
 		StreamDecoder::Get()->PushLog2Net(Info, this->url);
-		
+
 		isSuccess = BeginDemux();
 	}
 
@@ -179,6 +185,59 @@ bool Demux::PushStream2Cache(char* data, int len)
 	return true;
 }
 
+void Demux::Start()
+{
+	if (!demuxed)
+	{
+		cout << "Need demux!" << endl;
+		return;
+	}
+	if (isInReadAVPacketFunc)
+	{
+		cout << "Decoder is run, please wait!" << endl;
+		return;
+	}
+	if (isInterruptRead)
+	{
+		cout << "read AVPacket is interrupt, please redemux" << endl;
+		return;
+	}
+	std::thread t(&Demux::ReadAVPacket, this);
+	t.detach();
+}
+
+int Demux::GetCacheFreeSize()
+{
+	if (dataCache) return dataCacheSize - dataCache->size();
+	return 0;
+}
+
+AVCodecParameters* Demux::GetVideoPara()
+{
+	AVCodecParameters *para = NULL;
+	para = avcodec_parameters_alloc();
+	if (videoStreamIndex < 0)
+		return para;
+
+	mux.lock();
+	avcodec_parameters_copy(para, afc->streams[videoStreamIndex]->codecpar);
+	mux.unlock();
+	return para;
+}
+
+AVCodecParameters* Demux::GetAudioPara()
+{
+	AVCodecParameters *para = NULL;
+	para = avcodec_parameters_alloc();
+	if (audioStreamIndex < 0)
+		return para;
+
+	mux.lock();
+	avcodec_parameters_copy(para, afc->streams[audioStreamIndex]->codecpar);
+	mux.unlock();
+	return para;
+}
+
 int Demux::interrupt_cb(void* opaque)
 {
 	Demux* demux = (Demux*)opaque;
@@ -197,6 +256,9 @@ int Demux::read_packet(void *opaque, uint8_t *buf, int buf_size)
 	while (demux->dataCache->size() <= 0)
 	{
 		if (demux->quitSignal) return 0;
+		//等待
+		Tools::Get()->Sleep(1);
+
 		//处于解封装
 		if (demux->isDemuxing)
 		{
@@ -231,8 +293,6 @@ int Demux::read_packet(void *opaque, uint8_t *buf, int buf_size)
 				}
 			}
 		}
-		//等待
-		Tools::Get()->Sleep(1);
 	}
 
 	demux->dataCacheMux.lock();
@@ -322,11 +382,40 @@ bool Demux::BeginDemux()
 	av_dump_format(afc, 0, NULL, 0);
 
 
-	//videoStreamIndex = av_find_best_stream(afc, AVMEDIA_TYPE_VIDEO, -1, -1, NULL, 0);*/
-
-
-	//AVCodecParameters *para = avcodec_parameters_alloc();
-	//avcodec_parameters_copy(para, afc->streams[videoStreamIndex]->codecpar);
+	for (int i = 0; i < afc->nb_streams; i++)
+	{
+		if (afc->streams[i]->codecpar->codec_type == AVMEDIA_TYPE_UNKNOWN)
+		{
+			cout << "Stream index[" << i << "]:" << "AVMEDIA_TYPE_UNKNOWN" << endl;
+		}
+		else if (afc->streams[i]->codecpar->codec_type == AVMEDIA_TYPE_VIDEO)
+		{
+			cout << "Stream index[" << i << "]:" << "AVMEDIA_TYPE_VIDEO" << endl;
+			videoStreamIndex = i;
+		}
+		else if (afc->streams[i]->codecpar->codec_type == AVMEDIA_TYPE_AUDIO)
+		{
+			cout << "Stream index[" << i << "]:" << "AVMEDIA_TYPE_AUDIO" << endl;
+			audioStreamIndex = i;
+		}
+		else if (afc->streams[i]->codecpar->codec_type == AVMEDIA_TYPE_DATA)
+		{
+			cout << "Stream index[" << i << "]:" << "AVMEDIA_TYPE_DATA" << endl;
+		}
+		else if (afc->streams[i]->codecpar->codec_type == AVMEDIA_TYPE_SUBTITLE)
+		{
+			cout << "Stream index[" << i << "]:" << "AVMEDIA_TYPE_SUBTITLE" << endl;
+		}
+		else if (afc->streams[i]->codecpar->codec_type == AVMEDIA_TYPE_ATTACHMENT)
+		{
+			cout << "Stream index[" << i << "]:" << "AVMEDIA_TYPE_ATTACHMENT" << endl;
+		}
+		else if (afc->streams[i]->codecpar->codec_type == AVMEDIA_TYPE_NB)
+		{
+			cout << "Stream index[" << i << "]:" << "AVMEDIA_TYPE_NB" << endl;
+		}
+	}
+	videoStreamIndex = av_find_best_stream(afc, AVMEDIA_TYPE_VIDEO, -1, -1, NULL, 0);
 
 	return true;
 }
@@ -335,4 +424,74 @@ void Demux::DemuxSuccess()
 {
 	//解封装成功
 	demuxed = true;
+}
+
+void Demux::ReadAVPacket()
+{
+	cout << "开始读取帧数据" << endl;
+	isInReadAVPacketFunc = true;
+	while (!quitSignal)
+	{
+
+		mux.lock();
+		if (!afc)
+		{
+			mux.unlock();
+			break;
+		}
+
+
+		AVPacket* pkt = av_packet_alloc();
+
+		int ret = av_read_frame(afc, pkt);
+		//cout << "read a frame" << endl;
+		if (ret != 0)
+		{
+			mux.unlock();
+			//读取到结尾
+			cout << "read end!!" << endl;
+			av_packet_free(&pkt);
+
+			StreamDecoder::Get()->PushLog2Net(Warning, Tools::Get()->av_strerror2(ret));
+			break;
+		}
+		mux.unlock();
+		//读取一帧数据
+
+		//包含音频
+		if (audioStreamIndex != -1)
+		{
+			if (pkt->stream_index == videoStreamIndex)
+			{
+				//读取到一帧视频
+				session->OnReadOneAVPacket(pkt, false);
+			}
+			else if (pkt->stream_index == audioStreamIndex)
+			{
+				//读取到一帧音频
+				session->OnReadOneAVPacket(pkt, true);
+			}
+			else
+			{
+				av_packet_free(&pkt);
+			}
+		}
+		//不包含音频
+		else
+		{
+			if (pkt->stream_index == videoStreamIndex)
+			{
+				//读取到一帧视频
+				session->OnReadOneAVPacket(pkt, false);
+			}
+			else
+			{
+				av_packet_free(&pkt);
+			}
+		}
+		
+	}
+	isInReadAVPacketFunc = false;
+	isInterruptRead = true;
+	cout << "结束读取帧数据" << endl;
 }
