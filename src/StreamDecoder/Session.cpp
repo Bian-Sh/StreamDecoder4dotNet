@@ -341,13 +341,14 @@ void Session::Demux()
 	//av_dict_set_int(&opts, "stimeout", 5000, 0);
 
 	int ret = avformat_open_input(&afc, url, NULL, NULL);
-	isDemuxing = false;
+	
 	//av_dict_free(&opts);
 	if (ret < 0)
 	{
 		mux.unlock();
 		StreamDecoder::Get()->PushLog2Net(Warning, "avformat_open_input failed!");
 		isRuning = false;
+		isDemuxing = false;
 		Clear();
 		return;
 	}
@@ -362,6 +363,7 @@ void Session::Demux()
 		mux.unlock();
 		StreamDecoder::Get()->PushLog2Net(Warning, Tools::Get()->av_strerror2(ret));
 		isRuning = false;
+		isDemuxing = false;
 		Clear();
 		return;
 	}
@@ -398,9 +400,11 @@ void Session::Demux()
 		mux.unlock();
 		StreamDecoder::Get()->PushLog2Net(Warning, "open decode failed!");
 		isRuning = false;
+		isDemuxing = false;
 		Clear();
 		return;
 	}
+	isDemuxing = false;
 #endif // USE_DECODER
 	mux.unlock();
 

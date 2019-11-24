@@ -39,7 +39,14 @@ public class QScrcpy : MonoBehaviour
         instance = this;
         
     }
-    FileStream fs;
+    private FileStream fs;
+
+    private bool isFirst = true;
+    public RawImage rimg;
+    private Material mat;
+    private int width = 0;
+    private int height = 0;
+    private Texture2D ytex, utex, vtex;
     // Use this for initialization
     void Start()
     {
@@ -63,6 +70,51 @@ public class QScrcpy : MonoBehaviour
         mat = rimg.material;
         ADBStart();
     }
+    // Update is called once per frame
+    void Update()
+    {
+
+        if (UpdateEvent != null)
+            UpdateEvent();
+
+        if (dataCache.Count <= 0) return;
+        if (isFirst)
+        {
+            lock (dataCache)
+            {
+                if (dataCache.Count < 68) return;
+                isFirst = false;
+                byte[] ba = dataCache.ToArray();
+                string devicename = System.Text.Encoding.Default.GetString(ba, 0, 64);
+                Debug.Log("device name:" + devicename);
+                Debug.Log("width:" + BitConverter.ToUInt16(new byte[2] { ba[65], ba[64] }, 0));
+                Debug.Log("height:" + BitConverter.ToInt16(new byte[2] { ba[67], ba[66] }, 0));
+                dataCache.RemoveRange(0, 64);
+                player.TryBitStreamDemux();
+            }
+
+        }
+
+        lock (dataCache)
+        {
+            //byte[] arr = dataCache.ToArray();
+            //fs.Write(arr, 0, arr.Length);
+            //dataCache.Clear();
+
+            byte[] arr = dataCache.ToArray();
+            int size = Mathf.Min(player.GetCacheFreeSize(), arr.Length);
+            if (player.PushStream2Cache(arr, size))
+            {
+                if (writeToLocal)
+                {
+                    fs.Write(arr, 0, size);
+                }
+                dataCache.RemoveRange(0, size);
+            }
+        }
+
+
+    }
     private void OnDestroy()
     {
         if(writeToLocal)
@@ -76,11 +128,8 @@ public class QScrcpy : MonoBehaviour
 
         isExit = true;
     }
-    public RawImage rimg;
-    private Material mat;
-    private int width = 0;
-    private int height = 0;
-    private Texture2D ytex, utex, vtex;
+
+  
 
     private void OnEvent(EType et)
     {
@@ -115,56 +164,7 @@ public class QScrcpy : MonoBehaviour
         mat.SetTexture("_UTex", utex);
         mat.SetTexture("_VTex", vtex);
     }
-    bool isFirst = true;
-
-
-    public int _len;
-    // Update is called once per frame
-    void Update()
-    {
-
-        if (UpdateEvent != null)
-            UpdateEvent();
-
-        if (dataCache.Count <= 0) return;
-        if (isFirst)
-        {
-            lock(dataCache)
-            {
-                if (dataCache.Count < 68) return;
-                isFirst = false;
-                byte[] ba = dataCache.ToArray();
-                string devicename = System.Text.Encoding.Default.GetString(ba, 0, 64);
-                Debug.Log("device name:" + devicename);
-                Debug.Log("width:" + BitConverter.ToUInt16(new byte[2] { ba[65], ba[64] }, 0));
-                Debug.Log("height:" + BitConverter.ToInt16(new byte[2] { ba[67], ba[66] }, 0));
-                dataCache.RemoveRange(0, 64);
-                player.TryBitStreamDemux();
-            }
-           
-        }
-
-        lock(dataCache)
-        {
-            //byte[] arr = dataCache.ToArray();
-            //fs.Write(arr, 0, arr.Length);
-            //dataCache.Clear();
-
-            byte[] arr = dataCache.ToArray();
-            int size = Mathf.Min(player.GetCacheFreeSize(), arr.Length);
-            if (player.PushStream2Cache(arr, size))
-            {
-                if(writeToLocal)
-                {
-                    fs.Write(arr, 0, size);
-                }
-                _len += size;
-                dataCache.RemoveRange(0, size);
-            }
-        }
-        
-      
-    }
+   
     public void SetEvent(bool isAdd, System.Action ac)
     {
         if (isAdd) UpdateEvent += ac;
@@ -230,7 +230,7 @@ public class QScrcpy : MonoBehaviour
 
     private void PushQScrcpy()
     {
-        string local = Application.streamingAssetsPath + "/scrcpy-server.jar";
+        string local = StreamDecoder.dllPath + "scrcpy-server.jar";
         adbController.PushQScrcpy(deviceSerialInput.text, local, (isSuccess) =>
         {
             if (isSuccess)
