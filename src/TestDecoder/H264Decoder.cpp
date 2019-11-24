@@ -13,7 +13,7 @@
 #include <QHostAddress>
 #pragma comment(lib, "StreamDecoder.lib")
 
-#define USE_WIDGET
+#define USE_WIDGET_
 
 H264Decoder* H264Decoder::self = NULL;
 
@@ -39,12 +39,6 @@ void H264Decoder::OnEventPkt(int playerID, int eventType)
 	//BeginDecode(session);
 }
 
-struct test
-{
-	char* name;
-	int len;
-	long size;
-};
 
 H264Decoder::H264Decoder(QWidget *parent)
 	: QWidget(parent)
@@ -84,7 +78,7 @@ H264Decoder::H264Decoder(QWidget *parent)
 
 	QTimer *timer = new QTimer(parent);
 	timer->setSingleShot(false);
-	timer->setInterval(1);
+	timer->setInterval(30);
 	//timer->start();
 
 	//on_createsession_clicked();
@@ -94,7 +88,7 @@ H264Decoder::H264Decoder(QWidget *parent)
 		if (b)
 		{
 			on_CreateSession_clicked();
-			//on_trydemux_clicked();
+			on_TryBitStreamDemux_clicked();
 		}
 		else
 		{
@@ -144,7 +138,7 @@ void H264Decoder::on_DeleteSession_clicked()
 void H264Decoder::on_TryBitStreamDemux_clicked()
 {
 	if (!session) return;
-	qDebug() << TryBitStreamDemux(session);
+	TryBitStreamDemux(session);
 
 }
 
@@ -152,9 +146,9 @@ void H264Decoder::on_TryNetStreamDemux_clicked()
 {
 	if (!session) return;
 	//TryNetStreamDemux(session, "rtmp://192.168.30.135/live/test");
-	TryNetStreamDemux(session, "rtmp://202.69.69.180:443/webcast/bshdlive-pc");
+	//TryNetStreamDemux(session, "rtmp://202.69.69.180:443/webcast/bshdlive-pc");
 	//TryNetStreamDemux(session, "rtmp://58.200.131.2:1935/livetv/hunantv");
-	//TryNetStreamDemux(session, "rtmp://192.168.0.104/live/test");
+	TryNetStreamDemux(session, "rtmp://192.168.0.104/live/test");
 }
 
 void H264Decoder::on_BeginDecode_clicked()

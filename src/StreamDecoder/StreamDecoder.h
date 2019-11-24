@@ -54,9 +54,9 @@ public:
 	void DeleteSession(void* session);
 
 	//尝试打开解封装线程
-	bool TryBitStreamDemux(void* session);
+	void TryBitStreamDemux(void* session);
 
-	bool TryNetStreamDemux(void* session, char* url);
+	void TryNetStreamDemux(void* session, char* url);
 
 	//开始解码
 	void BeginDecode(void* session);
@@ -116,9 +116,9 @@ HEAD void* _cdecl CreateSession(int playerID, int dataCacheSize);
 
 HEAD void _cdecl DeleteSession(void* session);
 
-HEAD bool _cdecl TryBitStreamDemux(void* session);
+HEAD void _cdecl TryBitStreamDemux(void* session);
 
-HEAD bool _cdecl TryNetStreamDemux(void* session, char* url);
+HEAD void _cdecl TryNetStreamDemux(void* session, char* url);
 
 HEAD void _cdecl BeginDecode(void* session);
 

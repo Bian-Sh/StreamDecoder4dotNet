@@ -98,12 +98,14 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="Decode.cpp" />
+    <ClCompile Include="Demux.cpp" />
     <ClCompile Include="Session.cpp" />
     <ClCompile Include="StreamDecoder.cpp" />
     <ClCompile Include="Tools.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Decode.h" />
+    <ClInclude Include="Demux.h" />
     <ClInclude Include="Session.h" />
     <ClInclude Include="Packet.h" />
     <ClInclude Include="StreamDecoder.h">

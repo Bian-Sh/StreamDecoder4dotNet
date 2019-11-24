@@ -1,6 +1,7 @@
 #pragma once
 
 #include <mutex>
+class Demux;
 class Decode;
 class SCharList;
 struct AVIOContext;
@@ -11,13 +12,11 @@ class Session
 {
 
 public:
-	Session(int playerID, int dataCacheSize = 1000000);
+	Session(int playerID, int cacheSize = 1000000);
 	~Session();
 
-	//打开字节流数据
-	bool TryBitStreamDemux();
-	//打开rtmp
-	bool TryNetStreamDemux(char* url);
+	void TryStreamDemux(char* url);
+
 	//开始解码
 	void BeginDecode();
 	//停止解码
@@ -36,12 +35,6 @@ public:
 	void SetOption(int optionType, int value);
 public:
 
-	//数据缓冲区大小 默认1M
-	int dataCacheSize = 1000000;
-
-	//删除时候清理
-	//需要清理
-	SCharList *dataCache = NULL;
 	std::mutex dataCacheMux;
 
 	//退出信号，true 退出线程
@@ -50,11 +43,7 @@ public:
 	std::mutex mux;
 	
 
-	//解封装等待时间
-	int demuxTimeout = 2000;
-	int pushFrameInterval = 0;
-	bool alwaysWaitBitStream = false;
-	int waitBitStreamTimeout = 1000;
+
 
 	//是否处于Demux状态 重要的作用在ReadPacket的回调函数中
 	bool isDemuxing = false;
@@ -67,9 +56,20 @@ public:
 
 private:
 
-	void ProbeInputBuffer();
-	bool OpenDemuxThread();
-	void Demux();
+
+	Demux* demux = NULL;
+
+	int dataCacheSize = 1000000;
+
+	//解封装等待时间
+	int demuxTimeout = 2000;
+	int pushFrameInterval = 0;
+	bool alwaysWaitBitStream = false;
+	int waitBitStreamTimeout = 1000;
+
+#pragma region 老
+	void OpenDemuxThread(char* url);
+
 	//线程函数
 	void run();
 	//清理数据
@@ -77,22 +77,16 @@ private:
 	//关闭Session
 	void Close();
 
-	//需要清理
-	AVIOContext* avio = NULL;
-	//需要清理
-	AVFormatContext* afc = NULL;
 
 	int videoStreamIndex = -1;
 	int audioStreamIndex = -1;
 	//QMutex yuvMux;
-	
+
 	//需要清理
 	Decode *decode = NULL;
 
 	int width = 0;
 	int height = 0;
-
-private:
 	//ReadPacket线程是否运行标志位
 	bool isInReadPacketThread = false;
 	bool isInterruptRead = false;
@@ -108,5 +102,8 @@ private:
 	int playerID;
 
 	bool isLandscape = false;
+#pragma endregion 老
+
+	
 
 };
