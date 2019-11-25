@@ -9,7 +9,7 @@ class Session;
 class Demux
 {
 public:
-	Demux(Session* session, SessionConfig* config);
+	Demux(Session* session);
 	~Demux();
 
 	//多线程安全
@@ -27,8 +27,6 @@ public:
 
 	SCharList *dataCache = NULL;
 	std::mutex dataCacheMux;
-
-	SessionConfig* config;
 
 	bool quitSignal = false;
 

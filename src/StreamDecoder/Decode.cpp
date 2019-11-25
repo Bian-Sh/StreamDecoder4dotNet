@@ -1,13 +1,15 @@
 #include "Decode.h"
-#include "Session.h"
-#include "Tools.h"
 #include <iostream>
+#include "StreamDecoder.h"
+#include "Tools.h"
+#include "Packet.h"
+#include "Session.h"
 using namespace std;
 extern "C"
 {
 #include <libavcodec/avcodec.h>
 }
-#define  CODEC_THREAD_COUNT 4
+
 Decode::Decode(Session *session, bool isAudio)
 {
 	this->session = session;
@@ -43,7 +45,7 @@ bool Decode::Open(AVCodecParameters *para)
 	//释放参数
 	avcodec_parameters_free(&para);
 	//打开解码器
-	codec->thread_count = CODEC_THREAD_COUNT;
+	codec->thread_count = session->config->decodeThreadCount;
 	int ret = avcodec_open2(codec, NULL, NULL);
 	if (ret != 0)
 	{

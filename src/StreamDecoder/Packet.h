@@ -179,6 +179,7 @@ enum OptionType
 	AlwaysWaitBitStream,
 	WaitBitStreamTimeout,
 	AutoDecode,
+	DecodeThreadCount,
 };
 struct SessionConfig
 {
@@ -190,4 +191,5 @@ struct SessionConfig
 	bool alwaysWaitBitStream = false;			//AlwaysWaitBitStream
 	int waitBitStreamTimeout = 1000;			//WaitBitStreamTimeout
 	bool autoDecode = false;					//AutoDecode
+	int decodeThreadCount = 4;					//DecodeThreadCount
 };

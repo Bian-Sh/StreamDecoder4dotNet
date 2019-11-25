@@ -37,9 +37,9 @@ public class QScrcpy : MonoBehaviour
     {
         adbController = new AdbController();
         instance = this;
-        
+
     }
-    private FileStream fs;
+    private FileStream fsWrite;
 
     private bool isFirst = true;
     public RawImage rimg;
@@ -56,19 +56,24 @@ public class QScrcpy : MonoBehaviour
         StreamDecoder.dllPath = Application.streamingAssetsPath + "/../../../../../bin/";
 #endif
         adbController.adbPath = StreamDecoder.dllPath + "adb.exe";
-        if(writeToLocal)
+
+        if (writeToLocal)
         {
-            fs = new FileStream(fileName, FileMode.Create);
+            if(File.Exists(fileName)) fsWrite = new FileStream(fileName, FileMode.Truncate);
+            else fsWrite = new FileStream(fileName, FileMode.Create);
         }
-     
+
         StreamDecoder.LoadLibrary();
-        player = StreamPlayer.CreateSession(2, 1000000, OnEvent, onDraw);
+        player = StreamPlayer.CreateSession(2, 1000000, null, onDraw);
         player.SetOption(OptionType.DemuxTimeout, 5000);
         player.SetOption(OptionType.PushFrameInterval, 10);
         //player.SetOption(OptionType.WaitBitStreamTimeout, waitBitStreamTimeout);
         player.SetOption(OptionType.AlwaysWaitBitStream, 1);
+        player.SetOption(OptionType.AutoDecode, 1);
+        player.SetOption(OptionType.DecodeThreadCount, 8);
         mat = rimg.material;
         ADBStart();
+
     }
     // Update is called once per frame
     void Update()
@@ -107,7 +112,7 @@ public class QScrcpy : MonoBehaviour
             {
                 if (writeToLocal)
                 {
-                    fs.Write(arr, 0, size);
+                    fsWrite.Write(arr, 0, size);
                 }
                 dataCache.RemoveRange(0, size);
             }
@@ -117,11 +122,11 @@ public class QScrcpy : MonoBehaviour
     }
     private void OnDestroy()
     {
-        if(writeToLocal)
+        if (writeToLocal)
         {
-            fs.Close();
+            fsWrite.Close();
         }
-       
+
         StreamPlayer.DeleteSession(ref player);
         StreamDecoder.FreeLibrary();
         ADBKill();
@@ -129,16 +134,7 @@ public class QScrcpy : MonoBehaviour
         isExit = true;
     }
 
-  
 
-    private void OnEvent(EType et)
-    {
-        if (et == EType.DemuxSuccess)
-        {
-            Debug.Log("Demux Success");
-            player.BeginDecode();
-        }
-    }
     void onDraw(DotNetFrame frame)
     {
         if (mat == null)
@@ -153,6 +149,18 @@ public class QScrcpy : MonoBehaviour
             ytex = new Texture2D(width, height, TextureFormat.R8, false);
             utex = new Texture2D(width / 2, height / 2, TextureFormat.R8, false);
             vtex = new Texture2D(width / 2, height / 2, TextureFormat.R8, false);
+            //width 不大于 1200 高度不大于1000
+
+            if (width > height)
+            {
+                float rate = height / (float)width;
+                rimg.rectTransform.sizeDelta = new Vector2(1200, 1200 * rate);
+            }
+            else
+            {
+                float rate = width / (float)height;
+                rimg.rectTransform.sizeDelta = new Vector2(1000 * rate, 1000);
+            }
         }
         ytex.LoadRawTextureData(frame.frame_y, width * height);
         ytex.Apply();
@@ -164,7 +172,7 @@ public class QScrcpy : MonoBehaviour
         mat.SetTexture("_UTex", utex);
         mat.SetTexture("_VTex", vtex);
     }
-   
+
     public void SetEvent(bool isAdd, System.Action ac)
     {
         if (isAdd) UpdateEvent += ac;
@@ -198,14 +206,15 @@ public class QScrcpy : MonoBehaviour
     }
     public void ADBKill()
     {
-        lock(dataCache)
+        lock (dataCache)
         {
             dataCache.Clear();
             isFirst = true;
-            if(player != null)
+            if (player != null)
                 player.StopDecode();
         }
         adbController.AdbKillServer();
+
     }
 
     public void ClearDeviceList()
@@ -314,7 +323,7 @@ public class QScrcpy : MonoBehaviour
             //数据处理
             byte[] tmpByte = new byte[len];
             Buffer.BlockCopy(readBuff, 0, tmpByte, 0, len);
-            lock(dataCache)
+            lock (dataCache)
             {
                 dataCache.AddRange(tmpByte);
             }

@@ -14,10 +14,9 @@ extern "C"
 #define BUFF_SIZE 65536
 #define  URL_LENGTH 1280
 using namespace  std;
-Demux::Demux(Session* session, SessionConfig* config)
+Demux::Demux(Session* session)
 {
 	this->session = session;
-	this->config = config;
 
 	//初始化 视频流地址 数组
 	url = new char[URL_LENGTH];
@@ -266,7 +265,7 @@ int Demux::read_packet(void *opaque, uint8_t *buf, int buf_size)
 		//处于解封装
 		if (demux->isDemuxing)
 		{
-			if (av_gettime() - demux->startTime > demux->config->demuxTimeout * 1000)
+			if (av_gettime() - demux->startTime > demux->session->config->demuxTimeout * 1000)
 			{
 				//cout << "return 0" << endl;
 				return 0;
@@ -280,14 +279,14 @@ int Demux::read_packet(void *opaque, uint8_t *buf, int buf_size)
 		//处于av_read_frame
 		else
 		{
-			if (demux->config->alwaysWaitBitStream)
+			if (demux->session->config->alwaysWaitBitStream)
 			{
 				continue;
 			}
 			else
 			{
 				//超时读不到数据认为流中断
-				if (av_gettime() - lastT > demux->config->waitBitStreamTimeout * 1000)
+				if (av_gettime() - lastT > demux->session->config->waitBitStreamTimeout * 1000)
 				{
 					return 0;
 				}
@@ -429,7 +428,7 @@ void Demux::DemuxSuccess()
 	session->DemuxSuccess(afc->streams[videoStreamIndex]->codecpar->width, afc->streams[videoStreamIndex]->codecpar->height);
 	//解封装成功
 	demuxed = true;
-	if(config->autoDecode) Start();
+	if(session->config->autoDecode) Start();
 }
 
 void Demux::ReadAVPacket()

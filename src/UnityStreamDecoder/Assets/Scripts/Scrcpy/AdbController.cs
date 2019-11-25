@@ -21,7 +21,7 @@ public class AdbController
             //else if (state == Process.ExecuteState.StartSuccess) Debug.Log("启动成功");
             else if (state == Process.ExecuteState.Finished)
             {
-                //正常结束
+                //正常结束 
                 if (sender.ExitCode == 0)
                 {
                     string[] strsp = sender.StandardOutStr.Split('\n');
@@ -197,12 +197,12 @@ public class AdbController
     /// <param name="successCb"></param>
     public void OpenReverseProxy(string serial, int localPort, Action<bool> IsSuccessCb)
     {
-        string cmd = "reverse localabstract:scrcpy tcp:" + localPort;
+        string cmd = "reverse localabstract:qtscrcpy tcp:" + localPort;
         if (!string.IsNullOrEmpty(serial))
         {
             cmd = "-s " + serial + " " + cmd;
         }
-        new Process(QScrcpy.Instance.SetEvent).Execute("adb", cmd, (sender, state) =>
+        Execute(cmd, (sender, state) =>
         {
             if (state == Process.ExecuteState.StartFailed)
             {
@@ -238,7 +238,7 @@ public class AdbController
         {
             cmd = "-s " + serial + " " + cmd;
         }
-        new Process(QScrcpy.Instance.SetEvent).Execute("adb", cmd, (sender, state) =>
+        Execute( cmd, (sender, state) =>
         {
             if (state == Process.ExecuteState.StartFailed)
                 Debug.LogWarning("启动失败");
@@ -264,12 +264,12 @@ public class AdbController
 
     public void CloseReverseProxy(string serial)
     {
-        string cmd = " reverse --remove localabstract:scrcpy";
+        string cmd = " reverse --remove localabstract:qtscrcpy";
         if (!string.IsNullOrEmpty(serial))
         {
             cmd = "-s " + serial + " " + cmd;
         }
-        new Process(QScrcpy.Instance.SetEvent).Execute("adb", cmd, (sender, state) =>
+       Execute(cmd, (sender, state) =>
         {
             if (state == Process.ExecuteState.StartFailed)
                 Debug.LogWarning("启动失败");
@@ -293,7 +293,7 @@ public class AdbController
 
     public void StartQScrcpyServer(string serial, int scrWidth, int bitRate)
     {
-        string cmd = string.Format(" shell CLASSPATH=/sdcard/scrcpy-server.jar app_process / com.genymobile.scrcpy.Server {0} {1} false ", scrWidth, bitRate);
+        string cmd = string.Format(" shell CLASSPATH=/sdcard/scrcpy-server.jar app_process / com.genymobile.scrcpy.Server {0} {1} false - false false", scrWidth, bitRate);
         if (!string.IsNullOrEmpty(serial))
         {
             cmd = "-s " + serial + " " + cmd;

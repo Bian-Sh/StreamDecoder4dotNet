@@ -126,6 +126,7 @@ void H264Decoder::on_CreateSession_clicked()
 	SetOption(session, WaitBitStreamTimeout, 1000);
 	SetOption(session, AlwaysWaitBitStream, false);
 	SetOption(session, AutoDecode, true);
+	SetOption(session, DecodeThreadCount, 6);
 }
 
 void H264Decoder::on_DeleteSession_clicked()

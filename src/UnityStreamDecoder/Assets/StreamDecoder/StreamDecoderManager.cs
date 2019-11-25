@@ -14,6 +14,8 @@ namespace SStreamDecoder
         PushFrameInterval,
         AlwaysWaitBitStream,
         WaitBitStreamTimeout,
+        AutoDecode,
+        DecodeThreadCount,
     }
     public enum EType
     {

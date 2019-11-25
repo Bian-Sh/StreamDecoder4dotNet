@@ -14,15 +14,13 @@ extern "C"
 #include <libavutil/time.h>
 }
 
-#define USE_DECODER
-
 
 Session::Session(int playerID, int cacheSize)
 {
 	config = new SessionConfig();
 	config->playerID = playerID;
 	config->dataCacheSize = cacheSize;
-	//demux = new Demux(dataCacheSize, demuxTimeout, alwaysWaitBitStream, waitBitStreamTimeout);
+
 }
 
 Session::~Session()
@@ -79,7 +77,7 @@ bool Session::PushStream2Cache(char* data, int len)
 void Session::TryStreamDemux(char* url)
 {
 	quitSignal = false;
-	if (!demux) demux = new Demux(this, config);
+	if (!demux) demux = new Demux(this);
 	std::thread t(&Session::OpenDemuxThread, this, url);
 	t.detach();
 }
@@ -271,5 +269,11 @@ void Session::SetOption(int optionType, int value)
 	{
 		//0Îªfalse ÆäÓàÎªtrue
 		config->autoDecode = value;
+	}
+	else if ((OptionType)optionType == OptionType::DecodeThreadCount)
+	{
+		if (value < 2) value = 2;
+		if (value > 8) value = 8;
+		config->decodeThreadCount = value;
 	}
 }
