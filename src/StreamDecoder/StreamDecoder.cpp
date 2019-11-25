@@ -9,6 +9,9 @@ extern "C"
 #include <libavformat/avformat.h>
 
 }
+#pragma comment(lib, "avcodec.lib")
+#pragma comment(lib, "avformat.lib")
+#pragma comment(lib, "avutil.lib")
 using namespace std;
 void _stdcall TimerProcess(HWND hwnd, UINT uMsg, UINT idEvent, DWORD dwTime)
 {

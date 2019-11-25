@@ -155,13 +155,7 @@ struct DotNetFrame
 	char* frame_v;
 };
 
-enum OptionType
-{
-	DemuxTimeout = 1,
-	PushFrameInterval,
-	AlwaysWaitBitStream,
-	WaitBitStreamTimeout,
-};
+
 
 enum EventType
 {
@@ -176,4 +170,24 @@ struct DEvent
 		this->playerID = playerID;
 		this->eventType = eventType;
 	}
+};
+
+enum OptionType
+{
+	DemuxTimeout = 1,
+	PushFrameInterval,
+	AlwaysWaitBitStream,
+	WaitBitStreamTimeout,
+	AutoDecode,
+};
+struct SessionConfig
+{
+	int playerID;
+	int dataCacheSize = 1000000;
+	//解封装等待时间								
+	int demuxTimeout = 2000;					//DemuxTimeout
+	int pushFrameInterval = 0;					//PushFrameInterval
+	bool alwaysWaitBitStream = false;			//AlwaysWaitBitStream
+	int waitBitStreamTimeout = 1000;			//WaitBitStreamTimeout
+	bool autoDecode = false;					//AutoDecode
 };

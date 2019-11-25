@@ -125,6 +125,7 @@ void H264Decoder::on_CreateSession_clicked()
 	SetOption(session, PushFrameInterval, 0);
 	SetOption(session, WaitBitStreamTimeout, 1000);
 	SetOption(session, AlwaysWaitBitStream, false);
+	SetOption(session, AutoDecode, true);
 }
 
 void H264Decoder::on_DeleteSession_clicked()
@@ -147,8 +148,8 @@ void H264Decoder::on_TryNetStreamDemux_clicked()
 	if (!session) return;
 	//TryNetStreamDemux(session, "rtmp://192.168.30.135/live/test");
 	//TryNetStreamDemux(session, "rtmp://202.69.69.180:443/webcast/bshdlive-pc");
-	//TryNetStreamDemux(session, "rtmp://58.200.131.2:1935/livetv/hunantv");
-	TryNetStreamDemux(session, "rtmp://192.168.0.104/live/test");
+	TryNetStreamDemux(session, "rtmp://58.200.131.2:1935/livetv/hunantv");
+	//TryNetStreamDemux(session, "rtmp://192.168.0.104/live/test");
 }
 
 void H264Decoder::on_BeginDecode_clicked()

@@ -58,7 +58,7 @@ private:
 	//QString filePath = "d:/HTTPServer/faded.MP4";
 	//QString filePath = "F:/HTTPServer/faded10s.h264";
 	//QString filePath = "D:/device.h264";
-	QString filePath = "D:/HTTPServer/faded.h264";
+	QString filePath = "F:/HTTPServer/4K.mp4";
 
 private:
 	class QTcpServer* mServer = NULL;

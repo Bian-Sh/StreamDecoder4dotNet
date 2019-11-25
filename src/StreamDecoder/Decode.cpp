@@ -8,14 +8,16 @@ extern "C"
 #include <libavcodec/avcodec.h>
 }
 #define  CODEC_THREAD_COUNT 4
-Decode::Decode(Session *session)
+Decode::Decode(Session *session, bool isAudio)
 {
 	this->session = session;
+	isAudioDecodec = isAudio;
 }
 
 Decode::~Decode()
 {
 	Close();
+	cout << "~Decode" << endl;
 }
 
 bool Decode::Open(AVCodecParameters *para)
@@ -51,36 +53,39 @@ bool Decode::Open(AVCodecParameters *para)
 	}
 	cout << "open codec success!" << endl;
 	mux.unlock();
+	isOpened = true;
 	return true;
 }
 
-void Decode::Push(AVPacket *pkt)
+bool Decode::Push(AVPacket *pkt)
 {
-	while (packets.size() > 10)
-	{
-		if (isExit) return;
-		Tools::Get()->Sleep(1);
-		continue;
-	}
+	if (packets.size() > 10) return false;
 	mux.lock();
 	if (!codec)
 	{
 		mux.unlock();
-		return;
+		return false;
 	}
 	packets.push_back(pkt);
 	mux.unlock();
+	return true;
+}
+
+void Decode::Start()
+{
+	std::thread t(&Decode::DecodeAVPacket, this);
+	t.detach();
 }
 
 void Decode::Close()
 {
+	quitSignal = true;
 	mux.lock();
 	if (!codec)
 	{
 		mux.unlock();
 		return;
 	}
-	isExit = true;
 	avcodec_close(codec);
 	//释放编解码器上下文和所有与之相关的内容，并写入NULL。
 	avcodec_free_context(&codec);
@@ -93,14 +98,15 @@ void Decode::Close()
 	}
 	mux.unlock();
 
-	while (isRuning)
+	while (isInDecodeAVPacketFunc)
 		Tools::Get()->Sleep(1);
 }
 
-void Decode::run()
+void Decode::DecodeAVPacket()
 {
-	isRuning = true;
-	while (!isExit)
+	//int frameCount = 0;
+	isInDecodeAVPacketFunc = true;
+	while (!quitSignal)
 	{
 		int size = packets.size();
 		if (size <= 0)
@@ -113,10 +119,17 @@ void Decode::run()
 		packets.pop_front();
 		//发送并解码
 		int ret = avcodec_send_packet(codec, pkt);
+		if (ret != 0)
+		{
+			mux.unlock();
+			cout << Tools::Get()->av_strerror2(ret) << endl;
+			continue;
+		}
+		//cout << "{" << ++count << "}";
 		av_packet_free(&pkt);
 		mux.unlock();
 
-		while (!isExit)
+		while (!quitSignal)
 		{
 			mux.lock();
 			if (!codec) return;
@@ -126,6 +139,7 @@ void Decode::run()
 
 			if (ret != 0)
 			{
+				//cout << Tools::Get()->av_strerror2(ret) << endl;
 				av_frame_free(&frame);
 				break;
 			}
@@ -133,11 +147,13 @@ void Decode::run()
 			//处理解码出来的数据
 			if (session)
 			{
-				session->OnDecodeOneAVFrame(frame);
+				//cout << "[frame:"<< ++frameCount << "]";
+				session->OnDecodeOneAVFrame(frame, isAudioDecodec);
 			}
 			Tools::Get()->Sleep(1);
 		}
 		Tools::Get()->Sleep(1);
 	}
-	isRuning = false;
+	isInDecodeAVPacketFunc = false;
+
 }

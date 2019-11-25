@@ -3,12 +3,13 @@
 struct AVIOContext;
 struct AVFormatContext;
 struct AVCodecParameters;
+struct SessionConfig;
 class SCharList;
 class Session;
 class Demux
 {
 public:
-	Demux(Session* session, int cacheSize, int demuxTimeout, bool alwaysWaitBitStream, int waitBitStreamTimeout);
+	Demux(Session* session, SessionConfig* config);
 	~Demux();
 
 	//多线程安全
@@ -27,10 +28,7 @@ public:
 	SCharList *dataCache = NULL;
 	std::mutex dataCacheMux;
 
-	//解封装等待时间
-	int demuxTimeout = 2000;
-	bool alwaysWaitBitStream = false;
-	int waitBitStreamTimeout = 1000;
+	SessionConfig* config;
 
 	bool quitSignal = false;
 

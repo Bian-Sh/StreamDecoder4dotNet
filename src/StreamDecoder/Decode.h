@@ -5,30 +5,32 @@
 struct AVCodecContext;
 struct AVCodecParameters;
 struct AVPacket;
+class Session;
 
 class Decode
 {
 
 public:
-	Decode(class Session *session);
+	Decode(Session *session, bool isAudio);
 	~Decode();
 
 	//无论打开与否都释放 AVCodecParameters
 	bool Open(AVCodecParameters *para);
 
-	void Push(AVPacket *pkt);
+	bool Push(AVPacket *pkt);
 
+	void Start();
+public:
 
-	void run();
-
-	bool isRuning = false;
-	
+	bool isOpened = false;
 
 private:
-
+	void DecodeAVPacket();
 	//清理解码器上下文，并关闭，指针置为NULL
 	void Close();
 
+private:
+	bool isInDecodeAVPacketFunc = false;
 	std::mutex mux;
 
 	//解码器上下文，需要释放 avcodec_free_context
@@ -37,7 +39,9 @@ private:
 	//需要清理
 	std::list<AVPacket*> packets;
 
-	bool isExit = false;
+	bool quitSignal = false;
 
 	Session* session = NULL;
+
+	bool isAudioDecodec = false;
 };
