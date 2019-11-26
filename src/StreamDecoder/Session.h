@@ -6,11 +6,15 @@ class Decode;
 struct AVFrame;
 struct AVPacket;
 struct SessionConfig;
+struct DotNetFrame;
+typedef void(*PEvent)(int playerID, int eventType);
+typedef void(*PDrawFrame)(DotNetFrame* frame);
+
 class Session
 {
 
 public:
-	Session(int playerID, int cacheSize = 1000000);
+	Session(int playerID);
 	~Session();
 
 	void TryStreamDemux(char* url);
@@ -31,9 +35,13 @@ public:
 	//解码完成后Decode调用
 	void OnDecodeOneAVFrame(AVFrame *frame, bool isAudio);
 	
+	void Update();
 
 	//设置选项 
 	void SetOption(int optionType, int value);
+
+	void SetSessionEvent(PEvent pEvent, PDrawFrame pDrawFrame);
+
 public:
 
 	SessionConfig* config;
@@ -61,4 +69,8 @@ private:
 	bool isLandscape = false;
 
 
+	std::mutex funcMux;
+
+	PEvent DotNetSessionEvent = NULL;
+	PDrawFrame DotNetDrawFrame = NULL;
 };

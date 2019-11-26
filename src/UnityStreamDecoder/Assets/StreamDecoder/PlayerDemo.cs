@@ -75,22 +75,29 @@ public class PlayerDemo : MonoBehaviour
     {
         if (player != null) return;
         //唯一ID
-        player = StreamPlayer.CreateSession(1, bitStreamCacheSize, OnEvent, OnDrawFrame);
+        player = StreamPlayer.CreateSession(10);
+        player.SetOption(OptionType.DataCacheSize, bitStreamCacheSize);
         player.SetOption(OptionType.DemuxTimeout, demuxTimeout);
         player.SetOption(OptionType.PushFrameInterval, pushFrameInterval);
-        player.SetOption(OptionType.WaitBitStreamTimeout, waitBitStreamTimeout);
         player.SetOption(OptionType.AlwaysWaitBitStream, alwaysWaitBitStream ? 1 : 0);
+        player.SetOption(OptionType.WaitBitStreamTimeout, waitBitStreamTimeout);
+        player.SetOption(OptionType.AutoDecode, 1);
+        player.SetOption(OptionType.DecodeThreadCount, 8);
+        player.SetSessionEvent(null, OnDrawFrame);
+
     }
-    private void OnEvent(EType et)
+    private void OnEvent(int playerID, int et)
     {
-        if(et == EType.DemuxSuccess)
+        if(et == (int)SessionEventType.DemuxSuccess)
         {
-            Debug.Log("Demux Success");
-            player.BeginDecode();
+            Debug.Log("Demux Success" + playerID);
         }
     }
     public void OnDrawFrame(DotNetFrame frame)
     {
+        Debug.Log("ondrawframe");
+        this.transform.Rotate(Vector3.forward * Time.deltaTime);
+        return;
         if(mat == null)
         {
             Debug.LogWarning("mat is null");
@@ -124,12 +131,12 @@ public class PlayerDemo : MonoBehaviour
     public void TryBitStreamDemux()
     {
         if (player == null) return;
-        Debug.Log(player.TryBitStreamDemux());
+        player.TryBitStreamDemux();
     }
     public void TryNetStreamDemux()
     {
         if (player == null) return;
-        Debug.Log(player.TryNetStreamDemux(netUrl));
+        player.TryNetStreamDemux(netUrl);
     }
 
   

@@ -10,14 +10,15 @@ namespace SStreamDecoder
 {
     public enum OptionType
     {
-        DemuxTimeout = 1,
+        DataCacheSize = 1,
+        DemuxTimeout,
         PushFrameInterval,
         AlwaysWaitBitStream,
         WaitBitStreamTimeout,
         AutoDecode,
         DecodeThreadCount,
     }
-    public enum EType
+    public enum SessionEventType
     {
         DemuxSuccess = 1,
     }
@@ -49,7 +50,7 @@ namespace SStreamDecoder
         /// </summary>
         /// <param name="pfun"></param>
         /// <param name="pDraw"></param>
-        private delegate void StreamDecoderInitialize(DLL_Debug_Log pLog, DLL_Draw_Frame pDraw, DLL_Decode_Event pEvent);
+        private delegate void StreamDecoderInitialize(DLL_Debug_Log pLog);
 
         /// <summary>
         /// 注销StreamDecoder委托
@@ -66,7 +67,7 @@ namespace SStreamDecoder
         /// 创建一个Session委托
         /// </summary>
         /// <returns></returns>
-        public delegate IntPtr CreateSession(int playerID, int dataCacheSize);
+        public delegate IntPtr CreateSession(int playerID);
 
         /// <summary>
         /// 删除一个Session委托
@@ -79,7 +80,7 @@ namespace SStreamDecoder
         /// </summary>
         /// <param name="session"></param>
         /// <returns></returns>
-        public delegate bool TryBitStreamDemux(IntPtr session);
+        public delegate void TryBitStreamDemux(IntPtr session);
 
         /// <summary>
         /// 尝试解封装网络流数据委托
@@ -87,7 +88,7 @@ namespace SStreamDecoder
         /// <param name="session"></param>
         /// <param name="url"></param>
         /// <returns></returns>
-        public delegate bool TryNetStreamDemux(IntPtr session, string url);
+        public delegate void TryNetStreamDemux(IntPtr session, string url);
 
         /// <summary>
         /// 开始解码委托
@@ -126,6 +127,7 @@ namespace SStreamDecoder
         public delegate void SetOption(IntPtr session, OptionType type, int value);
 
 
+        public delegate void SetSessionEvent(IntPtr session, DLL_Decode_Event sessionEvent, DLL_Draw_Frame drawEvent);
         
 
         /// <summary>
@@ -141,7 +143,7 @@ namespace SStreamDecoder
         /// </summary>
         /// <param name="frame"></param>
         [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-        private delegate void DLL_Draw_Frame(DotNetFrame frame);
+        public delegate void DLL_Draw_Frame(DotNetFrame frame);
 
         /// <summary>
         /// C++ 回调函数 解码时间 委托
@@ -149,12 +151,9 @@ namespace SStreamDecoder
         /// <param name="playerID"></param>
         /// <param name="eventType"></param>
         [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-        private delegate void DLL_Decode_Event(int playerID, int eventType);
+        public delegate void DLL_Decode_Event(int playerID, int eventType);
 
 
-        private static event Action<int, string> logEvent;
-        public static event Action<DotNetFrame> drawEvent;
-        public static event Action<int, EType> decodeEvent;
 
         #region 加载卸载动态链接库
         public static bool LoadLibrary()
@@ -179,16 +178,6 @@ namespace SStreamDecoder
             if (avformat_dll == IntPtr.Zero) { Debug.Log("avformat-57.dll 加载失败"); return false; }
             else { Debug.Log("avformat-57.dll 加载成功"); }
 
-            //qt5core_dll = Native.LoadLibrary(dllPath + "Qt5Core.dll");
-            //if (qt5core_dll == IntPtr.Zero) { Debug.Log("Qt5Core.dll 加载失败"); return false; }
-            //else { Debug.Log("Qt5Core.dll 加载成功"); }
-
-            //qt5cored_dll = Native.LoadLibrary(dllPath + "Qt5Cored.dll");
-            //if (qt5cored_dll == IntPtr.Zero) { Debug.Log("Qt5Cored.dll 加载失败"); return false; }
-            //else { Debug.Log("Qt5Cored.dll 加载成功"); }
-
-          
-
             streamDecoder_dll = Native.LoadLibrary(dllPath + "StreamDecoder.dll");
             if (streamDecoder_dll == IntPtr.Zero) { Debug.Log("StreamDecoder.dll 加载失败"); return false; }
             else { Debug.Log("StreamDecoder.dll 加载成功"); }
@@ -197,8 +186,6 @@ namespace SStreamDecoder
         public static void FreeLibrary()
         {
             if (streamDecoder_dll != IntPtr.Zero) Debug.Log(Native.FreeLibrary(streamDecoder_dll) ? "StreamDecoder.dll 卸载成功" : "StreamDecoder.dll 卸载失败");
-            //if (qt5cored_dll != IntPtr.Zero) Debug.Log(Native.FreeLibrary(qt5cored_dll) ? "Qt5Cored.dll 卸载成功" : "Qt5Cored.dll 卸载失败");
-            //if (qt5core_dll != IntPtr.Zero) Debug.Log(Native.FreeLibrary(qt5core_dll) ? "Qt5Core.dll 卸载成功" : "Qt5Core.dll 卸载失败");
             if (avformat_dll != IntPtr.Zero) Debug.Log(Native.FreeLibrary(avformat_dll) ? "avformat-57.dll 卸载成功" : "avformat-57.dll 卸载失败");
             if (avcodec_dll != IntPtr.Zero) Debug.Log(Native.FreeLibrary(avcodec_dll) ? "avcodec-57.dll 卸载成功" : "avcodec-57.dll 卸载失败");
             if (swscale_dll != IntPtr.Zero) Debug.Log(Native.FreeLibrary(swscale_dll) ? "swscale-4.dll 卸载成功" : "swscale-4.dll 卸载失败");
@@ -214,9 +201,7 @@ namespace SStreamDecoder
         {
             isInit = true;
             DLL_Debug_Log log = StreamDecoderLog;
-            DLL_Draw_Frame draw = OnDrawFrame;
-            DLL_Decode_Event ev = OnEvent;
-            Native.Invoke<StreamDecoderInitialize>(streamDecoder_dll, log, draw, ev);
+            Native.Invoke<StreamDecoderInitialize>(streamDecoder_dll, log);
         }
 
         /// <summary>
@@ -236,30 +221,7 @@ namespace SStreamDecoder
         {
             //string logStr = ;
             string _log = "<b>" + Marshal.PtrToStringAnsi(log) + "</b>";
-            
-            if(logEvent == null)
-            {
-                if (level == 0) Debug.Log(_log);
-                else if (level == 1) Debug.LogWarning(_log);
-                else Debug.LogError(_log);
-            }
-            else
-            {
-                logEvent(level, _log);
-            }
-        }
-
-        private static void OnDrawFrame(DotNetFrame frame)
-        {
-            if (drawEvent == null) return;
-            drawEvent(frame);
-        }
-
-        private static void OnEvent(int playerID, int et)
-        {
-            
-            if (decodeEvent == null) return;
-            decodeEvent(playerID, (EType)et);
+            Debug.Log(_log);
         }
 
 
@@ -272,12 +234,6 @@ namespace SStreamDecoder
             IntPtr versionPtr = Native.Invoke<IntPtr, GetStreamDecoderVersion>(streamDecoder_dll);
             return Marshal.PtrToStringAnsi(versionPtr);
         }
-
-        //private delegate int Test();
-        //public static int Count()
-        //{
-        //    return Native.Invoke<int, Test>(streamDecoder_dll);
-        //}
 
     }
 }

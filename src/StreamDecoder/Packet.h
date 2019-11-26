@@ -157,34 +157,39 @@ struct DotNetFrame
 
 
 
-enum EventType
+enum SessionEventType
 {
 	DemuxSuccess = 1,
 };
-struct DEvent
+struct SessionEvent
 {
 	int playerID;
 	int eventType;
-	DEvent(int playerID, int eventType)
+	SessionEvent(int playerID, int eventType)
 	{
 		this->playerID = playerID;
 		this->eventType = eventType;
 	}
 };
 
+//OptionType与SessionConfig一一对应(playerID除外)
 enum OptionType
 {
-	DemuxTimeout = 1,
+	DataCacheSize = 1,
+	DemuxTimeout,
 	PushFrameInterval,
 	AlwaysWaitBitStream,
 	WaitBitStreamTimeout,
 	AutoDecode,
 	DecodeThreadCount,
+	
 };
 struct SessionConfig
 {
 	int playerID;
-	int dataCacheSize = 1000000;
+
+
+	int dataCacheSize = 1000000;				//DataCacheSize
 	//解封装等待时间								
 	int demuxTimeout = 2000;					//DemuxTimeout
 	int pushFrameInterval = 0;					//PushFrameInterval

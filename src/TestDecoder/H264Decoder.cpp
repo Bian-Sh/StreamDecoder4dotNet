@@ -13,7 +13,7 @@
 #include <QHostAddress>
 #pragma comment(lib, "StreamDecoder.lib")
 
-#define USE_WIDGET_
+#define USE_WIDGET
 
 H264Decoder* H264Decoder::self = NULL;
 
@@ -46,7 +46,7 @@ H264Decoder::H264Decoder(QWidget *parent)
 	ui.setupUi(this);
 	ui.filePath->setText(filePath);
 	if (self == NULL) self = this;
-	StreamDecoderInitialize(NULL, &OnDraw, &OnEvent);
+	StreamDecoderInitialize(NULL);
 
 #ifdef USE_WIDGET
 	if (canvas == NULL)
@@ -88,7 +88,7 @@ H264Decoder::H264Decoder(QWidget *parent)
 		if (b)
 		{
 			on_CreateSession_clicked();
-			on_TryBitStreamDemux_clicked();
+			//on_TryBitStreamDemux_clicked();
 		}
 		else
 		{
@@ -117,16 +117,26 @@ void OnEvent(int playerID, int eventType)
 	H264Decoder::self->OnEventPkt(playerID, eventType);
 }
 
+void EventTest(int playerID, int eventType)
+{
+	qDebug() << playerID;
+}
+void DrawTest(DotNetFrame* frame)
+{
+	qDebug() << frame->playerID;
+}
 void H264Decoder::on_CreateSession_clicked()
 {
 	if (session) return;
-	session = CreateSession(1, 1000000);
+	session = CreateSession(112);
+	SetOption(session, DataCacheSize, 1234000);
 	SetOption(session, DemuxTimeout, 5000);
 	SetOption(session, PushFrameInterval, 0);
 	SetOption(session, WaitBitStreamTimeout, 1000);
 	SetOption(session, AlwaysWaitBitStream, false);
 	SetOption(session, AutoDecode, true);
 	SetOption(session, DecodeThreadCount, 6);
+	SetSessionEvent(session, NULL, DrawTest);
 }
 
 void H264Decoder::on_DeleteSession_clicked()

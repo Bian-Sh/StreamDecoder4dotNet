@@ -1,7 +1,7 @@
 #pragma once
 #include <mutex>
 #include <list>
-
+#include <vector>
 #ifdef __cplusplus
 #define EXTERNC extern "C"
 #else
@@ -23,10 +23,10 @@ enum LogLevel
 struct LogPacket;
 struct Frame;
 struct DotNetFrame;
-struct DEvent;
+
+class Session;
 typedef void(*PLog)(int level, char* log);
-typedef void(*PDrawFrame)(DotNetFrame* frame);
-typedef void(*PEvent)(int playerID, int eventType);
+
 class StreamDecoder
 {
 	
@@ -34,13 +34,13 @@ public:
 	
 	inline static StreamDecoder* Get()
 	{
-	
 		static StreamDecoder sp;
 		return &sp;
 	}
+	~StreamDecoder();
 
 	//初始化StreamDecoder 设置日志回调函数
-	void StreamDecoderInitialize(PLog logfunc, PDrawFrame drawfunc, PEvent ev);
+	void StreamDecoderInitialize(PLog logfunc);
 
 	//注销StreamDecoder 预留函数
 	void StreamDecoderDeInitialize();
@@ -49,7 +49,7 @@ public:
 	//获取版本号
 	char* GetStreamDecoderVersion();
 	//创建一个Session
-	void* CreateSession(int playerID, int dataCacheSize);
+	void* CreateSession(int playerID);
 	//删除一个Session
 	void DeleteSession(void* session);
 
@@ -71,48 +71,55 @@ public:
 	//设置参数
 	void SetOption(void* session, int optionType, int value);
 
+	void SetSessionEvent(void* session, void(*PEvent)(int playerID, int eventType), void(*PDrawFrame)(DotNetFrame* frame));
+
 	//把消息追加到队列，通过主线程发送
 	void PushLog2Net(LogLevel level, char* log);
-	//
-	void PushFrame2Net(Frame* frame);
 
-	void PushEvent2Net(int playerID, int eventType);
+	/*void PushFrame2Net(Frame* frame);
+
+	void PushEvent2Net(int playerID, int eventType);*/
 
 	//主线程更新 物理时间
 	void FixedUpdate();
 
+	int GetUpdateRate();
 private:
 	StreamDecoder();
+
 	//调用回调函数（主线程同步）
 	void Log2Net(LogPacket* logpacket);
 
-	void DrawFrame2dotNet(Frame* frame);
+	/*void DrawFrame2dotNet(Frame* frame);
 
-	void Event2Net(DEvent* ev);
+	void Event2Net(DEvent* ev);*/
 private:
 	std::mutex logMux;
 	PLog Log = NULL;
+	std::list<LogPacket*> logpackets;
 
-	std::mutex frameMux;
+	/*std::mutex frameMux;
 	PDrawFrame DrawFrame = NULL;
-
 	std::mutex eventMux;
 	PEvent Event = NULL;
-
-	std::list<LogPacket*> logpackets;
 	std::list<Frame*> framepackets;
-	std::list<DEvent*> eventpackets;
-	//int waitPushFrameTime = 0;
+	std::list<DEvent*> eventpackets;*/
+	
+	unsigned long long timerPtr = 0;
+	long long timerCounter = 1;
+	long long startTimeStamp = 0;
+
+	std::vector<Session*> sessionList;
 };
 
 //Global
-HEAD void _cdecl StreamDecoderInitialize(PLog logfunc, PDrawFrame drawfunc, PEvent ev);
+HEAD void _cdecl StreamDecoderInitialize(PLog logfunc);
 //Global
 HEAD void _cdecl StreamDecoderDeInitialize();
 //Global
 HEAD char* _cdecl GetStreamDecoderVersion();
 
-HEAD void* _cdecl CreateSession(int playerID, int dataCacheSize);
+HEAD void* _cdecl CreateSession(int playerID);
 
 HEAD void _cdecl DeleteSession(void* session);
 
@@ -129,3 +136,5 @@ HEAD int _cdecl GetCacheFreeSize(void* session);
 HEAD bool _cdecl PushStream2Cache(void* session, char* data, int len);
 
 HEAD void _cdecl SetOption(void* session, int optionType, int value);
+
+HEAD void _cdecl SetSessionEvent(void* session, void(*PEvent)(int playerID, int eventType), void(*PDrawFrame)(DotNetFrame* frame));

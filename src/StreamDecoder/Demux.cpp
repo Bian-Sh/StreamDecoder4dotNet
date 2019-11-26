@@ -17,7 +17,7 @@ using namespace  std;
 Demux::Demux(Session* session)
 {
 	this->session = session;
-
+	this->dataCacheSize = session->config->dataCacheSize;
 	//初始化 视频流地址 数组
 	url = new char[URL_LENGTH];
 	memset(url, 0, URL_LENGTH);

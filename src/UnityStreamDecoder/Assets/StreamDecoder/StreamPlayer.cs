@@ -12,25 +12,23 @@ public class StreamPlayer {
     /// </summary>
     private IntPtr session = IntPtr.Zero;
     private int playerID;
-    private Action<DotNetFrame> drawCb;
-    private Action<EType> onEvent;
+
     
     /// <summary>
     /// 创建一个StreamDecoder
     /// </summary>
     /// <param name="playerID">唯一ID</param>
-    /// <param name="dataCacheSize">player 流缓冲大小</param>
     /// <param name="onReceiveEventCb">事件回调</param>
     /// <param name="onReceiveOneFrameCb">绘制回调</param>
     /// <returns></returns>
-    public static StreamPlayer CreateSession(int playerID, int dataCacheSize, Action<EType> onReceiveEventCb, Action<DotNetFrame> onReceiveOneFrameCb)
+    public static StreamPlayer CreateSession(int playerID)
     {
         if(!StreamDecoder.IsInit)
         {
             StreamDecoder.InitStreamDecoder();
         }
-        IntPtr s = Native.Invoke<IntPtr, StreamDecoder.CreateSession>(StreamDecoder.streamDecoder_dll, playerID, dataCacheSize);
-        return new StreamPlayer(s, playerID, onReceiveEventCb, onReceiveOneFrameCb);
+        IntPtr s = Native.Invoke<IntPtr, StreamDecoder.CreateSession>(StreamDecoder.streamDecoder_dll, playerID);
+        return new StreamPlayer(s, playerID);
     }
     /// <summary>
     /// 关闭并删除一个Session
@@ -38,55 +36,47 @@ public class StreamPlayer {
     /// <param name="session"></param>
     public static void DeleteSession(ref StreamPlayer session)
     {
-        session.DestructorStreamPlayer();
+        //session.DestructorStreamPlayer();
         Native.Invoke<StreamDecoder.DeleteSession>(StreamDecoder.streamDecoder_dll, session.session);
         session.session = IntPtr.Zero;
-        session.SetOption(OptionType.AlwaysWaitBitStream, 1);
         session = null;
     }
-    private void DestructorStreamPlayer()
-    {
-        StreamDecoder.drawEvent -= ReceiveOneFrame;
-        StreamDecoder.decodeEvent -= OnEvent;
-    }
+
 
     /// <summary>
     /// 构造StreamPlayer
     /// </summary>
     /// <param name="session"></param>
-    private StreamPlayer(IntPtr session, int playerID, Action<EType> onReceiveEventCb, Action<DotNetFrame> onReceiveOneFrameCb)
+    private StreamPlayer(IntPtr session, int playerID)
     {
         if(session == IntPtr.Zero)
         {
             Debug.LogError("Session is null");
             return;
         }
-        StreamDecoder.drawEvent += ReceiveOneFrame;
-        StreamDecoder.decodeEvent += OnEvent;
         this.playerID = playerID;
         this.session = session;
-        if (onReceiveOneFrameCb != null) this.drawCb = onReceiveOneFrameCb;
-        if (onReceiveEventCb != null) this.onEvent = onReceiveEventCb;
+
     }
 
     //尝试打开解封装线程
-    public bool TryBitStreamDemux()
+    public void TryBitStreamDemux()
     {
         if (session == IntPtr.Zero)
         {
             Debug.LogError("session is null");
-            return false;
+            return;
         }
-        return Native.Invoke<bool, StreamDecoder.TryBitStreamDemux>(StreamDecoder.streamDecoder_dll, session);
+        Native.Invoke<StreamDecoder.TryBitStreamDemux>(StreamDecoder.streamDecoder_dll, session);
     }
-    public bool TryNetStreamDemux(string url)
+    public void TryNetStreamDemux(string url)
     {
         if (session == IntPtr.Zero)
         {
             Debug.LogError("session is null");
-            return false;
+            return;
         }
-        return Native.Invoke<bool, StreamDecoder.TryNetStreamDemux>(StreamDecoder.streamDecoder_dll, session, url);
+       Native.Invoke<StreamDecoder.TryNetStreamDemux>(StreamDecoder.streamDecoder_dll, session, url);
     }
 
     //开始解码
@@ -129,15 +119,9 @@ public class StreamPlayer {
         Native.Invoke<StreamDecoder.SetOption>(StreamDecoder.streamDecoder_dll, session, (int)type, value);
     }
 
-    private void ReceiveOneFrame(DotNetFrame frame)
+    public void SetSessionEvent(StreamDecoder.DLL_Decode_Event sessionEvent, StreamDecoder.DLL_Draw_Frame drawEvent)
     {
-        if (frame.playerID != playerID) return;
-        if (drawCb != null) drawCb(frame);
-    }
-
-    private void OnEvent(int playerID, EType et)
-    {
-        if (this.playerID != playerID) return;
-        if (onEvent != null) onEvent(et);
+        if (session == IntPtr.Zero) return;
+        Native.Invoke<StreamDecoder.SetSessionEvent>(StreamDecoder.streamDecoder_dll, session, sessionEvent, drawEvent);
     }
 }

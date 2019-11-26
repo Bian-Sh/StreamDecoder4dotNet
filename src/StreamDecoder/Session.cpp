@@ -15,12 +15,10 @@ extern "C"
 }
 
 
-Session::Session(int playerID, int cacheSize)
+Session::Session(int playerID)
 {
 	config = new SessionConfig();
 	config->playerID = playerID;
-	config->dataCacheSize = cacheSize;
-
 }
 
 Session::~Session()
@@ -208,11 +206,15 @@ void Session::OnDecodeOneAVFrame(AVFrame *frame, bool isAudio)
 		height = this->width;
 	}
 
+	av_frame_free(&frame);
+	return;
 	//不需要内存对齐
 	if (frame->linesize[0] == width)
 	{
+
 		Frame *tmpFrame = new Frame(config->playerID, frame->width, frame->height, (char*)frame->data[0], (char*)frame->data[1], (char*)frame->data[2]);
-		StreamDecoder::Get()->PushFrame2Net(tmpFrame);
+		//StreamDecoder::Get()->PushFrame2Net(tmpFrame);
+
 	}
 	else
 	{
@@ -229,8 +231,7 @@ void Session::OnDecodeOneAVFrame(AVFrame *frame, bool isAudio)
 		{
 			memcpy(tmpFrame->frame_v + width / 2 * i, frame->data[2] + frame->linesize[2] * i, width / 2);
 		}
-		StreamDecoder::Get()->PushFrame2Net(tmpFrame);
-
+		//StreamDecoder::Get()->PushFrame2Net(tmpFrame);
 	}
 	av_frame_free(&frame);
 
@@ -242,13 +243,31 @@ void Session::OnDecodeOneAVFrame(AVFrame *frame, bool isAudio)
 }
 
 
+//主线程调用
+void Session::Update()
+{
+	funcMux.lock();
+	DotNetFrame * f = new DotNetFrame();
+	f->playerID = config->playerID;
+	if (DotNetDrawFrame) DotNetDrawFrame(f);
+	delete f;
+	f = NULL;
+
+	if (DotNetSessionEvent) DotNetSessionEvent(config->playerID, SessionEventType::DemuxSuccess);
+	funcMux.unlock();
+}
 
 void Session::SetOption(int optionType, int value)
 {
 	//安全校验
 	if (value < 0) value = 0;
 
-	if ((OptionType)optionType == OptionType::DemuxTimeout)
+	if ((OptionType)optionType == OptionType::DataCacheSize)
+	{
+		if (value < 500000) value = 500000;
+		config->dataCacheSize = value;
+	}
+	else if ((OptionType)optionType == OptionType::DemuxTimeout)
 	{
 		config->demuxTimeout = value;
 	}
@@ -276,4 +295,30 @@ void Session::SetOption(int optionType, int value)
 		if (value > 8) value = 8;
 		config->decodeThreadCount = value;
 	}
+}
+
+void Session::SetSessionEvent(PEvent pEvent, PDrawFrame pDrawFrame)
+{
+
+	funcMux.lock();
+	if (DotNetSessionEvent)
+	{
+		StreamDecoder::Get()->PushLog2Net(Info, "DotNetSessionEvent don't need set func pointer");
+	}
+	else
+	{
+		DotNetSessionEvent = pEvent;
+		StreamDecoder::Get()->PushLog2Net(Info, "DotNetSessionEvent set success");
+	}
+
+	if (DotNetDrawFrame)
+	{
+		StreamDecoder::Get()->PushLog2Net(Info, "DotNetDrawFrame don't need set func pointer");
+	}
+	else
+	{
+		DotNetDrawFrame = pDrawFrame;
+		StreamDecoder::Get()->PushLog2Net(Info, "DotNetDrawFrame set success");
+	}
+	funcMux.unlock();
 }

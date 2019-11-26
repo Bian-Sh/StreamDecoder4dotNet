@@ -1,5 +1,6 @@
 #include "StreamDecoder.h"
 #include "Session.h"
+#include "Tools.h"
 #include <windows.h>
 #include <iostream>
 #include "Packet.h"
@@ -7,13 +8,12 @@ extern "C"
 {
 #include <libavcodec/avcodec.h>
 #include <libavformat/avformat.h>
-
 }
 #pragma comment(lib, "avcodec.lib")
 #pragma comment(lib, "avformat.lib")
 #pragma comment(lib, "avutil.lib")
 using namespace std;
-void _stdcall TimerProcess(HWND hwnd, UINT uMsg, UINT idEvent, DWORD dwTime)
+void _stdcall TimerProcess(HWND hwnd, UINT uMsg, UINT_PTR timerPtr, DWORD dwTime)
 {
 	StreamDecoder::Get()->FixedUpdate();
 }
@@ -25,22 +25,31 @@ StreamDecoder::StreamDecoder()
 	avcodec_register_all();
 	avformat_network_init();
 }
+
+
+StreamDecoder::~StreamDecoder()
+{
+	StreamDecoderDeInitialize();
+	
+}
+
 //初始化StreamDecoder 设置日志回调函数
-void StreamDecoder::StreamDecoderInitialize(PLog logfunc, PDrawFrame drawfunc, PEvent ev)
+void StreamDecoder::StreamDecoderInitialize(PLog logfunc)
 {
 	logMux.lock();
 	if (!Log) Log = logfunc;
 	logMux.unlock();
 
-	frameMux.lock();
-	if (!DrawFrame) DrawFrame = drawfunc;
-	frameMux.unlock();
+	//frameMux.lock();
+	//if (!DrawFrame) DrawFrame = drawfunc;
+	//frameMux.unlock();
 
-	eventMux.lock();
-	if (!Event)Event = ev;
-	eventMux.unlock();
+	//eventMux.lock();
+	//if (!Event)Event = ev;
+	//eventMux.unlock();
 	
-	SetTimer(NULL, 1, 25, (TIMERPROC)TimerProcess);
+	timerPtr = SetTimer(NULL, 1, 10, TimerProcess);
+	startTimeStamp = Tools::Get()->GetTimestamp();
 }
 
 //注销StreamDecoder 预留函数
@@ -50,9 +59,12 @@ void StreamDecoder::StreamDecoderDeInitialize()
 	Log = NULL;
 	logMux.unlock();
 
-	frameMux.lock();
+	/*frameMux.lock();
 	DrawFrame = NULL;
-	frameMux.unlock();
+	frameMux.unlock();*/
+
+	KillTimer(NULL, timerPtr);
+	cout << "平均刷新率" << GetUpdateRate() << "次/s" << endl;
 }
 
 
@@ -63,10 +75,12 @@ char* StreamDecoder::GetStreamDecoderVersion()
 }
 
 //创建一个Session
-void* StreamDecoder::CreateSession(int playerID, int dataCacheSize)
+void* StreamDecoder::CreateSession(int playerID)
 {
+	Session* session = new Session(playerID);
+	sessionList.push_back(session);
 	PushLog2Net(Info, "Create Session Success");
-	return new Session(playerID, dataCacheSize);
+	return session;
 }
 
 //删除一个Session
@@ -79,6 +93,17 @@ void StreamDecoder::DeleteSession(void* session)
 		PushLog2Net(Error, "DeleteSession exception, session is null");
 		return;
 	}
+
+	if (std::count(sessionList.begin(), sessionList.end(), session) == 1)
+	{
+		vector<Session*>::iterator iter = find(sessionList.begin(), sessionList.end(), session);
+		sessionList.erase(iter);
+	}
+	else
+	{
+		cout << "严重错误，不存在当前值 session" << endl;
+	}
+	
 	delete s;
 	s = NULL;
 	PushLog2Net(Info, "Delete Session Success");
@@ -167,6 +192,17 @@ void StreamDecoder::SetOption(void* session, int optionType, int value)
 	s->SetOption(optionType, value);
 }
 
+void StreamDecoder::SetSessionEvent(void* session, void(*PEvent)(int playerID, int eventType), void(*PDrawFrame)(DotNetFrame* frame))
+{
+	Session* s = (Session*)session;
+	if (s == NULL)
+	{
+		PushLog2Net(Error, "SetSessionEvent exception, session is null");
+		return;
+	}
+	s->SetSessionEvent(PEvent, PDrawFrame);
+}
+
 //把消息追加到队列，通过主线程发送
 void StreamDecoder::PushLog2Net(LogLevel level, char* log)
 {
@@ -176,25 +212,30 @@ void StreamDecoder::PushLog2Net(LogLevel level, char* log)
 	logMux.unlock();
 }
 
-void StreamDecoder::PushFrame2Net(Frame* frame)
-{
-	frameMux.lock();
-	framepackets.push_back(frame);
-	frameMux.unlock();
-}
-
-void StreamDecoder::PushEvent2Net(int playerID, int eventType)
-{
-	DEvent * ev = new DEvent(playerID, eventType);
-	eventMux.lock();
-	eventpackets.push_back(ev);
-	eventMux.unlock();
-}
+//void StreamDecoder::PushFrame2Net(Frame* frame)
+//{
+//	frameMux.lock();
+//	framepackets.push_back(frame);
+//	frameMux.unlock();
+//}
+//
+//void StreamDecoder::PushEvent2Net(int playerID, int eventType)
+//{
+//	DEvent * ev = new DEvent(playerID, eventType);
+//	eventMux.lock();
+//	eventpackets.push_back(ev);
+//	eventMux.unlock();
+//}
 
 //主线程更新 物理时间
 void StreamDecoder::FixedUpdate()
 {
-	//callTime++;
+	int sessionCount = sessionList.size();
+	for (int i = 0; i < sessionCount; i ++)
+	{
+		sessionList[i]->Update();
+	}
+	timerCounter++;
 	logMux.lock();
 	int size = logpackets.size();
 	for (int i = 0; i < size; i++)
@@ -204,7 +245,7 @@ void StreamDecoder::FixedUpdate()
 	}
 	logMux.unlock();
 
-	frameMux.lock();
+	/*frameMux.lock();
 	size = framepackets.size();
 	for (int i = 0; i < size; i++)
 	{
@@ -220,10 +261,16 @@ void StreamDecoder::FixedUpdate()
 		Event2Net(eventpackets.front());
 		eventpackets.pop_front();
 	}
-	eventMux.unlock();
+	eventMux.unlock();*/
 }
 
 
+//获取平均更新率
+int StreamDecoder::GetUpdateRate()
+{
+	long long aliveTime = Tools::Get()->GetTimestamp() - startTimeStamp;
+	return (int)((float)timerCounter * 1000 / aliveTime);
+}
 
 //调用回调函数（主线程同步）
 void StreamDecoder::Log2Net(LogPacket* logpacket)
@@ -236,40 +283,40 @@ void StreamDecoder::Log2Net(LogPacket* logpacket)
 	delete logpacket;
 	logpacket = NULL;
 }
-//调用回调函数（主线程同步）
-void StreamDecoder::DrawFrame2dotNet(Frame* frame)
-{
-	if (DrawFrame)
-	{
-		DotNetFrame* dotNetFrame = new DotNetFrame();
-		dotNetFrame->playerID = frame->playerID;
-		dotNetFrame->width = frame->width;
-		dotNetFrame->height = frame->height;
-		dotNetFrame->frame_y = frame->frame_y;
-		dotNetFrame->frame_u = frame->frame_u;
-		dotNetFrame->frame_v = frame->frame_v;
-		//真正调用C#
-		DrawFrame(dotNetFrame);
-		//Log2Net(new LogPacket(Info, "call ok"));
-		delete dotNetFrame;
-		dotNetFrame = NULL;
-	}
-	delete frame;
-	frame = NULL;
-}
-
-void StreamDecoder::Event2Net(DEvent* ev)
-{
-	if (Event) Event(ev->playerID, ev->eventType);
-	delete ev;
-	ev = NULL;
-}
+////调用回调函数（主线程同步）
+//void StreamDecoder::DrawFrame2dotNet(Frame* frame)
+//{
+//	if (DrawFrame)
+//	{
+//		DotNetFrame* dotNetFrame = new DotNetFrame();
+//		dotNetFrame->playerID = frame->playerID;
+//		dotNetFrame->width = frame->width;
+//		dotNetFrame->height = frame->height;
+//		dotNetFrame->frame_y = frame->frame_y;
+//		dotNetFrame->frame_u = frame->frame_u;
+//		dotNetFrame->frame_v = frame->frame_v;
+//		//真正调用C#
+//		DrawFrame(dotNetFrame);
+//		//Log2Net(new LogPacket(Info, "call ok"));
+//		delete dotNetFrame;
+//		dotNetFrame = NULL;
+//	}
+//	delete frame;
+//	frame = NULL;
+//}
+//
+//void StreamDecoder::Event2Net(DEvent* ev)
+//{
+//	if (Event) Event(ev->playerID, ev->eventType);
+//	delete ev;
+//	ev = NULL;
+//}
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-void StreamDecoderInitialize(PLog logfunc, PDrawFrame drawfunc, PEvent ev)
+void StreamDecoderInitialize(PLog logfunc)
 {
-	StreamDecoder::Get()->StreamDecoderInitialize(logfunc, drawfunc, ev);
+	StreamDecoder::Get()->StreamDecoderInitialize(logfunc);
 }
 
 void StreamDecoderDeInitialize()
@@ -282,9 +329,9 @@ char* GetStreamDecoderVersion()
 	return StreamDecoder::Get()->GetStreamDecoderVersion();
 }
 
-void* CreateSession(int playerID, int dataCacheSize)
+void* CreateSession(int playerID)
 {
-	return StreamDecoder::Get()->CreateSession(playerID, dataCacheSize);
+	return StreamDecoder::Get()->CreateSession(playerID);
 }
 
 void DeleteSession(void* session)
@@ -326,5 +373,10 @@ bool PushStream2Cache(void* session, char* data, int len)
 void SetOption(void* session, int optionType, int value)
 {
 	StreamDecoder::Get()->SetOption(session, optionType, value);
+}
+
+void SetSessionEvent(void* session, void(*PEvent)(int playerID, int eventType), void(*PDrawFrame)(DotNetFrame* frame))
+{
+	StreamDecoder::Get()->SetSessionEvent(session, PEvent, PDrawFrame);
 }
 
