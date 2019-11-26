@@ -22,7 +22,7 @@ enum LogLevel
 };
 struct LogPacket;
 struct Frame;
-struct DotNetFrame;
+//struct DotNetFrame;
 
 class Session;
 typedef void(*PLog)(int level, char* log);
@@ -71,7 +71,7 @@ public:
 	//设置参数
 	void SetOption(void* session, int optionType, int value);
 
-	void SetSessionEvent(void* session, void(*PEvent)(int playerID, int eventType), void(*PDrawFrame)(DotNetFrame* frame));
+	void SetSessionEvent(void* session, void(*PEvent)(int playerID, int eventType), void(*PDrawFrame)(Frame* frame));
 
 	//把消息追加到队列，通过主线程发送
 	void PushLog2Net(LogLevel level, char* log);
@@ -98,12 +98,6 @@ private:
 	PLog Log = NULL;
 	std::list<LogPacket*> logpackets;
 
-	/*std::mutex frameMux;
-	PDrawFrame DrawFrame = NULL;
-	std::mutex eventMux;
-	PEvent Event = NULL;
-	std::list<Frame*> framepackets;
-	std::list<DEvent*> eventpackets;*/
 	
 	unsigned long long timerPtr = 0;
 	long long timerCounter = 1;
@@ -137,4 +131,4 @@ HEAD bool _cdecl PushStream2Cache(void* session, char* data, int len);
 
 HEAD void _cdecl SetOption(void* session, int optionType, int value);
 
-HEAD void _cdecl SetSessionEvent(void* session, void(*PEvent)(int playerID, int eventType), void(*PDrawFrame)(DotNetFrame* frame));
+HEAD void _cdecl SetSessionEvent(void* session, void(*PEvent)(int playerID, int eventType), void(*PDrawFrame)(Frame* frame));

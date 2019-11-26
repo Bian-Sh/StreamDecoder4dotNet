@@ -64,7 +64,7 @@ public class QScrcpy : MonoBehaviour
         }
 
         StreamDecoder.LoadLibrary();
-        player = StreamPlayer.CreateSession(2);
+        player = StreamPlayer.CreateSession();
         player.SetOption(OptionType.DataCacheSize, 2000000);
         player.SetOption(OptionType.DemuxTimeout, 5000);
         player.SetOption(OptionType.PushFrameInterval, 10);
@@ -136,7 +136,7 @@ public class QScrcpy : MonoBehaviour
     }
 
 
-    void onDraw(DotNetFrame frame)
+    void onDraw(Frame frame)
     {
         if (mat == null)
         {

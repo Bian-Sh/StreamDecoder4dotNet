@@ -17,7 +17,7 @@ public:
 	H264Decoder(QWidget *parent = Q_NULLPTR);
 
 	static H264Decoder* self;
-	void OnDrawFrame(DotNetFrame* frame);
+	void OnDrawFrame(Frame* frame);
 	void OnEventPkt(int playerID, int eventType);
 public slots :
 	void on_CreateSession_clicked();

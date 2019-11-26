@@ -48,7 +48,7 @@ void StreamDecoder::StreamDecoderInitialize(PLog logfunc)
 	//if (!Event)Event = ev;
 	//eventMux.unlock();
 	
-	timerPtr = SetTimer(NULL, 1, 10, TimerProcess);
+	timerPtr = SetTimer(NULL, 1, 20, TimerProcess);
 	startTimeStamp = Tools::Get()->GetTimestamp();
 }
 
@@ -192,7 +192,7 @@ void StreamDecoder::SetOption(void* session, int optionType, int value)
 	s->SetOption(optionType, value);
 }
 
-void StreamDecoder::SetSessionEvent(void* session, void(*PEvent)(int playerID, int eventType), void(*PDrawFrame)(DotNetFrame* frame))
+void StreamDecoder::SetSessionEvent(void* session, void(*PEvent)(int playerID, int eventType), void(*PDrawFrame)(Frame* frame))
 {
 	Session* s = (Session*)session;
 	if (s == NULL)
@@ -230,6 +230,7 @@ void StreamDecoder::PushLog2Net(LogLevel level, char* log)
 //主线程更新 物理时间
 void StreamDecoder::FixedUpdate()
 {
+	//PushLog2Net(Info, "hello");
 	int sessionCount = sessionList.size();
 	for (int i = 0; i < sessionCount; i ++)
 	{
@@ -375,7 +376,7 @@ void SetOption(void* session, int optionType, int value)
 	StreamDecoder::Get()->SetOption(session, optionType, value);
 }
 
-void SetSessionEvent(void* session, void(*PEvent)(int playerID, int eventType), void(*PDrawFrame)(DotNetFrame* frame))
+void SetSessionEvent(void* session, void(*PEvent)(int playerID, int eventType), void(*PDrawFrame)(Frame* frame))
 {
 	StreamDecoder::Get()->SetSessionEvent(session, PEvent, PDrawFrame);
 }

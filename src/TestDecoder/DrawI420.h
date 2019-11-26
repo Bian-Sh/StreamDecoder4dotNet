@@ -4,7 +4,7 @@
 #include <QGLShaderProgram>
 #include <QMutex>
 #include <QWaitCondition>
-class DotNetFrame;
+struct Frame;
 class DrawI420 : public QOpenGLWidget, protected QOpenGLFunctions
 {
 
@@ -21,7 +21,7 @@ public:
 
 	//»æÖÆYUVÊý¾Ý
 	bool Repaint(unsigned char* yuv[]);
-	bool Repaint(DotNetFrame* frame);
+	bool Repaint(Frame* frame);
 
 	void Close();
 

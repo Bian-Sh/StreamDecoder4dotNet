@@ -1,14 +1,15 @@
 #pragma once
-
 #include <mutex>
+#include <list>
 class Demux;
 class Decode;
 struct AVFrame;
 struct AVPacket;
 struct SessionConfig;
-struct DotNetFrame;
+//struct DotNetFrame;
+struct Frame;
 typedef void(*PEvent)(int playerID, int eventType);
-typedef void(*PDrawFrame)(DotNetFrame* frame);
+typedef void(*PDrawFrame)(Frame* frame);
 
 class Session
 {
@@ -73,4 +74,9 @@ private:
 
 	PEvent DotNetSessionEvent = NULL;
 	PDrawFrame DotNetDrawFrame = NULL;
+
+	//std::mutex frameMux;
+	//std::mutex eventMux;
+	std::list<Frame*> framePackets;
+	std::list<int> eventPackets;
 };

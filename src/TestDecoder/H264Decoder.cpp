@@ -17,7 +17,7 @@
 
 H264Decoder* H264Decoder::self = NULL;
 
-void H264Decoder::OnDrawFrame(DotNetFrame* frame)
+void H264Decoder::OnDrawFrame(Frame* frame)
 {
 #ifdef USE_WIDGET
 	if (width != frame->width || height != frame->height)
@@ -109,7 +109,7 @@ void H264Decoder::OnRead()
 
 void OnDraw(DotNetFrame* frame)
 {
-	H264Decoder::self->OnDrawFrame(frame);
+	//H264Decoder::self->OnDrawFrame(frame);
 }
 
 void OnEvent(int playerID, int eventType)
@@ -121,9 +121,9 @@ void EventTest(int playerID, int eventType)
 {
 	qDebug() << playerID;
 }
-void DrawTest(DotNetFrame* frame)
+void DrawTest(Frame* frame)
 {
-	qDebug() << frame->playerID;
+	qDebug() << frame->width;
 }
 void H264Decoder::on_CreateSession_clicked()
 {

@@ -97,24 +97,23 @@ struct LogPacket
 
 struct Frame
 {
-	int playerID;
+	//int playerID;
 	int width;
 	int height;
-	int size_y;
+	/*int size_y;
 	int size_u;
-	int size_v;
+	int size_v;*/
 	char* frame_y;
 	char* frame_u;
 	char* frame_v;
 	
-	Frame(int playerID, int width, int height, char* y, char* u, char* v, bool isLineAlign = true)
+	Frame(int width, int height, char* y, char* u, char* v, bool isLineAlign = true)
 	{
-		this->playerID = playerID;
 		this->width = width;
 		this->height = height;
-		this->size_y = width * height;
-		this->size_u = size_y / 4;
-		this->size_v = size_y / 4;
+		int size_y = width * height;
+		int size_u = size_y / 4;
+		int size_v = size_y / 4;
 		frame_y = new char[size_y];
 		frame_u = new char[size_u];
 		frame_v = new char[size_v];
@@ -145,15 +144,14 @@ struct Frame
 	}
 };
 
-struct DotNetFrame
-{
-	int playerID;
-	int width;
-	int height;
-	char* frame_y;
-	char* frame_u;
-	char* frame_v;
-};
+//struct DotNetFrame
+//{
+//	int width;
+//	int height;
+//	char* frame_y;
+//	char* frame_u;
+//	char* frame_v;
+//};
 
 
 
@@ -161,18 +159,9 @@ enum SessionEventType
 {
 	DemuxSuccess = 1,
 };
-struct SessionEvent
-{
-	int playerID;
-	int eventType;
-	SessionEvent(int playerID, int eventType)
-	{
-		this->playerID = playerID;
-		this->eventType = eventType;
-	}
-};
 
-//OptionType与SessionConfig一一对应(playerID除外)
+
+//OptionType与SessionConfig一一对应
 enum OptionType
 {
 	DataCacheSize = 1,
@@ -186,9 +175,6 @@ enum OptionType
 };
 struct SessionConfig
 {
-	int playerID;
-
-
 	int dataCacheSize = 1000000;				//DataCacheSize
 	//解封装等待时间								
 	int demuxTimeout = 2000;					//DemuxTimeout

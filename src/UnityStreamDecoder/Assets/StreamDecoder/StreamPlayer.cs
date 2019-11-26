@@ -21,14 +21,15 @@ public class StreamPlayer {
     /// <param name="onReceiveEventCb">事件回调</param>
     /// <param name="onReceiveOneFrameCb">绘制回调</param>
     /// <returns></returns>
-    public static StreamPlayer CreateSession(int playerID)
+    public static StreamPlayer CreateSession()
     {
+        int id = StreamDecoder.GetNewID();
         if(!StreamDecoder.IsInit)
         {
             StreamDecoder.InitStreamDecoder();
         }
-        IntPtr s = Native.Invoke<IntPtr, StreamDecoder.CreateSession>(StreamDecoder.streamDecoder_dll, playerID);
-        return new StreamPlayer(s, playerID);
+        IntPtr s = Native.Invoke<IntPtr, StreamDecoder.CreateSession>(StreamDecoder.streamDecoder_dll, id);
+        return new StreamPlayer(s, id);
     }
     /// <summary>
     /// 关闭并删除一个Session

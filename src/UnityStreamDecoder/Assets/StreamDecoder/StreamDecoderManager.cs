@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using System.Threading;
 using UnityEngine;
-
+using UnityEngine.UI;
 
 namespace SStreamDecoder
 {
@@ -22,9 +22,8 @@ namespace SStreamDecoder
     {
         DemuxSuccess = 1,
     }
-    public struct DotNetFrame
+    public struct Frame
     {
-        public int playerID;
         public int width;
         public int height;
         public IntPtr frame_y;
@@ -128,8 +127,9 @@ namespace SStreamDecoder
 
 
         public delegate void SetSessionEvent(IntPtr session, DLL_Decode_Event sessionEvent, DLL_Draw_Frame drawEvent);
-        
 
+
+        #region C++ 回调委托
         /// <summary>
         /// C++ 回调函数 Log 委托
         /// </summary>
@@ -143,7 +143,7 @@ namespace SStreamDecoder
         /// </summary>
         /// <param name="frame"></param>
         [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-        public delegate void DLL_Draw_Frame(DotNetFrame frame);
+        public delegate void DLL_Draw_Frame(Frame frame);
 
         /// <summary>
         /// C++ 回调函数 解码时间 委托
@@ -152,7 +152,7 @@ namespace SStreamDecoder
         /// <param name="eventType"></param>
         [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
         public delegate void DLL_Decode_Event(int playerID, int eventType);
-
+        #endregion
 
 
         #region 加载卸载动态链接库
@@ -213,18 +213,16 @@ namespace SStreamDecoder
         }
 
         /// <summary>
-        /// C++ 动态库回调函数
+        /// C++ 动态库回调函数, 打印Log
         /// </summary>
         /// <param name="level"></param>
-        /// <param name="log"></param>
-        private static void StreamDecoderLog(int level, IntPtr log)
+        /// <param name="_log"></param>
+        private static void StreamDecoderLog(int level, IntPtr _log)
         {
-            //string logStr = ;
-            string _log = "<b>" + Marshal.PtrToStringAnsi(log) + "</b>";
-            Debug.Log(_log);
+            string log = "<b>" + Marshal.PtrToStringAnsi(_log) + "</b>";
+            Debug.Log(log);
         }
-
-
+      
         /// <summary>
         /// 获取版本信息
         /// </summary>
@@ -235,6 +233,17 @@ namespace SStreamDecoder
             return Marshal.PtrToStringAnsi(versionPtr);
         }
 
+        private static List<int> decoderID = new List<int>();
+        public static int GetNewID()
+        {
+            int id = 0;
+            while(decoderID.Contains(id))
+            {
+                id++;
+            }
+            decoderID.Add(id);
+            return id;
+        }
     }
 }
 

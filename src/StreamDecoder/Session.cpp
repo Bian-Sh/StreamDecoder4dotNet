@@ -18,7 +18,6 @@ extern "C"
 Session::Session(int playerID)
 {
 	config = new SessionConfig();
-	config->playerID = playerID;
 }
 
 Session::~Session()
@@ -206,19 +205,16 @@ void Session::OnDecodeOneAVFrame(AVFrame *frame, bool isAudio)
 		height = this->width;
 	}
 
-	av_frame_free(&frame);
-	return;
+	Frame * tmpFrame = NULL;
 	//不需要内存对齐
 	if (frame->linesize[0] == width)
 	{
 
-		Frame *tmpFrame = new Frame(config->playerID, frame->width, frame->height, (char*)frame->data[0], (char*)frame->data[1], (char*)frame->data[2]);
-		//StreamDecoder::Get()->PushFrame2Net(tmpFrame);
-
+		tmpFrame = new Frame(frame->width, frame->height, (char*)frame->data[0], (char*)frame->data[1], (char*)frame->data[2]);
 	}
 	else
 	{
-		Frame *tmpFrame = new Frame(config->playerID, width, height, NULL, NULL, NULL, false);
+		tmpFrame = new Frame(width, height, NULL, NULL, NULL, false);
 		for (int i = 0; i < height; i++)
 		{
 			memcpy(tmpFrame->frame_y + width * i, frame->data[0] + frame->linesize[0] * i, width);
@@ -231,11 +227,17 @@ void Session::OnDecodeOneAVFrame(AVFrame *frame, bool isAudio)
 		{
 			memcpy(tmpFrame->frame_v + width / 2 * i, frame->data[2] + frame->linesize[2] * i, width / 2);
 		}
-		//StreamDecoder::Get()->PushFrame2Net(tmpFrame);
 	}
 	av_frame_free(&frame);
 
-	//会造成Session::run的阻塞
+	funcMux.lock();
+	framePackets.push_back(tmpFrame);
+	funcMux.unlock();
+
+	//funcMux.lock();
+	//if (DotNetDrawFrame) DotNetDrawFrame(tmpFrame);
+	//delete tmpFrame;
+	//funcMux.unlock();
 	if (config->pushFrameInterval > 0)
 	{
 		Tools::Get()->Sleep(config->pushFrameInterval);
@@ -246,14 +248,21 @@ void Session::OnDecodeOneAVFrame(AVFrame *frame, bool isAudio)
 //主线程调用
 void Session::Update()
 {
-	funcMux.lock();
-	DotNetFrame * f = new DotNetFrame();
-	f->playerID = config->playerID;
-	if (DotNetDrawFrame) DotNetDrawFrame(f);
-	delete f;
-	f = NULL;
 
-	if (DotNetSessionEvent) DotNetSessionEvent(config->playerID, SessionEventType::DemuxSuccess);
+	if (framePackets.size() == 0 && eventPackets.size() == 0) return;
+
+	funcMux.lock();
+	int size = framePackets.size();
+	for (int i = 0; i < size; i++)
+	{
+		Frame* frame = framePackets.front();
+		framePackets.pop_front();
+		//DotNetDrawFrame
+		if (DotNetDrawFrame) DotNetDrawFrame(frame);
+		delete frame;
+		frame = NULL;
+	}
+	
 	funcMux.unlock();
 }
 

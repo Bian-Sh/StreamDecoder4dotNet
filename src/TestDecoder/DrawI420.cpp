@@ -219,7 +219,7 @@ bool DrawI420::Repaint(unsigned char* yuv[])
 	return true;
 }
 
-bool DrawI420::Repaint(DotNetFrame* frame)
+bool DrawI420::Repaint(Frame* frame)
 {
 	if (isRepainting) return false;
 

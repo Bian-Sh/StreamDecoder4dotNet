@@ -268,8 +268,8 @@ RectTransform:
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 53029132}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 483.5, y: 272, z: 0}
-  m_LocalScale: {x: 0.50364584, y: 0.50364584, z: 0.50364584}
+  m_LocalPosition: {x: 960, y: 540, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
   - {fileID: 1189342000}
   m_Father: {fileID: 0}
@@ -305,7 +305,7 @@ RectTransform:
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 85422098}
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -150, y: 380.06204, z: 0}
+  m_LocalPosition: {x: -150, y: 379.99997, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
   - {fileID: 847195015}
@@ -427,7 +427,7 @@ RectTransform:
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 182904880}
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -810, y: 270.06207, z: 0}
+  m_LocalPosition: {x: -810, y: 270, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
   - {fileID: 1409339608}
@@ -623,7 +623,7 @@ RectTransform:
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 320700628}
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -150, y: 490.06207, z: 0}
+  m_LocalPosition: {x: -150, y: 490, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
   - {fileID: 1120843511}
@@ -1034,7 +1034,7 @@ RectTransform:
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 924700255}
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -810, y: 490.06207, z: 0}
+  m_LocalPosition: {x: -810, y: 490, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
   - {fileID: 1187393840}
@@ -1156,7 +1156,7 @@ RectTransform:
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 1024790741}
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -480, y: 270.06207, z: 0}
+  m_LocalPosition: {x: -480, y: 270, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
   - {fileID: 1036173}
@@ -1618,7 +1618,7 @@ RectTransform:
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 1381706616}
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -480, y: 160.06207, z: 0}
+  m_LocalPosition: {x: -480, y: 160, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
   - {fileID: 491491821}
@@ -1740,7 +1740,7 @@ RectTransform:
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 1396557577}
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -810, y: 380.06207, z: 0}
+  m_LocalPosition: {x: -810, y: 380, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
   - {fileID: 1039933831}
@@ -2082,8 +2082,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   readBuffSize: 10240
   tipText: {fileID: 488605589}
-  localPath: F:/Httpserver/Faded.mp4
-  netUrl: F:/HTTPServer/Faded.mp4
+  localPath: D:/Httpserver/Faded.mp4
+  netUrl: rtmp://58.200.131.2:1935/livetv/hunantv
   rimg: {fileID: 504296491}
   bitStreamCacheSize: 1200000
   demuxTimeout: 4000
@@ -2128,7 +2128,7 @@ RectTransform:
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 1961479569}
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -480, y: 490.06207, z: 0}
+  m_LocalPosition: {x: -480, y: 490, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
   - {fileID: 295797966}
@@ -2250,7 +2250,7 @@ RectTransform:
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 2129303357}
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -480, y: 380.06207, z: 0}
+  m_LocalPosition: {x: -480, y: 380, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
   - {fileID: 1066968556}

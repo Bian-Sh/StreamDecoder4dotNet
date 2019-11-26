@@ -35,6 +35,7 @@ public class PlayerDemo : MonoBehaviour
     private int waitBitStreamTimeout = 1000;
     [SerializeField]
     private bool alwaysWaitBitStream = true;
+
     // Use this for initialization
     void Start()
     {
@@ -54,7 +55,6 @@ public class PlayerDemo : MonoBehaviour
 
         mat = rimg.material;
 
-        
     }
 
     // Update is called once per frame
@@ -74,8 +74,8 @@ public class PlayerDemo : MonoBehaviour
     public void CreateSession()
     {
         if (player != null) return;
-        //唯一ID
-        player = StreamPlayer.CreateSession(10);
+  
+        player = StreamPlayer.CreateSession();
         player.SetOption(OptionType.DataCacheSize, bitStreamCacheSize);
         player.SetOption(OptionType.DemuxTimeout, demuxTimeout);
         player.SetOption(OptionType.PushFrameInterval, pushFrameInterval);
@@ -83,7 +83,7 @@ public class PlayerDemo : MonoBehaviour
         player.SetOption(OptionType.WaitBitStreamTimeout, waitBitStreamTimeout);
         player.SetOption(OptionType.AutoDecode, 1);
         player.SetOption(OptionType.DecodeThreadCount, 8);
-        player.SetSessionEvent(null, OnDrawFrame);
+        player.SetSessionEvent(null,null);
 
     }
     private void OnEvent(int playerID, int et)
@@ -93,12 +93,10 @@ public class PlayerDemo : MonoBehaviour
             Debug.Log("Demux Success" + playerID);
         }
     }
-    public void OnDrawFrame(DotNetFrame frame)
+
+    public void OnDrawFrame(Frame frame)
     {
-        Debug.Log("ondrawframe");
-        this.transform.Rotate(Vector3.forward * Time.deltaTime);
-        return;
-        if(mat == null)
+        if (mat == null)
         {
             Debug.LogWarning("mat is null");
             return;
