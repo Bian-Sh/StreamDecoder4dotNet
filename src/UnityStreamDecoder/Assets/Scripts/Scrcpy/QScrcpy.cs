@@ -71,7 +71,7 @@ public class QScrcpy : MonoBehaviour
         //player.SetOption(OptionType.WaitBitStreamTimeout, waitBitStreamTimeout);
         player.SetOption(OptionType.AlwaysWaitBitStream, 1);
         player.SetOption(OptionType.AutoDecode, 1);
-        player.SetOption(OptionType.DecodeThreadCount, 8);
+        player.SetOption(OptionType.DecodeThreadCount, 1);
         player.SetPlayerCb(null, OnFrame);
         mat = rimg.material;
         ADBStart();

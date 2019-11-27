@@ -311,7 +311,6 @@ void Session::SetOption(int optionType, int value)
 	}
 	else if ((OptionType)optionType == OptionType::DecodeThreadCount)
 	{
-		if (value < 2) value = 2;
 		if (value > 8) value = 8;
 		config->decodeThreadCount = value;
 	}

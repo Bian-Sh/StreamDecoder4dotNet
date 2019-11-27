@@ -45,7 +45,7 @@ bool Decode::Open(AVCodecParameters *para)
 	//释放参数
 	avcodec_parameters_free(&para);
 	//打开解码器
-	codec->thread_count = session->config->decodeThreadCount;
+	if(session->config->decodeThreadCount > 0) codec->thread_count = session->config->decodeThreadCount;
 	int ret = avcodec_open2(codec, NULL, NULL);
 	if (ret != 0)
 	{
