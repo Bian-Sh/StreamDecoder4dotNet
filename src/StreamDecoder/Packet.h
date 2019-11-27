@@ -97,7 +97,7 @@ struct LogPacket
 
 struct Frame
 {
-	//int playerID;
+	int playerID;
 	int width;
 	int height;
 	/*int size_y;
@@ -107,8 +107,9 @@ struct Frame
 	char* frame_u;
 	char* frame_v;
 	
-	Frame(int width, int height, char* y, char* u, char* v, bool isLineAlign = true)
+	Frame(int playerID, int width, int height, char* y, char* u, char* v, bool isLineAlign = true)
 	{
+		this->playerID = playerID;
 		this->width = width;
 		this->height = height;
 		int size_y = width * height;
@@ -159,9 +160,19 @@ enum SessionEventType
 {
 	DemuxSuccess = 1,
 };
+//struct SessionEvent
+//{
+//	int playerID;
+//	int sessionEventType;
+//	SessionEvent(int playerID, int sessionEventType)
+//	{
+//		this->playerID = playerID;
+//		this->sessionEventType = sessionEventType;
+//	}
+//};
 
 
-//OptionType与SessionConfig一一对应
+//OptionType与SessionConfig一一对应(playerID除外)
 enum OptionType
 {
 	DataCacheSize = 1,
@@ -175,6 +186,8 @@ enum OptionType
 };
 struct SessionConfig
 {
+	int playerID = 0;
+
 	int dataCacheSize = 1000000;				//DataCacheSize
 	//解封装等待时间								
 	int demuxTimeout = 2000;					//DemuxTimeout

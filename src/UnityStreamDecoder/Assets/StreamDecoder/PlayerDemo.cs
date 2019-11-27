@@ -35,6 +35,11 @@ public class PlayerDemo : MonoBehaviour
     private int waitBitStreamTimeout = 1000;
     [SerializeField]
     private bool alwaysWaitBitStream = true;
+    [SerializeField]
+    private bool autoDecode = true;
+    [SerializeField]
+    private int decodeThreadCount = 4;
+
 
     // Use this for initialization
     void Start()
@@ -57,11 +62,6 @@ public class PlayerDemo : MonoBehaviour
 
     }
 
-    // Update is called once per frame
-    void Update()
-    {
-
-    }
     private void OnDestroy()
     {
         isExit = true;
@@ -81,16 +81,16 @@ public class PlayerDemo : MonoBehaviour
         player.SetOption(OptionType.PushFrameInterval, pushFrameInterval);
         player.SetOption(OptionType.AlwaysWaitBitStream, alwaysWaitBitStream ? 1 : 0);
         player.SetOption(OptionType.WaitBitStreamTimeout, waitBitStreamTimeout);
-        player.SetOption(OptionType.AutoDecode, 1);
-        player.SetOption(OptionType.DecodeThreadCount, 8);
-        player.SetSessionEvent(null,null);
+        player.SetOption(OptionType.AutoDecode, autoDecode ? 1 : 0);
+        player.SetOption(OptionType.DecodeThreadCount, decodeThreadCount);
+        player.SetPlayerCb(OnEvent,OnDrawFrame);
 
     }
-    private void OnEvent(int playerID, int et)
+    private void OnEvent(SessionEventType type)
     {
-        if(et == (int)SessionEventType.DemuxSuccess)
+        if(type == SessionEventType.DemuxSuccess)
         {
-            Debug.Log("Demux Success" + playerID);
+            Debug.Log("Demux Success");
         }
     }
 

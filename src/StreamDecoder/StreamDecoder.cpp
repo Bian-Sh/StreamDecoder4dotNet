@@ -34,19 +34,14 @@ StreamDecoder::~StreamDecoder()
 }
 
 //初始化StreamDecoder 设置日志回调函数
-void StreamDecoder::StreamDecoderInitialize(PLog logfunc)
+void StreamDecoder::StreamDecoderInitialize(PLog logfunc, PEvent pE, PDrawFrame pDF)
 {
-	logMux.lock();
+
 	if (!Log) Log = logfunc;
-	logMux.unlock();
+	
+	if (!DotNetSessionEvent) DotNetSessionEvent = pE;
 
-	//frameMux.lock();
-	//if (!DrawFrame) DrawFrame = drawfunc;
-	//frameMux.unlock();
-
-	//eventMux.lock();
-	//if (!Event)Event = ev;
-	//eventMux.unlock();
+	if (!DotNetDrawFrame) DotNetDrawFrame = pDF;
 	
 	timerPtr = SetTimer(NULL, 1, 20, TimerProcess);
 	startTimeStamp = Tools::Get()->GetTimestamp();
@@ -77,7 +72,7 @@ char* StreamDecoder::GetStreamDecoderVersion()
 //创建一个Session
 void* StreamDecoder::CreateSession(int playerID)
 {
-	Session* session = new Session(playerID);
+	Session* session = new Session(playerID, DotNetSessionEvent, DotNetDrawFrame);
 	sessionList.push_back(session);
 	PushLog2Net(Info, "Create Session Success");
 	return session;
@@ -192,16 +187,16 @@ void StreamDecoder::SetOption(void* session, int optionType, int value)
 	s->SetOption(optionType, value);
 }
 
-void StreamDecoder::SetSessionEvent(void* session, void(*PEvent)(int playerID, int eventType), void(*PDrawFrame)(Frame* frame))
-{
-	Session* s = (Session*)session;
-	if (s == NULL)
-	{
-		PushLog2Net(Error, "SetSessionEvent exception, session is null");
-		return;
-	}
-	s->SetSessionEvent(PEvent, PDrawFrame);
-}
+//void StreamDecoder::SetSessionEvent(void* session, PEvent pE, PDrawFrame pDF)
+//{
+//	Session* s = (Session*)session;
+//	if (s == NULL)
+//	{
+//		PushLog2Net(Error, "SetSessionEvent exception, session is null");
+//		return;
+//	}
+//	s->SetSessionEvent(pE, pDF);
+//}
 
 //把消息追加到队列，通过主线程发送
 void StreamDecoder::PushLog2Net(LogLevel level, char* log)
@@ -315,9 +310,9 @@ void StreamDecoder::Log2Net(LogPacket* logpacket)
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-void StreamDecoderInitialize(PLog logfunc)
+void StreamDecoderInitialize(PLog logfunc, PEvent pE, PDrawFrame pDF)
 {
-	StreamDecoder::Get()->StreamDecoderInitialize(logfunc);
+	StreamDecoder::Get()->StreamDecoderInitialize(logfunc, pE, pDF);
 }
 
 void StreamDecoderDeInitialize()
@@ -376,8 +371,8 @@ void SetOption(void* session, int optionType, int value)
 	StreamDecoder::Get()->SetOption(session, optionType, value);
 }
 
-void SetSessionEvent(void* session, void(*PEvent)(int playerID, int eventType), void(*PDrawFrame)(Frame* frame))
-{
-	StreamDecoder::Get()->SetSessionEvent(session, PEvent, PDrawFrame);
-}
+//void SetSessionEvent(void* session, PEvent pE, PDrawFrame pDF)
+//{
+//	StreamDecoder::Get()->SetSessionEvent(session, pE, pDF);
+//}
 

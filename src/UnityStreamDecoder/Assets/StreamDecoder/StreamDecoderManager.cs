@@ -24,6 +24,7 @@ namespace SStreamDecoder
     }
     public struct Frame
     {
+        public int playerID;
         public int width;
         public int height;
         public IntPtr frame_y;
@@ -49,7 +50,7 @@ namespace SStreamDecoder
         /// </summary>
         /// <param name="pfun"></param>
         /// <param name="pDraw"></param>
-        private delegate void StreamDecoderInitialize(DLL_Debug_Log pLog);
+        private delegate void StreamDecoderInitialize(DLL_Debug_Log pLog, DLL_Decode_Event sessionEvent, DLL_Draw_Frame drawEvent);
 
         /// <summary>
         /// 注销StreamDecoder委托
@@ -126,7 +127,7 @@ namespace SStreamDecoder
         public delegate void SetOption(IntPtr session, OptionType type, int value);
 
 
-        public delegate void SetSessionEvent(IntPtr session, DLL_Decode_Event sessionEvent, DLL_Draw_Frame drawEvent);
+        //public delegate void SetSessionEvent(IntPtr session);
 
 
         #region C++ 回调委托
@@ -201,7 +202,9 @@ namespace SStreamDecoder
         {
             isInit = true;
             DLL_Debug_Log log = StreamDecoderLog;
-            Native.Invoke<StreamDecoderInitialize>(streamDecoder_dll, log);
+            DLL_Decode_Event ev = StreamDecoderEvent;
+            DLL_Draw_Frame draw = StreamDecoderDrawFrame;
+            Native.Invoke<StreamDecoderInitialize>(streamDecoder_dll, log, ev, draw);
         }
 
         /// <summary>
@@ -221,6 +224,19 @@ namespace SStreamDecoder
         {
             string log = "<b>" + Marshal.PtrToStringAnsi(_log) + "</b>";
             Debug.Log(log);
+        }
+
+        public static event Action<int, SessionEventType> onSessionEvent;
+        public static event Action<Frame> onFrameEvent;
+
+        private static void StreamDecoderEvent(int playerID, int eventType)
+        {
+            if (onSessionEvent != null) onSessionEvent(playerID, (SessionEventType)eventType);
+        }
+
+        private static void StreamDecoderDrawFrame(Frame frame)
+        {
+            if (onFrameEvent != null) onFrameEvent(frame);
         }
       
         /// <summary>

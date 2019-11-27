@@ -15,9 +15,13 @@ extern "C"
 }
 
 
-Session::Session(int playerID)
+Session::Session(int playerID, PEvent pE, PDrawFrame pDF)
 {
 	config = new SessionConfig();
+
+
+	DotNetSessionEvent = pE;
+	DotNetDrawFrame = pDF;
 }
 
 Session::~Session()
@@ -147,6 +151,10 @@ void Session::DemuxSuccess(int width, int height)
 		return;
 	}
 	vdecode->Start();
+
+	funcMux.lock();
+	eventPackets.push_back(SessionEventType::DemuxSuccess);
+	funcMux.unlock();
 	mux.unlock();
 }
 
@@ -210,11 +218,11 @@ void Session::OnDecodeOneAVFrame(AVFrame *frame, bool isAudio)
 	if (frame->linesize[0] == width)
 	{
 
-		tmpFrame = new Frame(frame->width, frame->height, (char*)frame->data[0], (char*)frame->data[1], (char*)frame->data[2]);
+		tmpFrame = new Frame(config->playerID, frame->width, frame->height, (char*)frame->data[0], (char*)frame->data[1], (char*)frame->data[2]);
 	}
 	else
 	{
-		tmpFrame = new Frame(width, height, NULL, NULL, NULL, false);
+		tmpFrame = new Frame(config->playerID, width, height, NULL, NULL, NULL, false);
 		for (int i = 0; i < height; i++)
 		{
 			memcpy(tmpFrame->frame_y + width * i, frame->data[0] + frame->linesize[0] * i, width);
@@ -230,14 +238,11 @@ void Session::OnDecodeOneAVFrame(AVFrame *frame, bool isAudio)
 	}
 	av_frame_free(&frame);
 
+	//同步到主线程调用
 	funcMux.lock();
 	framePackets.push_back(tmpFrame);
 	funcMux.unlock();
 
-	//funcMux.lock();
-	//if (DotNetDrawFrame) DotNetDrawFrame(tmpFrame);
-	//delete tmpFrame;
-	//funcMux.unlock();
 	if (config->pushFrameInterval > 0)
 	{
 		Tools::Get()->Sleep(config->pushFrameInterval);
@@ -257,12 +262,18 @@ void Session::Update()
 	{
 		Frame* frame = framePackets.front();
 		framePackets.pop_front();
-		//DotNetDrawFrame
 		if (DotNetDrawFrame) DotNetDrawFrame(frame);
 		delete frame;
 		frame = NULL;
 	}
 	
+	size = eventPackets.size();
+	for (int i = 0; i < size; i++)
+	{
+		int eventType = eventPackets.front();
+		eventPackets.pop_front();
+		if (DotNetSessionEvent) DotNetSessionEvent(config->playerID, eventType);
+	}
 	funcMux.unlock();
 }
 
@@ -304,30 +315,4 @@ void Session::SetOption(int optionType, int value)
 		if (value > 8) value = 8;
 		config->decodeThreadCount = value;
 	}
-}
-
-void Session::SetSessionEvent(PEvent pEvent, PDrawFrame pDrawFrame)
-{
-
-	funcMux.lock();
-	if (DotNetSessionEvent)
-	{
-		StreamDecoder::Get()->PushLog2Net(Info, "DotNetSessionEvent don't need set func pointer");
-	}
-	else
-	{
-		DotNetSessionEvent = pEvent;
-		StreamDecoder::Get()->PushLog2Net(Info, "DotNetSessionEvent set success");
-	}
-
-	if (DotNetDrawFrame)
-	{
-		StreamDecoder::Get()->PushLog2Net(Info, "DotNetDrawFrame don't need set func pointer");
-	}
-	else
-	{
-		DotNetDrawFrame = pDrawFrame;
-		StreamDecoder::Get()->PushLog2Net(Info, "DotNetDrawFrame set success");
-	}
-	funcMux.unlock();
 }

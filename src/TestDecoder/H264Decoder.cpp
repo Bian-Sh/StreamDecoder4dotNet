@@ -46,7 +46,7 @@ H264Decoder::H264Decoder(QWidget *parent)
 	ui.setupUi(this);
 	ui.filePath->setText(filePath);
 	if (self == NULL) self = this;
-	StreamDecoderInitialize(NULL);
+	StreamDecoderInitialize(NULL, NULL, NULL);
 
 #ifdef USE_WIDGET
 	if (canvas == NULL)
@@ -136,7 +136,7 @@ void H264Decoder::on_CreateSession_clicked()
 	SetOption(session, AlwaysWaitBitStream, false);
 	SetOption(session, AutoDecode, true);
 	SetOption(session, DecodeThreadCount, 6);
-	SetSessionEvent(session, NULL, DrawTest);
+	//SetSessionEvent(session, NULL, DrawTest);
 }
 
 void H264Decoder::on_DeleteSession_clicked()

@@ -6,7 +6,7 @@ class Decode;
 struct AVFrame;
 struct AVPacket;
 struct SessionConfig;
-//struct DotNetFrame;
+//struct SessionEvent;
 struct Frame;
 typedef void(*PEvent)(int playerID, int eventType);
 typedef void(*PDrawFrame)(Frame* frame);
@@ -15,7 +15,7 @@ class Session
 {
 
 public:
-	Session(int playerID);
+	Session(int playerID, PEvent pE, PDrawFrame pDF);
 	~Session();
 
 	void TryStreamDemux(char* url);
@@ -41,7 +41,7 @@ public:
 	//…Ë÷√—°œÓ 
 	void SetOption(int optionType, int value);
 
-	void SetSessionEvent(PEvent pEvent, PDrawFrame pDrawFrame);
+	//void SetSessionEvent(PEvent pEvent, PDrawFrame pDrawFrame);
 
 public:
 

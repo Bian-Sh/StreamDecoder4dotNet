@@ -26,7 +26,8 @@ struct Frame;
 
 class Session;
 typedef void(*PLog)(int level, char* log);
-
+typedef void(*PEvent)(int playerID, int eventType);
+typedef void(*PDrawFrame)(Frame* frame);
 class StreamDecoder
 {
 	
@@ -40,7 +41,7 @@ public:
 	~StreamDecoder();
 
 	//初始化StreamDecoder 设置日志回调函数
-	void StreamDecoderInitialize(PLog logfunc);
+	void StreamDecoderInitialize(PLog logfunc, PEvent pE, PDrawFrame pDF);
 
 	//注销StreamDecoder 预留函数
 	void StreamDecoderDeInitialize();
@@ -71,7 +72,7 @@ public:
 	//设置参数
 	void SetOption(void* session, int optionType, int value);
 
-	void SetSessionEvent(void* session, void(*PEvent)(int playerID, int eventType), void(*PDrawFrame)(Frame* frame));
+	//void SetSessionEvent(void* session, PEvent pE, PDrawFrame pDF);
 
 	//把消息追加到队列，通过主线程发送
 	void PushLog2Net(LogLevel level, char* log);
@@ -104,10 +105,13 @@ private:
 	long long startTimeStamp = 0;
 
 	std::vector<Session*> sessionList;
+
+	PEvent DotNetSessionEvent = NULL;
+	PDrawFrame DotNetDrawFrame = NULL;
 };
 
 //Global
-HEAD void _cdecl StreamDecoderInitialize(PLog logfunc);
+HEAD void _cdecl StreamDecoderInitialize(PLog logfunc, PEvent pE, PDrawFrame pDF);
 //Global
 HEAD void _cdecl StreamDecoderDeInitialize();
 //Global
@@ -131,4 +135,4 @@ HEAD bool _cdecl PushStream2Cache(void* session, char* data, int len);
 
 HEAD void _cdecl SetOption(void* session, int optionType, int value);
 
-HEAD void _cdecl SetSessionEvent(void* session, void(*PEvent)(int playerID, int eventType), void(*PDrawFrame)(Frame* frame));
+//HEAD void _cdecl SetSessionEvent(void* session, PEvent pE, PDrawFrame pDF);

@@ -66,12 +66,13 @@ public class QScrcpy : MonoBehaviour
         StreamDecoder.LoadLibrary();
         player = StreamPlayer.CreateSession();
         player.SetOption(OptionType.DataCacheSize, 2000000);
-        player.SetOption(OptionType.DemuxTimeout, 5000);
+        player.SetOption(OptionType.DemuxTimeout, 2000);
         player.SetOption(OptionType.PushFrameInterval, 10);
         //player.SetOption(OptionType.WaitBitStreamTimeout, waitBitStreamTimeout);
         player.SetOption(OptionType.AlwaysWaitBitStream, 1);
         player.SetOption(OptionType.AutoDecode, 1);
         player.SetOption(OptionType.DecodeThreadCount, 8);
+        player.SetPlayerCb(null, OnFrame);
         mat = rimg.material;
         ADBStart();
 
@@ -103,9 +104,6 @@ public class QScrcpy : MonoBehaviour
 
         lock (dataCache)
         {
-            //byte[] arr = dataCache.ToArray();
-            //fs.Write(arr, 0, arr.Length);
-            //dataCache.Clear();
 
             byte[] arr = dataCache.ToArray();
             int size = Mathf.Min(player.GetCacheFreeSize(), arr.Length);
@@ -136,7 +134,7 @@ public class QScrcpy : MonoBehaviour
     }
 
 
-    void onDraw(Frame frame)
+    void OnFrame(Frame frame)
     {
         if (mat == null)
         {

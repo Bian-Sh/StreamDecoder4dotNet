@@ -37,7 +37,7 @@ public class StreamPlayer {
     /// <param name="session"></param>
     public static void DeleteSession(ref StreamPlayer session)
     {
-        //session.DestructorStreamPlayer();
+        session.DestructorStreamPlayer();
         Native.Invoke<StreamDecoder.DeleteSession>(StreamDecoder.streamDecoder_dll, session.session);
         session.session = IntPtr.Zero;
         session = null;
@@ -58,8 +58,15 @@ public class StreamPlayer {
         this.playerID = playerID;
         this.session = session;
 
-    }
+        StreamDecoder.onFrameEvent += OnFrame;
+        StreamDecoder.onSessionEvent += OnSessionEvent;
 
+    }
+    public void DestructorStreamPlayer()
+    {
+        StreamDecoder.onFrameEvent -= OnFrame;
+        StreamDecoder.onSessionEvent -= OnSessionEvent;
+    }
     //尝试打开解封装线程
     public void TryBitStreamDemux()
     {
@@ -120,9 +127,22 @@ public class StreamPlayer {
         Native.Invoke<StreamDecoder.SetOption>(StreamDecoder.streamDecoder_dll, session, (int)type, value);
     }
 
-    public void SetSessionEvent(StreamDecoder.DLL_Decode_Event sessionEvent, StreamDecoder.DLL_Draw_Frame drawEvent)
+    private void OnSessionEvent(int playerID, SessionEventType type)
     {
-        if (session == IntPtr.Zero) return;
-        Native.Invoke<StreamDecoder.SetSessionEvent>(StreamDecoder.streamDecoder_dll, session, sessionEvent, drawEvent);
+        if (playerID != this.playerID) return;
+        if (onSessionEvent != null) onSessionEvent(type);
+    }
+    private void OnFrame(Frame frame)
+    {
+        if (playerID != frame.playerID) return;
+        if (onFrameEvent != null) onFrameEvent(frame);
+    }
+
+    private Action<SessionEventType> onSessionEvent;
+    private Action<Frame> onFrameEvent;
+    public void SetPlayerCb(Action<SessionEventType> onSessionEvent, Action<Frame> onFrameEvent)
+    {
+        this.onSessionEvent = onSessionEvent;
+        this.onFrameEvent = onFrameEvent;
     }
 }
