@@ -7,8 +7,8 @@
 #include <QMutex>
 
 
-void OnDraw(struct DotNetFrame* frame);
-void OnEvent(int playerID, int eventType);
+void OnDraw_cb(struct Frame* frame);
+void OnEvent_cb(int playerID, int eventType);
 class H264Decoder : public QWidget
 {
 	Q_OBJECT
@@ -17,8 +17,8 @@ public:
 	H264Decoder(QWidget *parent = Q_NULLPTR);
 
 	static H264Decoder* self;
-	void OnDrawFrame(Frame* frame);
-	void OnEventPkt(int playerID, int eventType);
+	void OnFrame(Frame* frame);
+	void OnSessionEvent(int playerID, int eventType);
 public slots :
 	void on_CreateSession_clicked();
 	void on_DeleteSession_clicked();

@@ -65,8 +65,15 @@ void Session::Clear()
 //添加数据流
 bool Session::PushStream2Cache(char* data, int len)
 {
-	if (!demux) return false;
-	return demux->PushStream2Cache(data, len);
+	mux.lock();
+	if (!demux)
+	{
+		mux.unlock();
+		return false;
+	}
+	bool b = demux->PushStream2Cache(data, len);
+	mux.unlock();
+	return b;
 }
 
 

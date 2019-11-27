@@ -21,3 +21,5 @@ src/UnityStreamDecoder/UnityPackageManager
 src/UnityStreamDecoder/UnityStreamDecoder.sln
 src/UnityStreamDecoder/UnityStreamDecoder.csproj
 bin/StreamDecoder.lib
+src/I420toRGB/x64
+src/I420toRGB/GeneratedFiles

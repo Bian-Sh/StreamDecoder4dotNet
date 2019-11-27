@@ -17,7 +17,7 @@
 
 H264Decoder* H264Decoder::self = NULL;
 
-void H264Decoder::OnDrawFrame(Frame* frame)
+void H264Decoder::OnFrame(Frame* frame)
 {
 #ifdef USE_WIDGET
 	if (width != frame->width || height != frame->height)
@@ -34,7 +34,7 @@ void H264Decoder::OnDrawFrame(Frame* frame)
 
 }
 
-void H264Decoder::OnEventPkt(int playerID, int eventType)
+void H264Decoder::OnSessionEvent(int playerID, int eventType)
 {
 	//BeginDecode(session);
 }
@@ -46,7 +46,7 @@ H264Decoder::H264Decoder(QWidget *parent)
 	ui.setupUi(this);
 	ui.filePath->setText(filePath);
 	if (self == NULL) self = this;
-	StreamDecoderInitialize(NULL, NULL, NULL);
+	StreamDecoderInitialize(NULL, OnEvent_cb, OnDraw_cb);
 
 #ifdef USE_WIDGET
 	if (canvas == NULL)
@@ -107,15 +107,9 @@ void H264Decoder::OnRead()
 
 
 
-void OnDraw(DotNetFrame* frame)
-{
-	//H264Decoder::self->OnDrawFrame(frame);
-}
+void OnDraw_cb(Frame* frame) { H264Decoder::self->OnFrame(frame); }
 
-void OnEvent(int playerID, int eventType)
-{
-	H264Decoder::self->OnEventPkt(playerID, eventType);
-}
+void OnEvent_cb(int playerID, int eventType) { H264Decoder::self->OnSessionEvent(playerID, eventType); }
 
 void EventTest(int playerID, int eventType)
 {

@@ -3,9 +3,11 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
 VisualStudioVersion = 15.0.28307.902
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "H264Decoder", "H264Decoder.vcxproj", "{B12702AD-ABFB-343A-A199-8E24837244A3}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "TestDecoder", "H264Decoder.vcxproj", "{B12702AD-ABFB-343A-A199-8E24837244A3}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "StreamDecoder", "..\StreamDecoder\StreamDecoder.vcxproj", "{EDC95A89-E98A-41CE-B4B3-32D1B0A97866}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "I420toRGB", "..\I420toRGB\I420toRGB.vcxproj", "{9CC6FB44-706E-4684-98A0-879221B4AC09}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -27,6 +29,12 @@ Global
 		{EDC95A89-E98A-41CE-B4B3-32D1B0A97866}.Release|x64.ActiveCfg = Release|x64
 		{EDC95A89-E98A-41CE-B4B3-32D1B0A97866}.Release|x64.Build.0 = Release|x64
 		{EDC95A89-E98A-41CE-B4B3-32D1B0A97866}.Release|x86.ActiveCfg = Release|x64
+		{9CC6FB44-706E-4684-98A0-879221B4AC09}.Debug|x64.ActiveCfg = Debug|x64
+		{9CC6FB44-706E-4684-98A0-879221B4AC09}.Debug|x64.Build.0 = Debug|x64
+		{9CC6FB44-706E-4684-98A0-879221B4AC09}.Debug|x86.ActiveCfg = Debug|x64
+		{9CC6FB44-706E-4684-98A0-879221B4AC09}.Release|x64.ActiveCfg = Release|x64
+		{9CC6FB44-706E-4684-98A0-879221B4AC09}.Release|x64.Build.0 = Release|x64
+		{9CC6FB44-706E-4684-98A0-879221B4AC09}.Release|x86.ActiveCfg = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
