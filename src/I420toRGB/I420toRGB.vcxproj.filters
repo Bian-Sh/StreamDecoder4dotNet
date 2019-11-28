@@ -33,17 +33,12 @@
     <ClCompile Include="main.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="I420toRGB.cpp">
+    <ClCompile Include="..\StreamDecoder\ConvertYUV.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="ConvertToRGB.cpp">
+    <ClCompile Include="ConvertTest.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-  </ItemGroup>
-  <ItemGroup>
-    <QtMoc Include="I420toRGB.h">
-      <Filter>Header Files</Filter>
-    </QtMoc>
   </ItemGroup>
   <ItemGroup>
     <QtUic Include="I420toRGB.ui">
@@ -56,8 +51,8 @@
     </QtRcc>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="ConvertToRGB.h">
+    <QtMoc Include="ConvertTest.h">
       <Filter>Header Files</Filter>
-    </ClInclude>
+    </QtMoc>
   </ItemGroup>
 </Project>
