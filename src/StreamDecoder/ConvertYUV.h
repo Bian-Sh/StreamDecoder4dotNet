@@ -1,8 +1,8 @@
 #pragma once
 typedef struct RGB32 {
-	unsigned char blue;
-	unsigned char green;
 	unsigned char red;
+	unsigned char green;
+	unsigned char blue;
 	unsigned char alpha;
 } RGB32;
 

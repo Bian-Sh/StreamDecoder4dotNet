@@ -17,6 +17,7 @@ namespace SStreamDecoder
         WaitBitStreamTimeout,
         AutoDecode,
         DecodeThreadCount,
+        UseCPUConvertYUV,
     }
     public enum SessionEventType
     {
@@ -30,6 +31,7 @@ namespace SStreamDecoder
         public IntPtr frame_y;
         public IntPtr frame_u;
         public IntPtr frame_v;
+        public IntPtr rgb;
     };
     public static class StreamDecoder
     {

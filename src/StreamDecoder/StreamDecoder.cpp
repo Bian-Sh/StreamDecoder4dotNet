@@ -12,6 +12,7 @@ extern "C"
 #pragma comment(lib, "avcodec.lib")
 #pragma comment(lib, "avformat.lib")
 #pragma comment(lib, "avutil.lib")
+#pragma comment(lib, "yuv.lib")
 using namespace std;
 void _stdcall TimerProcess(HWND hwnd, UINT uMsg, UINT_PTR timerPtr, DWORD dwTime)
 {

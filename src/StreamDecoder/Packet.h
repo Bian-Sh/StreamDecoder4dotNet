@@ -103,9 +103,10 @@ struct Frame
 	/*int size_y;
 	int size_u;
 	int size_v;*/
-	char* frame_y;
-	char* frame_u;
-	char* frame_v;
+	char* frame_y = NULL;
+	char* frame_u = NULL;
+	char* frame_v = NULL;
+	char* rgb = NULL;
 	
 	Frame(int playerID, int width, int height, char* y, char* u, char* v, bool isLineAlign = true)
 	{
@@ -125,6 +126,7 @@ struct Frame
 			memcpy(frame_v, v, size_v);
 		}
 	}
+
 	~Frame()
 	{
 		if (frame_y)
@@ -141,6 +143,12 @@ struct Frame
 		{
 			delete frame_v;
 			frame_v = NULL;
+		}
+
+		if (rgb)
+		{
+			delete rgb;
+			rgb = NULL;
 		}
 	}
 };
@@ -182,6 +190,7 @@ enum OptionType
 	WaitBitStreamTimeout,
 	AutoDecode,
 	DecodeThreadCount,
+	UseCPUConvertYUV,
 	
 };
 struct SessionConfig
@@ -196,4 +205,5 @@ struct SessionConfig
 	int waitBitStreamTimeout = 1000;			//WaitBitStreamTimeout
 	bool autoDecode = false;					//AutoDecode
 	int decodeThreadCount = 4;					//DecodeThreadCount
+	bool useCPUConvertYUV = false;				//UseCPUConvertYUV
 };

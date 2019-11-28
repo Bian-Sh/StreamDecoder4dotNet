@@ -6,11 +6,11 @@ using UnityEngine.UI;
 using System.Threading;
 using System.IO;
 
-public class PlayerDemo : MonoBehaviour
+
+public class PlayerDemo_YUV : MonoBehaviour
 {
-   
+ 
     public int readBuffSize = 1024;
-    public Text tipText;
     public string localPath = "F:/HTTPServer/Faded.mp4";
     public string netUrl = "rtmp://192.168.30.135/live/test";
     private bool isExit = false;
@@ -39,7 +39,8 @@ public class PlayerDemo : MonoBehaviour
     private bool autoDecode = true;
     [SerializeField]
     private int decodeThreadCount = 4;
-
+    [SerializeField]
+    private bool useCPUConvertYUV = false;
 
     // Use this for initialization
     void Start()
@@ -54,7 +55,6 @@ public class PlayerDemo : MonoBehaviour
         //加载动态库
         if (!StreamDecoder.LoadLibrary())
         {
-            tipText.text = "FFmpeg动态链接库加载失败";
             return;
         }
 
@@ -83,6 +83,7 @@ public class PlayerDemo : MonoBehaviour
         player.SetOption(OptionType.WaitBitStreamTimeout, waitBitStreamTimeout);
         player.SetOption(OptionType.AutoDecode, autoDecode ? 1 : 0);
         player.SetOption(OptionType.DecodeThreadCount, decodeThreadCount);
+        player.SetOption(OptionType.UseCPUConvertYUV, useCPUConvertYUV ? 1 : 0);
         player.SetPlayerCb(OnEvent,OnDrawFrame);
 
     }
@@ -118,6 +119,7 @@ public class PlayerDemo : MonoBehaviour
         mat.SetTexture("_YTex", ytex);
         mat.SetTexture("_UTex", utex);
         mat.SetTexture("_VTex", vtex);
+
     }
     public void DeleteSession()
     {
@@ -154,7 +156,7 @@ public class PlayerDemo : MonoBehaviour
         Debug.Log(player.GetCacheFreeSize());
     }
 
-    #region Send Data
+#region Send Data
     private bool isSending = false;
     public void StartSendData()
     {
@@ -215,5 +217,5 @@ public class PlayerDemo : MonoBehaviour
         file.Close();
         Debug.Log("Stop send data");
     }
-    #endregion
+#endregion
 }

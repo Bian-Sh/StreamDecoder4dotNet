@@ -310,7 +310,7 @@ RectTransform:
   m_Children:
   - {fileID: 847195015}
   m_Father: {fileID: 1189342000}
-  m_RootOrder: 10
+  m_RootOrder: 9
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
@@ -432,7 +432,7 @@ RectTransform:
   m_Children:
   - {fileID: 1409339608}
   m_Father: {fileID: 1189342000}
-  m_RootOrder: 4
+  m_RootOrder: 3
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
@@ -628,7 +628,7 @@ RectTransform:
   m_Children:
   - {fileID: 1120843511}
   m_Father: {fileID: 1189342000}
-  m_RootOrder: 9
+  m_RootOrder: 8
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
@@ -720,80 +720,6 @@ CanvasRenderer:
   m_PrefabParentObject: {fileID: 0}
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 320700628}
---- !u!1 &488605587
-GameObject:
-  m_ObjectHideFlags: 0
-  m_PrefabParentObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 0}
-  serializedVersion: 5
-  m_Component:
-  - component: {fileID: 488605588}
-  - component: {fileID: 488605590}
-  - component: {fileID: 488605589}
-  m_Layer: 5
-  m_Name: LogText
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!224 &488605588
-RectTransform:
-  m_ObjectHideFlags: 0
-  m_PrefabParentObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 0}
-  m_GameObject: {fileID: 488605587}
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_Children: []
-  m_Father: {fileID: 1189342000}
-  m_RootOrder: 1
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0.5, y: 0.5}
-  m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 512.5, y: 300.5}
-  m_Pivot: {x: 0.5, y: 0.5}
---- !u!114 &488605589
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_PrefabParentObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 0}
-  m_GameObject: {fileID: 488605587}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 708705254, guid: f70555f144d8491a825f0804e09c671c, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  m_Material: {fileID: 0}
-  m_Color: {r: 0.19607843, g: 0.19607843, b: 0.19607843, a: 1}
-  m_RaycastTarget: 1
-  m_OnCullStateChanged:
-    m_PersistentCalls:
-      m_Calls: []
-    m_TypeName: UnityEngine.UI.MaskableGraphic+CullStateChangedEvent, UnityEngine.UI,
-      Version=1.0.0.0, Culture=neutral, PublicKeyToken=null
-  m_FontData:
-    m_Font: {fileID: 10102, guid: 0000000000000000e000000000000000, type: 0}
-    m_FontSize: 26
-    m_FontStyle: 0
-    m_BestFit: 0
-    m_MinSize: 10
-    m_MaxSize: 40
-    m_Alignment: 4
-    m_AlignByGeometry: 0
-    m_RichText: 1
-    m_HorizontalOverflow: 0
-    m_VerticalOverflow: 0
-    m_LineSpacing: 1
-  m_Text: 
---- !u!222 &488605590
-CanvasRenderer:
-  m_ObjectHideFlags: 0
-  m_PrefabParentObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 0}
-  m_GameObject: {fileID: 488605587}
 --- !u!1 &491491820
 GameObject:
   m_ObjectHideFlags: 0
@@ -1039,7 +965,7 @@ RectTransform:
   m_Children:
   - {fileID: 1187393840}
   m_Father: {fileID: 1189342000}
-  m_RootOrder: 2
+  m_RootOrder: 1
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
@@ -1161,7 +1087,7 @@ RectTransform:
   m_Children:
   - {fileID: 1036173}
   m_Father: {fileID: 1189342000}
-  m_RootOrder: 7
+  m_RootOrder: 6
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
@@ -1575,7 +1501,6 @@ RectTransform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
   - {fileID: 504296490}
-  - {fileID: 488605588}
   - {fileID: 924700256}
   - {fileID: 1396557578}
   - {fileID: 182904881}
@@ -1623,7 +1548,7 @@ RectTransform:
   m_Children:
   - {fileID: 491491821}
   m_Father: {fileID: 1189342000}
-  m_RootOrder: 8
+  m_RootOrder: 7
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
@@ -1745,7 +1670,7 @@ RectTransform:
   m_Children:
   - {fileID: 1039933831}
   m_Father: {fileID: 1189342000}
-  m_RootOrder: 3
+  m_RootOrder: 2
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
@@ -2081,17 +2006,17 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   readBuffSize: 10240
-  tipText: {fileID: 488605589}
   localPath: F:/Httpserver/Faded.mp4
   netUrl: rtmp://58.200.131.2:1935/livetv/hunantv
   rimg: {fileID: 504296491}
   bitStreamCacheSize: 1200000
   demuxTimeout: 4000
-  pushFrameInterval: 20
+  pushFrameInterval: 10
   waitBitStreamTimeout: 1000
   alwaysWaitBitStream: 1
   autoDecode: 1
   decodeThreadCount: 4
+  useCPUConvertYUV: 0
 --- !u!4 &1551522791
 Transform:
   m_ObjectHideFlags: 0
@@ -2135,7 +2060,7 @@ RectTransform:
   m_Children:
   - {fileID: 295797966}
   m_Father: {fileID: 1189342000}
-  m_RootOrder: 5
+  m_RootOrder: 4
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
@@ -2257,7 +2182,7 @@ RectTransform:
   m_Children:
   - {fileID: 1066968556}
   m_Father: {fileID: 1189342000}
-  m_RootOrder: 6
+  m_RootOrder: 5
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}

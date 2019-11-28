@@ -5,6 +5,14 @@
 #include <iostream>
 #include "Tools.h"
 #include "Demux.h"
+
+#define USE_LIBYUV
+
+#ifdef USE_LIBYUV
+#include <libyuv.h>
+#endif
+
+
 using namespace std;
 extern "C"
 {
@@ -12,6 +20,7 @@ extern "C"
 #include <libavformat/avformat.h>
 #include <libavutil/error.h>
 #include <libavutil/time.h>
+#include "ConvertYUV.h"
 }
 
 
@@ -19,9 +28,10 @@ Session::Session(int playerID, PEvent pE, PDrawFrame pDF)
 {
 	config = new SessionConfig();
 
-
 	DotNetSessionEvent = pE;
 	DotNetDrawFrame = pDF;
+
+	InitConverter();
 }
 
 Session::~Session()
@@ -75,10 +85,6 @@ bool Session::PushStream2Cache(char* data, int len)
 	mux.unlock();
 	return b;
 }
-
-
-
-
 
 
 //尝试打开网络流解封装线程
@@ -224,8 +230,7 @@ void Session::OnDecodeOneAVFrame(AVFrame *frame, bool isAudio)
 	//不需要内存对齐
 	if (frame->linesize[0] == width)
 	{
-
-		tmpFrame = new Frame(config->playerID, frame->width, frame->height, (char*)frame->data[0], (char*)frame->data[1], (char*)frame->data[2]);
+		tmpFrame = new Frame(config->playerID, width, height, (char*)frame->data[0], (char*)frame->data[1], (char*)frame->data[2]);
 	}
 	else
 	{
@@ -245,6 +250,25 @@ void Session::OnDecodeOneAVFrame(AVFrame *frame, bool isAudio)
 	}
 	av_frame_free(&frame);
 
+	if (config->useCPUConvertYUV)
+	{
+		tmpFrame->rgb = new char[width * height * 4];
+		
+		
+#ifdef USE_LIBYUV
+
+		//I420toRGB((unsigned char*)tmpFrame->frame_y, (unsigned char*)tmpFrame->frame_u, (unsigned char*)tmpFrame->frame_v, width, height, (unsigned char*)tmpFrame->rgb);
+
+		//libyuv::I420ToABGR()
+
+		//内存中存储方式为RGBA
+		libyuv::I420ToABGR(
+			(uint8_t*)tmpFrame->frame_y, width,
+			(uint8_t*)tmpFrame->frame_u, width / 2,
+			(uint8_t*)tmpFrame->frame_v, width / 2, (uint8_t*)tmpFrame->rgb, width * 4, width, height);
+#endif // USE_LIBYUV
+		
+	}
 	//同步到主线程调用
 	funcMux.lock();
 	framePackets.push_back(tmpFrame);
@@ -320,5 +344,9 @@ void Session::SetOption(int optionType, int value)
 	{
 		if (value > 8) value = 8;
 		config->decodeThreadCount = value;
+	}
+	else if ((OptionType)optionType == OptionType::UseCPUConvertYUV)
+	{
+		config->useCPUConvertYUV = value;
 	}
 }

@@ -6,7 +6,7 @@ class Decode;
 struct AVFrame;
 struct AVPacket;
 struct SessionConfig;
-//struct SessionEvent;
+
 struct Frame;
 typedef void(*PEvent)(int playerID, int eventType);
 typedef void(*PDrawFrame)(Frame* frame);
@@ -41,11 +41,10 @@ public:
 	//设置选项 
 	void SetOption(int optionType, int value);
 
-	//void SetSessionEvent(PEvent pEvent, PDrawFrame pDrawFrame);
 
 public:
 
-	SessionConfig* config;
+	SessionConfig* config = NULL;
 
 	//退出信号，true 退出线程
 	bool quitSignal = false;
@@ -75,8 +74,7 @@ private:
 	PEvent DotNetSessionEvent = NULL;
 	PDrawFrame DotNetDrawFrame = NULL;
 
-	//std::mutex frameMux;
-	//std::mutex eventMux;
 	std::list<Frame*> framePackets;
 	std::list<int> eventPackets;
+
 };
