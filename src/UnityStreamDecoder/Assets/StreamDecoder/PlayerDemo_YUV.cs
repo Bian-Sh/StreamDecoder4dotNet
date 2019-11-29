@@ -104,6 +104,8 @@ public class PlayerDemo_YUV : MonoBehaviour
             Debug.LogWarning("mat is null");
             return;
         }
+        float decodeTime = ((float)(frame.edts - frame.bdts) / decodeThreadCount);
+
         if (width != frame.width || height != frame.height)
         {
             width = frame.width;
@@ -121,6 +123,8 @@ public class PlayerDemo_YUV : MonoBehaviour
         mat.SetTexture("_YTex", ytex);
         mat.SetTexture("_UTex", utex);
         mat.SetTexture("_VTex", vtex);
+
+        Debug.Log(StreamDecoder.GetTimestamp() - frame.edts + decodeTime);
 
     }
     public void DeleteSession()

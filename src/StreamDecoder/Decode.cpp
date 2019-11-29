@@ -119,6 +119,7 @@ void Decode::DecodeAVPacket()
 		mux.lock();
 		AVPacket* pkt = packets.front();
 		packets.pop_front();
+		pkt->dts = Tools::Get()->GetTimestamp();
 		//·¢ËÍ²¢½âÂë
 		int ret = avcodec_send_packet(codec, pkt);
 		if (ret != 0)

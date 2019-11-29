@@ -2006,7 +2006,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   readBuffSize: 10240
-  localPath: F:/Httpserver/Faded.mp4
+  localPath: F:/Httpserver/4K.mp4
   netUrl: rtmp://58.200.131.2:1935/livetv/hunantv
   rimg: {fileID: 504296491}
   bitStreamCacheSize: 1200000
@@ -2015,8 +2015,8 @@ MonoBehaviour:
   waitBitStreamTimeout: 1000
   alwaysWaitBitStream: 1
   autoDecode: 1
-  decodeThreadCount: 4
-  useCPUConvertYUV: 0
+  decodeThreadCount: 8
+  useCPUConvertYUV: 1
 --- !u!4 &1551522791
 Transform:
   m_ObjectHideFlags: 0

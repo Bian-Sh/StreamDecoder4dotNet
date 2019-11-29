@@ -100,6 +100,7 @@ struct Frame
 	int playerID;
 	int width;
 	int height;
+
 	/*int size_y;
 	int size_u;
 	int size_v;*/
@@ -107,10 +108,20 @@ struct Frame
 	char* frame_u = NULL;
 	char* frame_v = NULL;
 	char* rgb = NULL;
+
+	//begin decode timestamp
+	long long bdts = 0;
+	//end decode timestamp
+	long long edts = 0;
+	//begin send dot net timestamp
+	long long bsdnts = 0;
 	
-	Frame(int playerID, int width, int height, char* y, char* u, char* v, bool isLineAlign = true)
+	
+	Frame(int playerID, long long bdts, long long edts, int width, int height, char* y, char* u, char* v, bool isLineAlign = true)
 	{
 		this->playerID = playerID;
+		this->bdts = bdts;
+		this->edts = edts;
 		this->width = width;
 		this->height = height;
 		int size_y = width * height;

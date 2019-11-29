@@ -67,10 +67,18 @@ namespace SStreamDecoder
         public int playerID;
         public int width;
         public int height;
+
         public IntPtr frame_y;
         public IntPtr frame_u;
         public IntPtr frame_v;
         public IntPtr rgb;
+
+        //begin decode timestamp
+        public long bdts;
+        //end decode timestamp
+        public long edts;
+        //begin send dot net timestamp
+        public long bsdnts;
     };
     public static class StreamDecoder
     {
@@ -300,6 +308,12 @@ namespace SStreamDecoder
             }
             decoderID.Add(id);
             return id;
+        }
+
+        public static long GetTimestamp()
+        {
+            //获取从1970年一月一日0点0分0秒0微妙开始
+            return (DateTime.UtcNow.Ticks - new DateTime(1970, 1, 1, 0, 0, 0, 0).Ticks) / 10000;
         }
     }
 }
