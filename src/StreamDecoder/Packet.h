@@ -179,6 +179,11 @@ enum SessionEventType
 //	}
 //};
 
+enum PixelFormat
+{
+	RGBA = 1,
+	BGRA
+};
 
 //OptionType与SessionConfig一一对应(playerID除外)
 enum OptionType
@@ -191,7 +196,7 @@ enum OptionType
 	AutoDecode,
 	DecodeThreadCount,
 	UseCPUConvertYUV,
-	
+	ConvertPixelFormat,
 };
 struct SessionConfig
 {
@@ -206,4 +211,5 @@ struct SessionConfig
 	bool autoDecode = false;					//AutoDecode
 	int decodeThreadCount = 4;					//DecodeThreadCount
 	bool useCPUConvertYUV = false;				//UseCPUConvertYUV
+	int convertPixelFormat = RGBA;				//ConvertPixelFormat
 };

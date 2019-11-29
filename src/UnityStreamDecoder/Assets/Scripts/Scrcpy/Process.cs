@@ -127,5 +127,20 @@ public class Process
         setUpdateEvent(false, Update);
     }
 
+    public void Kill()
+    {
+        if (isExit) return;
+        try
+        {
+            cmdProcess.Kill();
+            cmdProcess.Dispose();
+            cmdProcess.Close();
+        }
+        catch(Exception ex)
+        {
+            Debug.LogWarning(ex);
+        }
+       
+    }
 }
 

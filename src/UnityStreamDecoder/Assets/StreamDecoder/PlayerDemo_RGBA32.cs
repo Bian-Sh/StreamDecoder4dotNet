@@ -9,19 +9,19 @@ using System.IO;
 
 public class PlayerDemo_RGBA32 : MonoBehaviour
 {
- 
+
     public int readBuffSize = 1024;
     public string localPath = "F:/HTTPServer/Faded.mp4";
     public string netUrl = "rtmp://192.168.30.135/live/test";
     private bool isExit = false;
-    
+
     public RawImage rimg;
     private Material mat;
     private int width = 0;
     private int height = 0;
     private Texture2D tex;
 
-   
+
     private StreamPlayer player;
     [Space]
     [Header("StreamPlayer Parameters")]
@@ -69,11 +69,11 @@ public class PlayerDemo_RGBA32 : MonoBehaviour
         StreamDecoder.FreeLibrary();
     }
 
-  
+
     public void CreateSession()
     {
         if (player != null) return;
-  
+
         player = StreamPlayer.CreateSession();
         player.SetOption(OptionType.DataCacheSize, bitStreamCacheSize);
         player.SetOption(OptionType.DemuxTimeout, demuxTimeout);
@@ -83,12 +83,13 @@ public class PlayerDemo_RGBA32 : MonoBehaviour
         player.SetOption(OptionType.AutoDecode, autoDecode ? 1 : 0);
         player.SetOption(OptionType.DecodeThreadCount, decodeThreadCount);
         player.SetOption(OptionType.UseCPUConvertYUV, 1);
-        player.SetPlayerCb(OnEvent,OnDrawFrame);
+        player.SetOption(OptionType.ConvertPixelFormat, (int)PixelFormat.RGBA);
+        player.SetPlayerCb(OnEvent, OnDrawFrame);
 
     }
     private void OnEvent(SessionEventType type)
     {
-        if(type == SessionEventType.DemuxSuccess)
+        if (type == SessionEventType.DemuxSuccess)
         {
             Debug.Log("Demux Success");
         }
@@ -96,7 +97,7 @@ public class PlayerDemo_RGBA32 : MonoBehaviour
 
     public void OnDrawFrame(Frame frame)
     {
-        if(frame.rgb == System.IntPtr.Zero)
+        if (frame.rgb == System.IntPtr.Zero)
         {
             Debug.Log("Please set UseCPUConvertYUV");
             return;
@@ -115,7 +116,7 @@ public class PlayerDemo_RGBA32 : MonoBehaviour
         tex.LoadRawTextureData(frame.rgb, width * height * 4);
         tex.Apply();
         mat.SetTexture("_RawImg", tex);
-      
+
     }
     public void DeleteSession()
     {
@@ -135,7 +136,7 @@ public class PlayerDemo_RGBA32 : MonoBehaviour
         player.TryNetStreamDemux(netUrl);
     }
 
-  
+
     public void BeginDecode()
     {
         if (player == null) return;
@@ -152,7 +153,7 @@ public class PlayerDemo_RGBA32 : MonoBehaviour
         Debug.Log(player.GetCacheFreeSize());
     }
 
-#region Send Data
+    #region Send Data
     private bool isSending = false;
     public void StartSendData()
     {
@@ -198,12 +199,12 @@ public class PlayerDemo_RGBA32 : MonoBehaviour
             //处理数据
             while (!isExit && isSending)
             {
-                if(player == null)
+                if (player == null)
                 {
                     break;
                 }
                 if (player.PushStream2Cache(readBuff, ret)) break;
-              
+
                 Thread.Sleep(1);
                 continue;
             }
@@ -213,5 +214,5 @@ public class PlayerDemo_RGBA32 : MonoBehaviour
         file.Close();
         Debug.Log("Stop send data");
     }
-#endregion
+    #endregion
 }

@@ -23,5 +23,7 @@ src/UnityStreamDecoder/UnityStreamDecoder.csproj
 bin/StreamDecoder.lib
 src/I420toRGB/x64
 src/I420toRGB/GeneratedFiles
+src/StreamDecoder/GeneratedFiles
+src/TestDecoder/GeneratedFiles
 bin/I420toRGB.exe
 bin/ConvertTest.exe

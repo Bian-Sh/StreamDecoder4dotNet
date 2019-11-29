@@ -458,7 +458,7 @@ void Demux::ReadAVPacket()
 			cout << "read end!!" << endl;
 			av_packet_free(&pkt);
 
-			StreamDecoder::Get()->PushLog2Net(Warning, Tools::Get()->av_strerror2(ret));
+			StreamDecoder::Get()->PushLog2Net(Warning, "Stream is interrupt!");
 			break;
 		}
 		mux.unlock();

@@ -8,8 +8,13 @@
 
 #define USE_LIBYUV
 
+
 #ifdef USE_LIBYUV
 #include <libyuv.h>
+#else
+extern "C" {
+#include "ConvertYUV.h"
+}
 #endif
 
 
@@ -20,7 +25,6 @@ extern "C"
 #include <libavformat/avformat.h>
 #include <libavutil/error.h>
 #include <libavutil/time.h>
-#include "ConvertYUV.h"
 }
 
 
@@ -31,7 +35,10 @@ Session::Session(int playerID, PEvent pE, PDrawFrame pDF)
 	DotNetSessionEvent = pE;
 	DotNetDrawFrame = pDF;
 
+#ifndef USE_LIBYUV
 	InitConverter();
+#endif
+
 }
 
 Session::~Session()
@@ -256,17 +263,35 @@ void Session::OnDecodeOneAVFrame(AVFrame *frame, bool isAudio)
 		
 		
 #ifdef USE_LIBYUV
+		if (config->convertPixelFormat == RGBA)
+		{
+			//内存中存储方式为RGBA
+			libyuv::I420ToABGR(
+				(uint8_t*)tmpFrame->frame_y, width,
+				(uint8_t*)tmpFrame->frame_u, width / 2,
+				(uint8_t*)tmpFrame->frame_v, width / 2, (uint8_t*)tmpFrame->rgb, width * 4, width, height);
+		}
+		else if (config->convertPixelFormat == BGRA)
+		{
+			libyuv::I420ToARGB(
+				(uint8_t*)tmpFrame->frame_y, width,
+				(uint8_t*)tmpFrame->frame_u, width / 2,
+				(uint8_t*)tmpFrame->frame_v, width / 2, (uint8_t*)tmpFrame->rgb, width * 4, width, height);
+		}
 
-		//I420toRGB((unsigned char*)tmpFrame->frame_y, (unsigned char*)tmpFrame->frame_u, (unsigned char*)tmpFrame->frame_v, width, height, (unsigned char*)tmpFrame->rgb);
+#else
 
-		//libyuv::I420ToABGR()
+		if (config->convertPixelFormat == RGBA)
+		{
+			I420toRGBA((unsigned char*)tmpFrame->frame_y, (unsigned char*)tmpFrame->frame_u, (unsigned char*)tmpFrame->frame_v, width, height, (unsigned char*)tmpFrame->rgb);
+		}
+		else if (config->convertPixelFormat == BGRA)
+		{
+			I420toBGRA((unsigned char*)tmpFrame->frame_y, (unsigned char*)tmpFrame->frame_u, (unsigned char*)tmpFrame->frame_v, width, height, (unsigned char*)tmpFrame->rgb);
+		}
 
-		//内存中存储方式为RGBA
-		libyuv::I420ToABGR(
-			(uint8_t*)tmpFrame->frame_y, width,
-			(uint8_t*)tmpFrame->frame_u, width / 2,
-			(uint8_t*)tmpFrame->frame_v, width / 2, (uint8_t*)tmpFrame->rgb, width * 4, width, height);
-#endif // USE_LIBYUV
+
+#endif
 		
 	}
 	//同步到主线程调用
@@ -348,5 +373,9 @@ void Session::SetOption(int optionType, int value)
 	else if ((OptionType)optionType == OptionType::UseCPUConvertYUV)
 	{
 		config->useCPUConvertYUV = value;
+	}
+	else if ((OptionType)optionType == OptionType::ConvertPixelFormat)
+	{
+		config->convertPixelFormat = value;
 	}
 }

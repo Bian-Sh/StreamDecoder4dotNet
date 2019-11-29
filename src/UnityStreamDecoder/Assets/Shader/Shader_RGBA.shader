@@ -47,7 +47,6 @@
 
 		fixed4 frag(v2f i) : SV_Target{
 			fixed3 rgb = tex2D(_RawImg, i.uv).rgb;
-
 			return fixed4(rgb * _Color.rgb,_Color.a);
 		}
 

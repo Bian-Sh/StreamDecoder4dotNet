@@ -59,7 +59,7 @@ public class QScrcpy : MonoBehaviour
 
         if (writeToLocal)
         {
-            if(File.Exists(fileName)) fsWrite = new FileStream(fileName, FileMode.Truncate);
+            if (File.Exists(fileName)) fsWrite = new FileStream(fileName, FileMode.Truncate);
             else fsWrite = new FileStream(fileName, FileMode.Create);
         }
 
@@ -67,11 +67,11 @@ public class QScrcpy : MonoBehaviour
         player = StreamPlayer.CreateSession();
         player.SetOption(OptionType.DataCacheSize, 2000000);
         player.SetOption(OptionType.DemuxTimeout, 2000);
-        player.SetOption(OptionType.PushFrameInterval, 10);
+        //player.SetOption(OptionType.PushFrameInterval, 0);
         //player.SetOption(OptionType.WaitBitStreamTimeout, waitBitStreamTimeout);
         player.SetOption(OptionType.AlwaysWaitBitStream, 1);
         player.SetOption(OptionType.AutoDecode, 1);
-        player.SetOption(OptionType.DecodeThreadCount, 1);
+        player.SetOption(OptionType.DecodeThreadCount, 0);
         player.SetPlayerCb(null, OnFrame);
         mat = rimg.material;
         ADBStart();
@@ -89,6 +89,7 @@ public class QScrcpy : MonoBehaviour
         {
             lock (dataCache)
             {
+                //64个字节为设备名称，2个字节为宽，2个字节为高
                 if (dataCache.Count < 68) return;
                 isFirst = false;
                 byte[] ba = dataCache.ToArray();
@@ -98,6 +99,8 @@ public class QScrcpy : MonoBehaviour
                 Debug.Log("height:" + BitConverter.ToInt16(new byte[2] { ba[67], ba[66] }, 0));
                 dataCache.RemoveRange(0, 64);
                 player.TryBitStreamDemux();
+                //做清理标记
+                ClearDevices();
             }
 
         }
@@ -116,8 +119,6 @@ public class QScrcpy : MonoBehaviour
                 dataCache.RemoveRange(0, size);
             }
         }
-
-
     }
     private void OnDestroy()
     {
@@ -128,8 +129,11 @@ public class QScrcpy : MonoBehaviour
 
         StreamPlayer.DeleteSession(ref player);
         StreamDecoder.FreeLibrary();
-        ADBKill();
-
+        //ADBKill();
+        if (qtScrcpyServer != null)
+        {
+            qtScrcpyServer.Kill();
+        }
         isExit = true;
     }
 
@@ -205,6 +209,15 @@ public class QScrcpy : MonoBehaviour
     }
     public void ADBKill()
     {
+
+        CloseServer();
+        adbController.AdbKillServer();
+
+    }
+
+    public void CloseServer()
+    {
+        rimg.rectTransform.sizeDelta = new Vector2(0, 0);
         lock (dataCache)
         {
             dataCache.Clear();
@@ -212,8 +225,33 @@ public class QScrcpy : MonoBehaviour
             if (player != null)
                 player.StopDecode();
         }
-        adbController.AdbKillServer();
+        if (client != null && client.Connected)
+        {
+            lock (client)
+            {
+                client.Shutdown(SocketShutdown.Both);
+                client.Close();
+                client = null;
+            }
+        }
 
+        if (tcpServer != null)
+        {
+            lock (tcpServer)
+            {
+                tcpServer.Close();
+                tcpServer = null;
+            }
+
+        }
+        if (qtScrcpyServer != null)
+        {
+            qtScrcpyServer.Kill();
+        }
+
+        width = 0;
+        height = 0;
+        player.StopDecode();
     }
 
     public void ClearDeviceList()
@@ -256,6 +294,11 @@ public class QScrcpy : MonoBehaviour
         {
             if (isSuccess)
             {
+                if (tcpServer != null)
+                {
+                    Debug.LogWarning("当前服务已经启动");
+                    return;
+                }
                 Debug.Log("open reverse success localabstract:scrcpy tcp:" + reverserPort);
                 //打开tcp服务器
                 tcpServer = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
@@ -289,7 +332,6 @@ public class QScrcpy : MonoBehaviour
     {
         if (isExit)
         {
-            Debug.Log("AcceptCb return");
             return;
         }
         try
@@ -307,7 +349,6 @@ public class QScrcpy : MonoBehaviour
     {
         if (isExit)
         {
-            Debug.Log("ReceiveCb return");
             return;
         }
         try
@@ -343,9 +384,10 @@ public class QScrcpy : MonoBehaviour
         adbController.CloseReverseProxy(deviceSerialInput.text);
     }
 
+    private Process qtScrcpyServer;
     private void StartQScrcpyServer()
     {
-        adbController.StartQScrcpyServer(deviceSerialInput.text, 0, 10000000);
+        qtScrcpyServer = adbController.StartQScrcpyServer(deviceSerialInput.text, 0, 10000000);
     }
 
 }

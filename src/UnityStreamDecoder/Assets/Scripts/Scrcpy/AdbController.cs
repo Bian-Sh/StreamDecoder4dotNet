@@ -119,9 +119,9 @@ public class AdbController
                 //正常结束
                 if (sender.ExitCode == 0)
                 {
-                    if(sender.StandardOutStr.StartsWith("Device"))
+                    if (sender.StandardOutStr.StartsWith("Device"))
                         Debug.Log(sender.StandardOutStr);
-            
+
                     if (!string.IsNullOrEmpty(sender.StandardOutStr))
                     {
                         bool isUpdateIp = false;
@@ -130,7 +130,7 @@ public class AdbController
                             string[] info = match.Value.Trim().Split(' ');
                             if (info.Length >= 1 && !string.IsNullOrEmpty(info[0]) && !string.IsNullOrEmpty(info[1]))
                             {
-                                if(!isUpdateIp) cb(info[1].Trim());
+                                if (!isUpdateIp) cb(info[1].Trim());
                                 isUpdateIp = true;
                                 Debug.Log(info[1]);
                             }
@@ -143,7 +143,7 @@ public class AdbController
                     if (!string.IsNullOrEmpty(sender.ErrorOutStr)) Debug.LogWarning(sender.ErrorOutStr);
                     if (!string.IsNullOrEmpty(sender.StandardOutStr)) Debug.Log(sender.StandardOutStr);
                 }
-                
+
             }
         });
     }
@@ -184,7 +184,6 @@ public class AdbController
                     if (!string.IsNullOrEmpty(sender.StandardOutStr)) Debug.Log(sender.StandardOutStr);
                     if (IsSuccessCb != null) IsSuccessCb(false);
                 }
-
             }
         });
     }
@@ -238,7 +237,7 @@ public class AdbController
         {
             cmd = "-s " + serial + " " + cmd;
         }
-        Execute( cmd, (sender, state) =>
+        Execute(cmd, (sender, state) =>
         {
             if (state == Process.ExecuteState.StartFailed)
                 Debug.LogWarning("启动失败");
@@ -260,8 +259,6 @@ public class AdbController
         });
     }
 
-   
-
     public void CloseReverseProxy(string serial)
     {
         string cmd = " reverse --remove localabstract:qtscrcpy";
@@ -269,7 +266,7 @@ public class AdbController
         {
             cmd = "-s " + serial + " " + cmd;
         }
-       Execute(cmd, (sender, state) =>
+        Execute(cmd, (sender, state) =>
         {
             if (state == Process.ExecuteState.StartFailed)
                 Debug.LogWarning("启动失败");
@@ -291,14 +288,22 @@ public class AdbController
         });
     }
 
-    public void StartQScrcpyServer(string serial, int scrWidth, int bitRate)
+    /// <summary>
+    /// 启动qtscrcpy
+    /// </summary>
+    /// <param name="serial">设备序列号</param>
+    /// <param name="scrWidth">视频宽，比例为16：9</param>
+    /// <param name="bitRate">比特率</param>
+    /// <returns></returns>
+    public Process StartQScrcpyServer(string serial, int scrWidth, int bitRate)
     {
         string cmd = string.Format(" shell CLASSPATH=/sdcard/scrcpy-server.jar app_process / com.genymobile.scrcpy.Server {0} {1} false - false false", scrWidth, bitRate);
         if (!string.IsNullOrEmpty(serial))
         {
             cmd = "-s " + serial + " " + cmd;
         }
-        Execute(cmd, (sender, state) =>
+        Process process = new Process(QScrcpy.Instance.SetEvent);
+        process.Execute(adbPath, cmd, (sender, state) =>
         {
             if (state == Process.ExecuteState.StartFailed)
             {
@@ -324,6 +329,7 @@ public class AdbController
             }
 
         });
+        return process;
     }
 
     /// <summary>

@@ -8,16 +8,22 @@ using UnityEngine.UI;
 
 namespace SStreamDecoder
 {
+    public enum PixelFormat
+    {
+        RGBA = 1,
+        BGRA
+    }
     public enum OptionType
     {
-        DataCacheSize = 1,
-        DemuxTimeout,
-        PushFrameInterval,
-        AlwaysWaitBitStream,
-        WaitBitStreamTimeout,
-        AutoDecode,
-        DecodeThreadCount,
-        UseCPUConvertYUV,
+        DataCacheSize = 1,              //Default value:    1000000 1M字节
+        DemuxTimeout,                   //Default value:    2000    2秒
+        PushFrameInterval,              //Default value:    0       0毫秒
+        AlwaysWaitBitStream,            //Default value:    false
+        WaitBitStreamTimeout,           //Default value:    1000    1秒
+        AutoDecode,                     //Default value:    false
+        DecodeThreadCount,              //Default value:    4       解码线程数量      0为默认
+        UseCPUConvertYUV,               //Default value:    false
+        ConvertPixelFormat,             //Default value:    RGBA
     }
     public enum SessionEventType
     {
@@ -240,7 +246,7 @@ namespace SStreamDecoder
         {
             if (onFrameEvent != null) onFrameEvent(frame);
         }
-      
+
         /// <summary>
         /// 获取版本信息
         /// </summary>
@@ -255,7 +261,7 @@ namespace SStreamDecoder
         public static int GetNewID()
         {
             int id = 0;
-            while(decoderID.Contains(id))
+            while (decoderID.Contains(id))
             {
                 id++;
             }
