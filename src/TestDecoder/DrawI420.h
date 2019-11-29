@@ -37,6 +37,7 @@ protected:
 	//void resizeGL(int w, int h);
 
 	void closeEvent(QCloseEvent *event);
+
 private:
 	QMutex mux;
 	//shader³ÌÐò

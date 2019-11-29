@@ -68,10 +68,13 @@ public class QScrcpy : MonoBehaviour
         player.SetOption(OptionType.DataCacheSize, 2000000);
         player.SetOption(OptionType.DemuxTimeout, 2000);
         //player.SetOption(OptionType.PushFrameInterval, 0);
-        //player.SetOption(OptionType.WaitBitStreamTimeout, waitBitStreamTimeout);
         player.SetOption(OptionType.AlwaysWaitBitStream, 1);
+        //player.SetOption(OptionType.WaitBitStreamTimeout, waitBitStreamTimeout);
         player.SetOption(OptionType.AutoDecode, 1);
         player.SetOption(OptionType.DecodeThreadCount, 0);
+        //player.SetOption(OptionType.UseCPUConvertYUV, 0);
+        //player.SetOption(OptionType.ConvertPixelFormat, (int)PixelFormat.RGBA);
+        //player.SetOption(OptionType.AsyncUpdate, 0);
         player.SetPlayerCb(null, OnFrame);
         mat = rimg.material;
         ADBStart();

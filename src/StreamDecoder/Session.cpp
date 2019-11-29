@@ -109,6 +109,7 @@ void Session::TryStreamDemux(char* url)
 
 void Session::OpenDemuxThread(char* url)
 {
+	StreamDecoder::Get()->PushLog2Net(Info, "Try open stream!");
 	cout << "解封装结果:" << (demux->Open(url) == false ? "false" : "true") << endl;
 }
 
@@ -296,10 +297,22 @@ void Session::OnDecodeOneAVFrame(AVFrame *frame, bool isAudio)
 #endif
 		
 	}
-	//同步到主线程调用
-	funcMux.lock();
-	framePackets.push_back(tmpFrame);
-	funcMux.unlock();
+
+	if (config->asyncUpdate)
+	{
+		//异步直接调用
+		if (DotNetDrawFrame) DotNetDrawFrame(tmpFrame);
+		delete tmpFrame;
+		tmpFrame = NULL;
+	}
+	else
+	{
+		//同步到主线程调用
+		funcMux.lock();
+		framePackets.push_back(tmpFrame);
+		funcMux.unlock();
+	}
+	
 
 	if (config->pushFrameInterval > 0)
 	{
@@ -379,5 +392,9 @@ void Session::SetOption(int optionType, int value)
 	else if ((OptionType)optionType == OptionType::ConvertPixelFormat)
 	{
 		config->convertPixelFormat = value;
+	}
+	else if ((OptionType)optionType == OptionType::AsyncUpdate)
+	{
+		config->asyncUpdate = value;
 	}
 }

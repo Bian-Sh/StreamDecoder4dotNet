@@ -84,6 +84,7 @@ public class PlayerDemo_RGBA32 : MonoBehaviour
         player.SetOption(OptionType.DecodeThreadCount, decodeThreadCount);
         player.SetOption(OptionType.UseCPUConvertYUV, 1);
         player.SetOption(OptionType.ConvertPixelFormat, (int)PixelFormat.RGBA);
+        player.SetOption(OptionType.AsyncUpdate, 0);
         player.SetPlayerCb(OnEvent, OnDrawFrame);
 
     }

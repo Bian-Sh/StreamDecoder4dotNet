@@ -197,6 +197,7 @@ enum OptionType
 	DecodeThreadCount,
 	UseCPUConvertYUV,
 	ConvertPixelFormat,
+	AsyncUpdate,
 };
 struct SessionConfig
 {
@@ -212,4 +213,5 @@ struct SessionConfig
 	int decodeThreadCount = 4;					//DecodeThreadCount
 	bool useCPUConvertYUV = false;				//UseCPUConvertYUV
 	int convertPixelFormat = RGBA;				//ConvertPixelFormat
+	bool asyncUpdate = false;					//AsyncUpdate
 };

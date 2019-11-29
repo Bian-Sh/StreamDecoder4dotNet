@@ -15,15 +15,48 @@ namespace SStreamDecoder
     }
     public enum OptionType
     {
-        DataCacheSize = 1,              //Default value:    1000000 1M字节
-        DemuxTimeout,                   //Default value:    2000    2秒
-        PushFrameInterval,              //Default value:    0       0毫秒
-        AlwaysWaitBitStream,            //Default value:    false
-        WaitBitStreamTimeout,           //Default value:    1000    1秒
-        AutoDecode,                     //Default value:    false
-        DecodeThreadCount,              //Default value:    4       解码线程数量      0为默认
-        UseCPUConvertYUV,               //Default value:    false
-        ConvertPixelFormat,             //Default value:    RGBA
+        /// <summary>
+        /// 字节流缓冲大小  Dll默认值:1000000字节
+        /// </summary>
+        DataCacheSize = 1,
+        /// <summary>
+        /// 解封装超时时间  Dll默认值:2000毫秒
+        /// </summary>
+        DemuxTimeout,
+        /// <summary>
+        /// 回调DLL_Draw_Frame的时间间隔  Dll默认值:0毫秒
+        /// </summary>
+        PushFrameInterval,
+        /// <summary>
+        /// 是否一直等待字节流  Dll默认值:false
+        /// </summary>
+        AlwaysWaitBitStream,
+        /// <summary>
+        /// 解码过程中读取数据流超时时间  Dll默认值:1000毫秒
+        /// </summary>
+        WaitBitStreamTimeout,
+        /// <summary>
+        /// 解封装完成后立即解码  Dll默认值:false
+        /// </summary>
+        AutoDecode,
+        /// <summary>
+        /// 解码线程数量 Dll默认值:4
+        /// </summary>
+        DecodeThreadCount,
+        /// <summary>
+        /// 使用CPU转换YUV数据 Dll默认值:false
+        /// </summary>
+        UseCPUConvertYUV,
+        /// <summary>
+        /// CPU转换YUV数据的目标格式 Dll默认值:RGBA
+        /// </summary>
+        ConvertPixelFormat,
+        /// <summary>
+        /// 回调函数的回调方式 DLL默认值false
+        /// true为异步回调 false同步回调
+        /// 异步回调的效率最高
+        /// </summary>
+        AsyncUpdate,
     }
     public enum SessionEventType
     {

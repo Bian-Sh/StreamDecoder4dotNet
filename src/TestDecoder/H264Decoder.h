@@ -39,6 +39,8 @@ public slots :
 	void OnRead();
 protected:
 	void closeEvent(QCloseEvent *event);
+
+	bool event(QEvent* event);
 private:
 	Ui::H264DecoderClass ui;
 
@@ -66,4 +68,6 @@ private:
 
 	bool GetDeviceInfoOnConnect(QString &deviceName, QSize &size);
 
+
+	bool isSettingCanvas = false;
 };

@@ -11,27 +11,44 @@
 #include <QTcpServer>
 #include <QTcpSocket>
 #include <QHostAddress>
+#include <QCoreApplication>
+#include "QtEvent.h"
 #pragma comment(lib, "StreamDecoder.lib")
 
-#define USE_WIDGET_
+#define USE_WIDGET
 
 H264Decoder* H264Decoder::self = NULL;
 
 void H264Decoder::OnFrame(Frame* frame)
 {
 #ifdef USE_WIDGET
+
 	if (width != frame->width || height != frame->height)
 	{
 		width = frame->width;
 		height = frame->height;
-		canvas->resize(width, height);
-
-		canvas->Init(frame->width, frame->height);
+		QtEvent * _event = new QtEvent(QtEvent::Event1);
+		QCoreApplication::postEvent(this, _event);
+		isSettingCanvas = true;
+		return;
 	}
-	if (canvas)
+
+	if (!isSettingCanvas && canvas)
 		canvas->Repaint(frame);
 #endif
 
+}
+
+bool H264Decoder::event(QEvent* event)
+{
+	if (event->type() == QtEvent::Event1)
+	{
+		canvas->resize(width, height);
+		canvas->Init(width, height);
+		isSettingCanvas = false;
+		return true;
+	}
+	return QWidget::event(event);
 }
 
 void H264Decoder::OnSessionEvent(int playerID, int eventType)
@@ -92,7 +109,7 @@ H264Decoder::H264Decoder(QWidget *parent)
 		}
 		else if (value / 3 == 2)
 		{
-			
+
 			on_TryBitStreamDemux_clicked();
 			on_StartSendData_clicked();
 		}
@@ -128,15 +145,16 @@ void DrawTest(Frame* frame)
 void H264Decoder::on_CreateSession_clicked()
 {
 	if (session) return;
-	session = CreateSession(112);
-	SetOption(session, DataCacheSize, 1234000);
+	session = CreateSession(1);
+	SetOption(session, DataCacheSize, 1000000);
 	SetOption(session, DemuxTimeout, 5000);
 	SetOption(session, PushFrameInterval, 0);
 	SetOption(session, WaitBitStreamTimeout, 1000);
 	SetOption(session, AlwaysWaitBitStream, false);
 	SetOption(session, AutoDecode, true);
-	SetOption(session, DecodeThreadCount, 6);
-	SetOption(session, UseCPUConvertYUV, true);
+	SetOption(session, DecodeThreadCount, 4);
+	SetOption(session, UseCPUConvertYUV, false);
+	SetOption(session, AsyncUpdate, true);
 }
 
 void H264Decoder::on_DeleteSession_clicked()
@@ -157,9 +175,9 @@ void H264Decoder::on_TryBitStreamDemux_clicked()
 void H264Decoder::on_TryNetStreamDemux_clicked()
 {
 	if (!session) return;
-	//TryNetStreamDemux(session, "rtmp://192.168.30.135/live/test");
+	TryNetStreamDemux(session, "rtmp://192.168.30.135/live/test");
 	//TryNetStreamDemux(session, "rtmp://202.69.69.180:443/webcast/bshdlive-pc");
-	TryNetStreamDemux(session, "rtmp://58.200.131.2:1935/livetv/hunantv");
+	//TryNetStreamDemux(session, "rtmp://58.200.131.2:1935/livetv/hunantv");
 	//TryNetStreamDemux(session, "rtmp://192.168.0.104/live/test");
 }
 
@@ -184,7 +202,6 @@ void H264Decoder::on_GetFree_clicked()
 
 void H264Decoder::on_OpenFile_clicked()
 {
-	qDebug() << "open";
 	filePath = QFileDialog::getOpenFileName(this);
 	ui.filePath->setText(filePath);
 }
@@ -288,3 +305,4 @@ bool H264Decoder::GetDeviceInfoOnConnect(QString &deviceName, QSize &size)
 	size.setHeight(buf[64 + 2] << 8 | buf[64 + 3]);
 	return true;
 }
+

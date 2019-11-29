@@ -84,6 +84,8 @@ public class PlayerDemo_YUV : MonoBehaviour
         player.SetOption(OptionType.AutoDecode, autoDecode ? 1 : 0);
         player.SetOption(OptionType.DecodeThreadCount, decodeThreadCount);
         player.SetOption(OptionType.UseCPUConvertYUV, useCPUConvertYUV ? 1 : 0);
+        player.SetOption(OptionType.ConvertPixelFormat, (int)PixelFormat.RGBA);
+        player.SetOption(OptionType.AsyncUpdate, 0);
         player.SetPlayerCb(OnEvent,OnDrawFrame);
 
     }

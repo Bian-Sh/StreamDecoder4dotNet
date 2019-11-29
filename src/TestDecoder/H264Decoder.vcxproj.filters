@@ -59,7 +59,7 @@
     </QtRcc>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="DecodeEvent.h">
+    <ClInclude Include="QtEvent.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
