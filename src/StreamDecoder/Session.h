@@ -36,7 +36,7 @@ public:
 	//解码完成后Decode调用
 	void OnDecodeOneAVFrame(AVFrame *frame, bool isAudio);
 	
-	void Update();
+	void Update(bool call_cb = true);
 
 	//设置选项 
 	void SetOption(int optionType, int value);

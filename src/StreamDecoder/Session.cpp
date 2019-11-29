@@ -76,6 +76,8 @@ void Session::Clear()
 		delete vdecode;
 		vdecode = NULL;
 	}
+	//清空列表
+	Update(false);
 	mux.unlock();
 }
 
@@ -307,7 +309,7 @@ void Session::OnDecodeOneAVFrame(AVFrame *frame, bool isAudio)
 
 
 //主线程调用
-void Session::Update()
+void Session::Update(bool call_cb)
 {
 
 	if (framePackets.size() == 0 && eventPackets.size() == 0) return;
@@ -318,7 +320,7 @@ void Session::Update()
 	{
 		Frame* frame = framePackets.front();
 		framePackets.pop_front();
-		if (DotNetDrawFrame) DotNetDrawFrame(frame);
+		if (call_cb && DotNetDrawFrame) DotNetDrawFrame(frame);
 		delete frame;
 		frame = NULL;
 	}
@@ -328,7 +330,7 @@ void Session::Update()
 	{
 		int eventType = eventPackets.front();
 		eventPackets.pop_front();
-		if (DotNetSessionEvent) DotNetSessionEvent(config->playerID, eventType);
+		if (call_cb && DotNetSessionEvent) DotNetSessionEvent(config->playerID, eventType);
 	}
 	funcMux.unlock();
 }

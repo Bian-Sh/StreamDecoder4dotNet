@@ -13,7 +13,7 @@
 #include <QHostAddress>
 #pragma comment(lib, "StreamDecoder.lib")
 
-#define USE_WIDGET
+#define USE_WIDGET_
 
 H264Decoder* H264Decoder::self = NULL;
 
@@ -78,23 +78,29 @@ H264Decoder::H264Decoder(QWidget *parent)
 
 	QTimer *timer = new QTimer(parent);
 	timer->setSingleShot(false);
-	timer->setInterval(30);
+	timer->setInterval(2000);
 	//timer->start();
 
 	//on_createsession_clicked();
 	connect(timer, &QTimer::timeout, [this]() {
-		//on_trydemux_clicked();
-		static bool b = true;
-		if (b)
+
+		static int value = 0;
+		value++;
+		if (value / 3 == 1)
 		{
 			on_CreateSession_clicked();
-			//on_TryBitStreamDemux_clicked();
+		}
+		else if (value / 3 == 2)
+		{
+			
+			on_TryBitStreamDemux_clicked();
+			on_StartSendData_clicked();
 		}
 		else
 		{
+			on_EndSendData_clicked();
 			on_DeleteSession_clicked();
 		}
-		b = !b;
 	});
 
 }
@@ -130,7 +136,7 @@ void H264Decoder::on_CreateSession_clicked()
 	SetOption(session, AlwaysWaitBitStream, false);
 	SetOption(session, AutoDecode, true);
 	SetOption(session, DecodeThreadCount, 6);
-	//SetSessionEvent(session, NULL, DrawTest);
+	SetOption(session, UseCPUConvertYUV, true);
 }
 
 void H264Decoder::on_DeleteSession_clicked()
