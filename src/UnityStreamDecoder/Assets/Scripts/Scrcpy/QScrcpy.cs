@@ -35,8 +35,15 @@ public class QScrcpy : MonoBehaviour
 
     public bool writeToLocal = false;
     public string fileName = "D:/device.h264";
+
+    
+    public bool useQtScrcpy = false;
     private void Awake()
     {
+
+        //int a = 0x11223344;
+        //byte[] bab = System.BitConverter.GetBytes(a);
+
         adbController = new AdbController();
         instance = this;
 
@@ -55,6 +62,8 @@ public class QScrcpy : MonoBehaviour
     private Material mat;
     private int width = 0;
     private int height = 0;
+    public int Width { get { return width; } }
+    public int Height { get { return height; } }
     private Texture2D ytex, utex, vtex;
     // Use this for initialization
     void Start()
@@ -289,7 +298,7 @@ public class QScrcpy : MonoBehaviour
 
     private void PushQScrcpy()
     {
-        string local = StreamDecoder.dllPath + "scrcpy-server.jar";
+        string local = StreamDecoder.dllPath + (useQtScrcpy ? "scrcpy-server_qt.jar" : "scrcpy-server.jar");
         adbController.PushQScrcpy(deviceSerialInput.text, local, (isSuccess) =>
         {
             if (isSuccess)
@@ -340,7 +349,7 @@ public class QScrcpy : MonoBehaviour
     }
 
     private byte[] readBuff = new byte[1024];
-    private Socket client;
+    public Socket client;
     private void AcceptCb(IAsyncResult ar)
     {
         if (isExit)
