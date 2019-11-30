@@ -27,3 +27,5 @@ src/StreamDecoder/GeneratedFiles
 src/TestDecoder/GeneratedFiles
 bin/I420toRGB.exe
 bin/ConvertTest.exe
+src/UnityStreamDecoder/bin
+src/UnityStreamDecoder/obj

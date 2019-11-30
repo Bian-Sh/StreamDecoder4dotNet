@@ -136,11 +136,11 @@ public class Process
             cmdProcess.Dispose();
             cmdProcess.Close();
         }
-        catch(Exception ex)
+        catch (Exception ex)
         {
             Debug.LogWarning(ex);
         }
-       
+
     }
 }
 
