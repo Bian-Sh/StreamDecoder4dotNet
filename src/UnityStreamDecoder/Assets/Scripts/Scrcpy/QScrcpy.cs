@@ -22,8 +22,8 @@ public class QScrcpy : MonoBehaviour
     private AdbController adbController;
 
     private Socket tcpServer;
-    private Socket udpClient;
-    public IPEndPoint remoteIEP;
+    //private Socket udpClient;
+    //private IPEndPoint remoteIEP;
 
     private StreamPlayer player;
     public static QScrcpy Instance
@@ -31,7 +31,7 @@ public class QScrcpy : MonoBehaviour
         get { return instance; }
     }
 
-    private event Action UpdateEvent;
+    public event Action UpdateEvent;
 
     public bool writeToLocal = false;
     public string fileName = "D:/device.h264";
@@ -40,14 +40,14 @@ public class QScrcpy : MonoBehaviour
         adbController = new AdbController();
         instance = this;
 
-        remoteIEP = new IPEndPoint(IPAddress.Parse("192.168.30.135"), 5555);
-        udpClient = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
-        SendTo("==========Start Debug Unity==========");
+        //remoteIEP = new IPEndPoint(IPAddress.Parse("192.168.30.135"), 5555);
+        //udpClient = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
+        //SendTo("==========Start Debug Unity==========");
     }
-    public void SendTo(string msg)
-    {
-        udpClient.SendTo(System.Text.Encoding.ASCII.GetBytes(msg), remoteIEP);
-    }
+    //public void SendTo(string msg)
+    //{
+    //    udpClient.SendTo(System.Text.Encoding.ASCII.GetBytes(msg), remoteIEP);
+    //}
     private FileStream fsWrite;
 
     private bool isFirst = true;
@@ -189,11 +189,11 @@ public class QScrcpy : MonoBehaviour
         mat.SetTexture("_VTex", vtex);
     }
 
-    public void SetEvent(bool isAdd, System.Action ac)
-    {
-        if (isAdd) UpdateEvent += ac;
-        else UpdateEvent -= ac;
-    }
+    //public void SetEvent(bool isAdd, System.Action ac)
+    //{
+    //    if (isAdd) UpdateEvent += ac;
+    //    else UpdateEvent -= ac;
+    //}
     public void TryScrcpy()
     {
         PushQScrcpy();

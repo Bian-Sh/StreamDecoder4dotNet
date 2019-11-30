@@ -302,7 +302,7 @@ public class AdbController
         {
             cmd = "-s " + serial + " " + cmd;
         }
-        Process process = new Process(QScrcpy.Instance.SetEvent);
+        Process process = new Process();
         process.Execute(adbPath, cmd, (sender, state) =>
         {
             if (state == Process.ExecuteState.StartFailed)
@@ -339,6 +339,6 @@ public class AdbController
     /// <param name="cb"></param>
     private void Execute(string cmd, Action<Process, Process.ExecuteState> cb)
     {
-        new Process(QScrcpy.Instance.SetEvent).Execute(adbPath, cmd, cb);
+        new Process().Execute(adbPath, cmd, cb);
     }
 }

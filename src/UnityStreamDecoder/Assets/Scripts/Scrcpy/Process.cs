@@ -1,22 +1,15 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Threading;
 using UnityEngine;
 
 public class Process
 {
-    //Unity调用端更新代码
-    //C#窗体使用WinForm定时器
-    //private event Action UpdateEvent;
-    //// Update is called once per frame
-    //void Update()
-    //{
-    //    if (UpdateEvent != null)
-    //        UpdateEvent();
-    //}
-    //public void SetEvent(bool isAdd, System.Action ac)
-    //{
-    //    if (isAdd) UpdateEvent += ac;
-    //    else UpdateEvent -= ac;
-    //}
+    private struct ThreadParam
+    {
+        public string exe;
+        public string cmd;
+    }
 
     public enum ExecuteState
     {
@@ -25,10 +18,12 @@ public class Process
         StartFailed,
         Finished
     }
+    private List<ExecuteState> cmdList = new List<ExecuteState>();
     private bool isExit = false;
     private string standardOutStr;
     private string errorOutStr;
     private int exitCode;
+    //同步回调
     private Action<Process, ExecuteState> callback;
 
     public string StandardOutStr
@@ -44,11 +39,11 @@ public class Process
         get { return exitCode; }
     }
 
-    private Action<bool, Action> setUpdateEvent;
+
     public System.Diagnostics.Process cmdProcess;
-    public Process(Action<bool, Action> callback)
+    public Process()
     {
-        setUpdateEvent = callback;
+        QScrcpy.Instance.UpdateEvent += Update;
     }
     /// <summary>
     /// 启动一个进程
@@ -58,14 +53,21 @@ public class Process
     /// <param name="cb">执行回调</param>
     public void Execute(string exe, string cmd, Action<Process, ExecuteState> cb)
     {
+        new Thread(new ParameterizedThreadStart(AsyncExecute)).Start(new ThreadParam { exe = exe, cmd = cmd });
         callback = cb;
+      
+    }
+    private void AsyncExecute(object obj)
+    {
+        
+        ThreadParam para = (ThreadParam)obj;
         try
         {
             cmdProcess = new System.Diagnostics.Process();
 
             //如果使用cmd Arguments前面要加/c  如果使用adb Arguments可以直接复制
-            cmdProcess.StartInfo.FileName = exe;      // 命令
-            cmdProcess.StartInfo.Arguments = exe == "cmd.exe" ? "/c " + cmd : cmd;      // 参数
+            cmdProcess.StartInfo.FileName = para.exe;      // 命令
+            cmdProcess.StartInfo.Arguments = para.exe == "cmd.exe" ? "/c " + para.cmd : para.cmd;      // 参数
 
             cmdProcess.StartInfo.CreateNoWindow = true;         // 不创建新窗口
             cmdProcess.StartInfo.UseShellExecute = false;
@@ -77,25 +79,28 @@ public class Process
             cmdProcess.OutputDataReceived += new System.Diagnostics.DataReceivedEventHandler(OutputDataReceived);
             cmdProcess.ErrorDataReceived += new System.Diagnostics.DataReceivedEventHandler(ErrorDataReceived);
 
-            cmdProcess.EnableRaisingEvents = true;                      // 启用Exited事件
-            cmdProcess.Exited += new EventHandler(CmdProcess_Exited);   // 注册进程结束事件
+            ////在Unity发布后Exited不会调用，原因未知
+            //cmdProcess.EnableRaisingEvents = true;                      // 启用Exited事件
+            //cmdProcess.Exited += new EventHandler(CmdProcess_Exited);   // 注册进程结束事件
 
             cmdProcess.Start();
             cmdProcess.BeginOutputReadLine();
             cmdProcess.BeginErrorReadLine();
 
-            // 如果打开注释，则以同步方式执行命令，此例子中用Exited事件异步执行。
-            // CmdProcess.WaitForExit();
-
-            if (callback != null) callback(this, ExecuteState.StartSuccess);
-
+            if (callback != null) PushToMainThread(ExecuteState.StartSuccess);
         }
         catch (Exception ex)
         {
             Debug.LogWarning(ex);
-            if (callback != null) callback(this, ExecuteState.StartFailed);
+            if (callback != null) PushToMainThread(ExecuteState.StartFailed);
         }
-        setUpdateEvent(true, Update);
+
+
+        //等待执行完毕
+        cmdProcess.WaitForExit();
+
+        exitCode = cmdProcess.ExitCode;
+        if (callback != null) PushToMainThread(ExecuteState.Finished);
     }
 
 
@@ -112,19 +117,27 @@ public class Process
         errorOutStr += e.Data.Trim();
         errorOutStr += '\n';
     }
-    private void CmdProcess_Exited(object sender, EventArgs e)
-    {
-        exitCode = cmdProcess.ExitCode;
-        isExit = true;
-        cmdProcess.Dispose();
-        cmdProcess.Close();
-    }
+
 
     private void Update()
     {
-        if (!isExit) return;
-        if (callback != null) callback(this, ExecuteState.Finished);
-        setUpdateEvent(false, Update);
+
+        if (cmdList.Count <= 0) return;
+
+        lock(cmdList)
+        {
+            int size = cmdList.Count;
+            for (int i = 0; i < size; i++)
+            {
+                callback(this, cmdList[i]);
+                if(cmdList[i] == ExecuteState.Finished)
+                {
+                    isExit = true;
+                    QScrcpy.Instance.UpdateEvent -= Update;
+                }
+            }
+            cmdList.RemoveRange(0, size);
+        }
     }
 
     public void Kill()
@@ -140,7 +153,16 @@ public class Process
         {
             Debug.LogWarning(ex);
         }
+        QScrcpy.Instance.UpdateEvent -= Update;
 
+    }
+
+    private void PushToMainThread(ExecuteState state)
+    {
+        lock(cmdList)
+        {
+            cmdList.Add(state);
+        }
     }
 }
 
