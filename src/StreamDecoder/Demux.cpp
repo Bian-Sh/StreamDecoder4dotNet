@@ -87,7 +87,7 @@ bool Demux::Open(char* url)
 	isInOpenFunc = true;
 	if (demuxed)
 	{
-		cout << "已经解放装成功" << endl;
+		StreamDecoder::Get()->PushLog2Net(Warning, "Already demux success!");
 		isInOpenFunc = false;
 		return false;
 	}
@@ -192,17 +192,17 @@ void Demux::Start()
 	//确保decode已经存在并且已经打开成功
 	if (!demuxed)
 	{
-		cout << "Need demux!" << endl;
+		StreamDecoder::Get()->PushLog2Net(Warning, "Need demux!");
 		return;
 	}
 	if (isInReadAVPacketFunc)
 	{
-		cout << "Decoder is run, please wait!" << endl;
+		StreamDecoder::Get()->PushLog2Net(Warning, "Decoder is run, please wait!");
 		return;
 	}
 	if (isInterruptRead)
 	{
-		cout << "read AVPacket is interrupt, please redemux" << endl;
+		StreamDecoder::Get()->PushLog2Net(Warning, "Read AVPacket is interrupt, please redemux!");
 		return;
 	}
 	std::thread t(&Demux::ReadAVPacket, this);
@@ -366,14 +366,14 @@ bool Demux::BeginDemux()
 	//av_dict_free(&opts);
 	if (ret < 0)
 	{
-		StreamDecoder::Get()->PushLog2Net(Warning, "avformat_open_input failed!");
+		StreamDecoder::Get()->PushLog2Net(Error, Tools::Get()->av_strerror2(ret));
 		return false;
 	}
 	//cout << "avformat_open_input open Success" << endl;
-	StreamDecoder::Get()->PushLog2Net(Warning, "avformat_open_input open Success");
+	StreamDecoder::Get()->PushLog2Net(Info, "avformat_open_input open Success");
 	//读取一段视频 获取流信息
 	ret = avformat_find_stream_info(afc, NULL);
-	StreamDecoder::Get()->PushLog2Net(Warning, "avformat_find_stream_info Success");
+	StreamDecoder::Get()->PushLog2Net(Info, "avformat_find_stream_info Success");
 
 	if (ret < 0)
 	{

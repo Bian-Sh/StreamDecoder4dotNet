@@ -16,7 +16,7 @@
 //#pragma pack(1)
 enum LogLevel
 {
-	Info,
+	Info = 1,
 	Warning,
 	Error
 };

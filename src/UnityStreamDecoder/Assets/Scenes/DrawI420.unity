@@ -2007,16 +2007,16 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   readBuffSize: 10240
   localPath: F:/Httpserver/4K.mp4
-  netUrl: rtmp://58.200.131.2:1935/livetv/hunantv
+  netUrl: http://192.168.30.135/4k.mp4
   rimg: {fileID: 504296491}
   bitStreamCacheSize: 1200000
   demuxTimeout: 4000
-  pushFrameInterval: 10
+  pushFrameInterval: 0
   waitBitStreamTimeout: 1000
   alwaysWaitBitStream: 1
   autoDecode: 1
   decodeThreadCount: 8
-  useCPUConvertYUV: 1
+  useCPUConvertYUV: 0
 --- !u!4 &1551522791
 Transform:
   m_ObjectHideFlags: 0

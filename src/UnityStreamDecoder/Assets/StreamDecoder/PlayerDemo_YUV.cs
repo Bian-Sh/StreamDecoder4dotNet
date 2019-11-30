@@ -13,7 +13,7 @@ public class PlayerDemo_YUV : MonoBehaviour
     public int readBuffSize = 1024;
     public string localPath = "F:/HTTPServer/Faded.mp4";
     public string netUrl = "rtmp://192.168.30.135/live/test";
-    private bool isExit = false;
+    private bool applicationIsQuit = false;
     
     public RawImage rimg;
     private Material mat;
@@ -64,7 +64,7 @@ public class PlayerDemo_YUV : MonoBehaviour
 
     private void OnDestroy()
     {
-        isExit = true;
+        applicationIsQuit = true;
         DeleteSession();
         //释放动态库
         StreamDecoder.FreeLibrary();
@@ -124,11 +124,12 @@ public class PlayerDemo_YUV : MonoBehaviour
         mat.SetTexture("_UTex", utex);
         mat.SetTexture("_VTex", vtex);
 
-        Debug.Log(StreamDecoder.GetTimestamp() - frame.edts + decodeTime);
+        //Debug.Log(StreamDecoder.GetTimestamp() - frame.edts + decodeTime);
 
     }
     public void DeleteSession()
     {
+        isInSendThread = false;
         if (player == null) return;
 
         StreamPlayer.DeleteSession(ref player);
@@ -163,57 +164,64 @@ public class PlayerDemo_YUV : MonoBehaviour
     }
 
 #region Send Data
-    private bool isSending = false;
+    private bool isInSendThread = false;
     public void StartSendData()
     {
-        if (isSending) return;
-        isSending = true;
+        if (isInSendThread) return;
         new Thread(run).Start();
     }
     public void EndSendData()
     {
-        if (!isSending) return;
-        isSending = false;
+        isInSendThread = false;
     }
-
+    private static readonly Mutex mutex = new Mutex();
     private void run()
     {
+     
         Debug.Log("Begin send Data");
-
+        isInSendThread = true;
         if (!File.Exists(localPath))
         {
             Debug.Log(localPath + " not exists");
-            return;
+            goto end;
         }
         FileStream file = new FileStream(localPath, FileMode.Open);
         byte[] readBuff = new byte[readBuffSize];
         int count = 0;
-        while (!isExit && isSending)
+        while (!applicationIsQuit && isInSendThread && player != null)
         {
             int ret = 0;
             try
             {
                 ret = file.Read(readBuff, 0, readBuffSize);
+                if (ret <= 0)
+                {
+                    throw new System.Exception("读取到结尾");
+                }
             }
             catch (System.Exception ex)
             {
                 Debug.LogWarning(ex);
-                return;
+                goto end;
             }
-            if (ret <= 0)
-            {
-                break;
-            }
+           
             count += ret;
             //处理数据
-            while (!isExit && isSending)
+            while (!applicationIsQuit && isInSendThread)
             {
+
+                mutex.WaitOne();
                 if(player == null)
                 {
+                    mutex.ReleaseMutex();
+                    goto end;
+                }
+                if (player.PushStream2Cache(readBuff, ret))
+                {
+                    mutex.ReleaseMutex();
                     break;
                 }
-                if (player.PushStream2Cache(readBuff, ret)) break;
-              
+                mutex.ReleaseMutex();
                 Thread.Sleep(1);
                 continue;
             }
@@ -221,7 +229,10 @@ public class PlayerDemo_YUV : MonoBehaviour
         }
         file.Dispose();
         file.Close();
+
+end:
         Debug.Log("Stop send data");
+        isInSendThread = false;
     }
 #endregion
 }

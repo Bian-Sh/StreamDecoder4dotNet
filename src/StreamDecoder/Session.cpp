@@ -32,6 +32,8 @@ Session::Session(int playerID, PEvent pE, PDrawFrame pDF)
 {
 	config = new SessionConfig();
 
+	config->playerID = playerID;
+
 	DotNetSessionEvent = pE;
 	DotNetDrawFrame = pDF;
 

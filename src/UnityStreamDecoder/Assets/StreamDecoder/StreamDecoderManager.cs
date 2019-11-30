@@ -272,7 +272,10 @@ namespace SStreamDecoder
         private static void StreamDecoderLog(int level, IntPtr _log)
         {
             string log = "<b>" + Marshal.PtrToStringAnsi(_log) + "</b>";
-            Debug.Log(log);
+            if (level == 1) Debug.Log(log);
+            else if (level == 2) Debug.LogWarning(log);
+            else if (level == 3) Debug.LogError(log);
+
         }
 
         public static event Action<int, SessionEventType> onSessionEvent;

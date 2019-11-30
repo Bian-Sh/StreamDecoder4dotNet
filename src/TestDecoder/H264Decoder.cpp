@@ -154,7 +154,7 @@ void H264Decoder::on_CreateSession_clicked()
 	SetOption(session, AutoDecode, true);
 	SetOption(session, DecodeThreadCount, 4);
 	SetOption(session, UseCPUConvertYUV, false);
-	SetOption(session, AsyncUpdate, true);
+	SetOption(session, AsyncUpdate, false);
 }
 
 void H264Decoder::on_DeleteSession_clicked()
@@ -202,7 +202,7 @@ void H264Decoder::on_GetFree_clicked()
 
 void H264Decoder::on_OpenFile_clicked()
 {
-	filePath = QFileDialog::getOpenFileName(this);
+	filePath = QFileDialog::getOpenFileName(this, "select file", "F:/HTTPServer");
 	ui.filePath->setText(filePath);
 }
 

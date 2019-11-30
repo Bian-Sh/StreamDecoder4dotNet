@@ -44,6 +44,7 @@ void StreamDecoder::StreamDecoderInitialize(PLog logfunc, PEvent pE, PDrawFrame 
 
 	if (!DotNetDrawFrame) DotNetDrawFrame = pDF;
 	
+
 	timerPtr = SetTimer(NULL, 1, 20, TimerProcess);
 	startTimeStamp = Tools::Get()->GetTimestamp();
 }
@@ -98,6 +99,7 @@ void StreamDecoder::DeleteSession(void* session)
 	else
 	{
 		cout << "严重错误，不存在当前值 session" << endl;
+		PushLog2Net(Error, "Remove session from vector<Session*>!");
 	}
 	
 	delete s;
