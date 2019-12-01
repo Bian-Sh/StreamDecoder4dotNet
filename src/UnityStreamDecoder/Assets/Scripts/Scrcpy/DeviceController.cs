@@ -3,44 +3,26 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.EventSystems;
 
-public class DeviceController : MonoBehaviour, IPointerDownHandler, IPointerUpHandler
+public class DeviceController : MonoBehaviour, IPointerDownHandler, IPointerUpHandler,IBeginDragHandler, IEndDragHandler, IDragHandler
 {
 
+    private Vector2Int startPos = Vector2Int.zero;
     public void OnPointerDown(PointerEventData eventData)
     {
         Vector2Int fixedPos = GetDeviceFixedPos(CurrMousePosition());
-        Debug.Log(fixedPos);
-        byte[] info = new byte[14];
-        info[0] = (byte)2;
-        info[1] = (byte)D_Input.AndroidMotioneventAction.AMOTION_EVENT_ACTION_DOWN;
-        //AndroidMotioneventButtons ,
-        byte[] motionevent = System.BitConverter.GetBytes((int)D_Input.AndroidMotioneventButtons.AMOTION_EVENT_BUTTON_PRIMARY);
-        info[2] = motionevent[3];
-        info[3] = motionevent[2];
-        info[4] = motionevent[1];
-        info[5] = motionevent[0];
-
-
-        byte[] fixedX = System.BitConverter.GetBytes((short)fixedPos.x);
-        info[6] = fixedX[1];
-        info[7] = fixedX[0];
-
-        byte[] fixedY = System.BitConverter.GetBytes((short)fixedPos.y);
-        info[8] = fixedY[1];
-        info[9] = fixedY[0];
-
-        
-        byte[] deviceCrtW = System.BitConverter.GetBytes((short)QScrcpy.Instance.Width);
-        info[10] = deviceCrtW[1];
-        info[11] = deviceCrtW[0];
-
-        byte[] deviceCrtH = System.BitConverter.GetBytes((short)QScrcpy.Instance.Height);
-        info[12] = deviceCrtH[1];
-        info[13] = deviceCrtH[0];
+        try
+        {
+            QScrcpy.Instance.client.Send(AssemblyControlCmd.Ass_Touch(0, AndroidMotioneventAction.AMOTION_EVENT_ACTION_DOWN, (short)fixedPos.x, (short)fixedPos.y, (short)QScrcpy.Instance.Width, (short)QScrcpy.Instance.Height));
+        }
+        catch (System.Exception ex)
+        {
+            System.Console.WriteLine(ex);
+        }
+        return;
 
         try
         {
-            QScrcpy.Instance.client.Send(info);
+            QScrcpy.Instance.client.Send(AssemblyControlCmd.Ass_Mouse(AndroidMotioneventAction.AMOTION_EVENT_ACTION_DOWN, AndroidMotioneventButtons.AMOTION_EVENT_BUTTON_PRIMARY, (short)fixedPos.x, (short)fixedPos.y, (short)QScrcpy.Instance.Width, (short)QScrcpy.Instance.Height));
         }
         catch (System.Exception ex)
         {
@@ -49,39 +31,12 @@ public class DeviceController : MonoBehaviour, IPointerDownHandler, IPointerUpHa
     }
     public void OnPointerUp(PointerEventData eventData)
     {
+
+        return;
         Vector2Int fixedPos = GetDeviceFixedPos(CurrMousePosition());
-        Debug.Log(fixedPos);
-        byte[] info = new byte[14];
-        info[0] = (byte)2;
-        info[1] = (byte)D_Input.AndroidMotioneventAction.AMOTION_EVENT_ACTION_UP;
-        //AndroidMotioneventButtons ,
-        byte[] motionevent = System.BitConverter.GetBytes((int)D_Input.AndroidMotioneventButtons.AMOTION_EVENT_BUTTON_PRIMARY);
-        info[2] = motionevent[3];
-        info[3] = motionevent[2];
-        info[4] = motionevent[1];
-        info[5] = motionevent[0];
-
-
-        byte[] fixedX = System.BitConverter.GetBytes((short)fixedPos.x);
-        info[6] = fixedX[1];
-        info[7] = fixedX[0];
-
-        byte[] fixedY = System.BitConverter.GetBytes((short)fixedPos.y);
-        info[8] = fixedY[1];
-        info[9] = fixedY[0];
-
-
-        byte[] deviceCrtW = System.BitConverter.GetBytes((short)QScrcpy.Instance.Width);
-        info[10] = deviceCrtW[1];
-        info[11] = deviceCrtW[0];
-
-        byte[] deviceCrtH = System.BitConverter.GetBytes((short)QScrcpy.Instance.Height);
-        info[12] = deviceCrtH[1];
-        info[13] = deviceCrtH[0];
-
         try
         {
-            QScrcpy.Instance.client.Send(info);
+            QScrcpy.Instance.client.Send(AssemblyControlCmd.Ass_Mouse(AndroidMotioneventAction.AMOTION_EVENT_ACTION_UP, AndroidMotioneventButtons.AMOTION_EVENT_BUTTON_PRIMARY, (short)fixedPos.x, (short)fixedPos.y, (short)QScrcpy.Instance.Width, (short)QScrcpy.Instance.Height));
         }
         catch (System.Exception ex)
         {
@@ -107,4 +62,88 @@ public class DeviceController : MonoBehaviour, IPointerDownHandler, IPointerUpHa
         RectTransformUtility.ScreenPointToLocalPointInRectangle(transform as RectTransform, Input.mousePosition, null, out vecMouse);
         return vecMouse;
     }
+
+    private void Update()
+    {
+        if(Input.GetKeyDown(KeyCode.A))
+        {
+            try
+            {
+                QScrcpy.Instance.client.Send(AssemblyControlCmd.Ass_KeyCode(AndroidKeyeventAction.AKEY_EVENT_ACTION_DOWN, AndroidKeycode.AKEYCODE_A, AndroidMetastate.AMETA_NONE));
+            }
+            catch (System.Exception ex)
+            {
+                System.Console.WriteLine(ex);
+            }
+        }
+        if (Input.GetKeyDown(KeyCode.B))
+        {
+            try
+            {
+                QScrcpy.Instance.client.Send(AssemblyControlCmd.Ass_Text("hello_unity")); 
+            }
+            catch (System.Exception ex)
+            {
+                System.Console.WriteLine(ex);
+            }
+        }
+
+        float v = Input.GetAxis("Mouse ScrollWheel");
+        if (v != 0)
+        {
+            Debug.Log(v * 10);
+            try
+            {
+                QScrcpy.Instance.client.Send(AssemblyControlCmd.Ass_Scroll(
+                    (short)startPos.x,
+                    (short)startPos.y,
+                    (short)QScrcpy.Instance.Width,
+                    (short)QScrcpy.Instance.Height,
+                    0,
+                    (int)(v * 10)
+                    ));
+            }
+            catch (System.Exception ex)
+            {
+                System.Console.WriteLine(ex);
+            }
+        }
+    }
+
+    public void OnBeginDrag(PointerEventData eventData)
+    {
+        Debug.Log("OnBeginDrag");
+        startPos = GetDeviceFixedPos(CurrMousePosition());
+    }
+
+    public void OnEndDrag(PointerEventData eventData)
+    {
+        Debug.Log("OnEndDrag");
+        Vector2Int deltaPos = GetDeviceFixedPos(CurrMousePosition()) - startPos;
+        Debug.Log(deltaPos);
+        try
+        {
+            QScrcpy.Instance.client.Send(AssemblyControlCmd.Ass_Scroll(
+                (short)startPos.x,
+                (short)startPos.y,
+                (short)QScrcpy.Instance.Width,
+                (short)QScrcpy.Instance.Height,
+                deltaPos.x,
+                -1
+                ));
+        }
+        catch (System.Exception ex)
+        {
+            System.Console.WriteLine(ex);
+        }
+        //if (startPos != Vector2Int.zero) return;
+        startPos = Vector2Int.zero;
+    }
+
+    public void OnDrag(PointerEventData eventData)
+    {
+        //Debug.Log("OnDrag");
+    }
+
+    
 }
