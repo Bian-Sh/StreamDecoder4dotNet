@@ -1,47 +1,42 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.EventSystems;
 
-public class DeviceController : MonoBehaviour, IPointerDownHandler, IPointerUpHandler,IBeginDragHandler, IEndDragHandler, IDragHandler
+public class DeviceController : MonoBehaviour, IPointerDownHandler, IPointerUpHandler, IDragHandler
 {
 
-    private Vector2Int startPos = Vector2Int.zero;
+    //private bool isPress = false;
+    private Array keyCodeArr;
+    private void Start()
+    {
+        keyCodeArr = Enum.GetValues(typeof(KeyCode));
+    }
     public void OnPointerDown(PointerEventData eventData)
     {
+        //isPress = true;
         Vector2Int fixedPos = GetDeviceFixedPos(CurrMousePosition());
-        try
-        {
-            QScrcpy.Instance.client.Send(AssemblyControlCmd.Ass_Touch(0, AndroidMotioneventAction.AMOTION_EVENT_ACTION_DOWN, (short)fixedPos.x, (short)fixedPos.y, (short)QScrcpy.Instance.Width, (short)QScrcpy.Instance.Height));
-        }
-        catch (System.Exception ex)
-        {
-            System.Console.WriteLine(ex);
-        }
-        return;
-
-        try
-        {
-            QScrcpy.Instance.client.Send(AssemblyControlCmd.Ass_Mouse(AndroidMotioneventAction.AMOTION_EVENT_ACTION_DOWN, AndroidMotioneventButtons.AMOTION_EVENT_BUTTON_PRIMARY, (short)fixedPos.x, (short)fixedPos.y, (short)QScrcpy.Instance.Width, (short)QScrcpy.Instance.Height));
-        }
-        catch (System.Exception ex)
-        {
-            System.Console.WriteLine(ex);
-        }
+        QScrcpy.Instance.SendDeviceCmd(AssemblyControlCmd.Ass_Mouse(
+                AndroidMotioneventAction.AMOTION_EVENT_ACTION_DOWN,
+                AndroidMotioneventButtons.AMOTION_EVENT_BUTTON_PRIMARY,
+                (short)fixedPos.x,
+                (short)fixedPos.y,
+                (short)QScrcpy.Instance.Width,
+                (short)QScrcpy.Instance.Height));
     }
     public void OnPointerUp(PointerEventData eventData)
     {
-
-        return;
+        //if (!isPress) return;
+        //isPress = false;
         Vector2Int fixedPos = GetDeviceFixedPos(CurrMousePosition());
-        try
-        {
-            QScrcpy.Instance.client.Send(AssemblyControlCmd.Ass_Mouse(AndroidMotioneventAction.AMOTION_EVENT_ACTION_UP, AndroidMotioneventButtons.AMOTION_EVENT_BUTTON_PRIMARY, (short)fixedPos.x, (short)fixedPos.y, (short)QScrcpy.Instance.Width, (short)QScrcpy.Instance.Height));
-        }
-        catch (System.Exception ex)
-        {
-            System.Console.WriteLine(ex);
-        }
+        QScrcpy.Instance.SendDeviceCmd(AssemblyControlCmd.Ass_Mouse(
+              AndroidMotioneventAction.AMOTION_EVENT_ACTION_UP,
+              AndroidMotioneventButtons.AMOTION_EVENT_BUTTON_PRIMARY,
+              (short)fixedPos.x,
+              (short)fixedPos.y,
+              (short)QScrcpy.Instance.Width,
+              (short)QScrcpy.Instance.Height));
     }
 
     //获取相对于手机的屏幕坐标的位置
@@ -56,6 +51,10 @@ public class DeviceController : MonoBehaviour, IPointerDownHandler, IPointerUpHa
         return finalyFixedPos;
     }
 
+    /// <summary>
+    /// 获取鼠标相对于transform的位置
+    /// </summary>
+    /// <returns></returns>
     private Vector2 CurrMousePosition()
     {
         Vector2 vecMouse;
@@ -65,85 +64,110 @@ public class DeviceController : MonoBehaviour, IPointerDownHandler, IPointerUpHa
 
     private void Update()
     {
-        if(Input.GetKeyDown(KeyCode.A))
-        {
-            try
-            {
-                QScrcpy.Instance.client.Send(AssemblyControlCmd.Ass_KeyCode(AndroidKeyeventAction.AKEY_EVENT_ACTION_DOWN, AndroidKeycode.AKEYCODE_A, AndroidMetastate.AMETA_NONE));
-            }
-            catch (System.Exception ex)
-            {
-                System.Console.WriteLine(ex);
-            }
-        }
-        if (Input.GetKeyDown(KeyCode.B))
-        {
-            try
-            {
-                QScrcpy.Instance.client.Send(AssemblyControlCmd.Ass_Text("hello_unity")); 
-            }
-            catch (System.Exception ex)
-            {
-                System.Console.WriteLine(ex);
-            }
-        }
-
-        float v = Input.GetAxis("Mouse ScrollWheel");
-        if (v != 0)
-        {
-            Debug.Log(v * 10);
-            try
-            {
-                QScrcpy.Instance.client.Send(AssemblyControlCmd.Ass_Scroll(
-                    (short)startPos.x,
-                    (short)startPos.y,
-                    (short)QScrcpy.Instance.Width,
-                    (short)QScrcpy.Instance.Height,
-                    0,
-                    (int)(v * 10)
-                    ));
-            }
-            catch (System.Exception ex)
-            {
-                System.Console.WriteLine(ex);
-            }
-        }
+        MouseScrollEvent();
+        InputEvent();
     }
-
-    public void OnBeginDrag(PointerEventData eventData)
+    private void InputEvent()
     {
-        Debug.Log("OnBeginDrag");
-        startPos = GetDeviceFixedPos(CurrMousePosition());
+        if (Input.anyKeyDown)
+        {
+            foreach (KeyCode keyCode in keyCodeArr)
+            {
+                if (Input.GetKeyDown(keyCode))
+                {
+                    ConvertKeyCode((int)keyCode);
+                }
+            }
+        }
+    }
+    private void ConvertKeyCode(int keycode)
+    {
+        //A-Z AndroidKeycode.AKEYCODE_A = 29
+        if (keycode >= 97 && keycode <= 122)
+        {
+            KeyDown((AndroidKeycode)(keycode - 68));
+        }
+        //主键盘上的0-9 AKEYCODE_0 = 7
+        if (keycode >= 48 && keycode <= 57)
+        {
+            KeyDown((AndroidKeycode)(keycode - 41));
+        }
+
+        //小键盘上的0-9 AKEYCODE_0 = 7
+        if (keycode >= 256 && keycode <= 265)
+        {
+            KeyDown((AndroidKeycode)(keycode - 249));
+        }
     }
 
-    public void OnEndDrag(PointerEventData eventData)
+    private void MouseScrollEvent()
     {
-        Debug.Log("OnEndDrag");
-        Vector2Int deltaPos = GetDeviceFixedPos(CurrMousePosition()) - startPos;
-        Debug.Log(deltaPos);
-        try
+        float scrollValue = Input.GetAxis("Mouse ScrollWheel");
+        if (scrollValue != 0)
         {
-            QScrcpy.Instance.client.Send(AssemblyControlCmd.Ass_Scroll(
-                (short)startPos.x,
-                (short)startPos.y,
-                (short)QScrcpy.Instance.Width,
-                (short)QScrcpy.Instance.Height,
-                deltaPos.x,
-                -1
-                ));
+            Vector2Int currentPos = GetDeviceFixedPos(CurrMousePosition());
+            QScrcpy.Instance.SendDeviceCmd(AssemblyControlCmd.Ass_Scroll(
+               (short)currentPos.x,
+               (short)currentPos.y,
+               (short)QScrcpy.Instance.Width,
+               (short)QScrcpy.Instance.Height,
+               0,
+               scrollValue
+               ));
         }
-        catch (System.Exception ex)
-        {
-            System.Console.WriteLine(ex);
-        }
-        //if (startPos != Vector2Int.zero) return;
-        startPos = Vector2Int.zero;
     }
+
 
     public void OnDrag(PointerEventData eventData)
     {
-        //Debug.Log("OnDrag");
+        Vector2Int fixedPos = GetDeviceFixedPos(CurrMousePosition());
+        QScrcpy.Instance.SendDeviceCmd(AssemblyControlCmd.Ass_Mouse(
+              AndroidMotioneventAction.AMOTION_EVENT_ACTION_MOVE,
+              AndroidMotioneventButtons.AMOTION_EVENT_BUTTON_PRIMARY,
+              (short)fixedPos.x,
+              (short)fixedPos.y,
+              (short)QScrcpy.Instance.Width,
+              (short)QScrcpy.Instance.Height));
     }
 
-    
+    public void Power()
+    {
+        KeyDown(AndroidKeycode.AKEYCODE_POWER);
+    }
+
+    public void SwitchAPP()
+    {
+        KeyDown(AndroidKeycode.AKEYCODE_APP_SWITCH);
+    }
+    public void Home()
+    {
+        KeyDown(AndroidKeycode.AKEYCODE_HOME);
+    }
+    public void Back()
+    {
+        KeyDown(AndroidKeycode.AKEYCODE_BACK);
+    }
+
+    public void VolumUp()
+    {
+        KeyDown(AndroidKeycode.AKEYCODE_VOLUME_UP);
+    }
+
+    public void VolumDown()
+    {
+        KeyDown(AndroidKeycode.AKEYCODE_VOLUME_DOWN);
+    }
+
+    private void KeyDown(AndroidKeycode keycode)
+    {
+        QScrcpy.Instance.SendDeviceCmd(AssemblyControlCmd.Ass_KeyCode(
+           AndroidKeyeventAction.AKEY_EVENT_ACTION_DOWN,
+           keycode,
+           AndroidMetastate.AMETA_NONE));
+
+        QScrcpy.Instance.SendDeviceCmd(AssemblyControlCmd.Ass_KeyCode(
+           AndroidKeyeventAction.AKEY_EVENT_ACTION_UP,
+           keycode,
+           AndroidMetastate.AMETA_NONE));
+    }
 }

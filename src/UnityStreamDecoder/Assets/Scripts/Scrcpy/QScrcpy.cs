@@ -11,6 +11,7 @@ public class QScrcpy : MonoBehaviour
 {
 
     private List<byte> dataCache = new List<byte>();
+    private List<byte[]> cmdList = new List<byte[]>();
     public GameObject devicesObject;
     public Transform devicesListParent;
     public InputField deviceSerialInput;
@@ -68,6 +69,7 @@ public class QScrcpy : MonoBehaviour
     // Use this for initialization
     void Start()
     {
+        rimg.transform.parent.gameObject.SetActive(false);
 #if UNITY_EDITOR
         StreamDecoder.dllPath = Application.streamingAssetsPath + "/../../../../bin/";
 #else
@@ -102,7 +104,7 @@ public class QScrcpy : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-
+        HandleCmdList();
         if (UpdateEvent != null)
             UpdateEvent();
 
@@ -140,6 +142,37 @@ public class QScrcpy : MonoBehaviour
                 }
                 dataCache.RemoveRange(0, size);
             }
+        }
+    }
+    private void HandleCmdList()
+    {
+        if (cmdList.Count <= 0) return;
+        lock(cmdList)
+        {
+            int size = cmdList.Count;
+            for (int i = 0; i < size; i++)
+            {
+                if (client.Connected)
+                {
+                    try
+                    {
+                        client.Send(cmdList[i]);
+                    }
+                    catch (Exception ex)
+                    {
+                        Debug.LogWarning(ex);
+                    }
+                }
+            }
+        }
+        cmdList.Clear();
+    }
+    public void SendDeviceCmd(byte[] cmd)
+    {
+        if (client == null) return;
+        lock(cmdList)
+        {
+            cmdList.Add(cmd);
         }
     }
     private void OnDestroy()
@@ -180,12 +213,14 @@ public class QScrcpy : MonoBehaviour
             {
                 float rate = height / (float)width;
                 rimg.rectTransform.sizeDelta = new Vector2(1200, 1200 * rate);
+              
             }
             else
             {
                 float rate = width / (float)height;
                 rimg.rectTransform.sizeDelta = new Vector2(1000 * rate, 1000);
             }
+            rimg.transform.parent.gameObject.SetActive(true);
         }
         ytex.LoadRawTextureData(frame.frame_y, width * height);
         ytex.Apply();
@@ -240,6 +275,7 @@ public class QScrcpy : MonoBehaviour
     public void CloseServer()
     {
         rimg.rectTransform.sizeDelta = new Vector2(0, 0);
+        rimg.transform.parent.gameObject.SetActive(false);
         lock (dataCache)
         {
             dataCache.Clear();

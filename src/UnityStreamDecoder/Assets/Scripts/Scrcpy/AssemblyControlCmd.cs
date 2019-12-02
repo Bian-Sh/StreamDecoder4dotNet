@@ -93,7 +93,7 @@ public class AssemblyControlCmd {
  
     }
 
-    public static byte[] Ass_Scroll(short mousePosX, short mousePosY, short width, short height, int hScroll, int vScroll)
+    public static byte[] Ass_Scroll(short mousePosX, short mousePosY, short width, short height, float hScroll, float vScroll)
     {
         byte[] cmdBytes = new byte[17];
         cmdBytes[0] = (byte)EType.Scroll;
