@@ -7,7 +7,6 @@ using UnityEngine.EventSystems;
 public class DeviceController : MonoBehaviour, IPointerDownHandler, IPointerUpHandler, IDragHandler
 {
 
-    //private bool isPress = false;
     private Array keyCodeArr;
     private void Start()
     {
@@ -15,28 +14,27 @@ public class DeviceController : MonoBehaviour, IPointerDownHandler, IPointerUpHa
     }
     public void OnPointerDown(PointerEventData eventData)
     {
-        //isPress = true;
         Vector2Int fixedPos = GetDeviceFixedPos(CurrMousePosition());
-        QScrcpy.Instance.SendDeviceCmd(AssemblyControlCmd.Ass_Mouse(
+        Scrcpy.Instance.SendControlCmd(AssemblyControlCmd.Ass_Mouse(
                 AndroidMotioneventAction.AMOTION_EVENT_ACTION_DOWN,
                 AndroidMotioneventButtons.AMOTION_EVENT_BUTTON_PRIMARY,
                 (short)fixedPos.x,
                 (short)fixedPos.y,
-                (short)QScrcpy.Instance.Width,
-                (short)QScrcpy.Instance.Height));
+                (short)Scrcpy.Instance.Width,
+                (short)Scrcpy.Instance.Height));
     }
     public void OnPointerUp(PointerEventData eventData)
     {
         //if (!isPress) return;
         //isPress = false;
         Vector2Int fixedPos = GetDeviceFixedPos(CurrMousePosition());
-        QScrcpy.Instance.SendDeviceCmd(AssemblyControlCmd.Ass_Mouse(
+        Scrcpy.Instance.SendControlCmd(AssemblyControlCmd.Ass_Mouse(
               AndroidMotioneventAction.AMOTION_EVENT_ACTION_UP,
               AndroidMotioneventButtons.AMOTION_EVENT_BUTTON_PRIMARY,
               (short)fixedPos.x,
               (short)fixedPos.y,
-              (short)QScrcpy.Instance.Width,
-              (short)QScrcpy.Instance.Height));
+              (short)Scrcpy.Instance.Width,
+              (short)Scrcpy.Instance.Height));
     }
 
     //获取相对于手机的屏幕坐标的位置
@@ -47,7 +45,7 @@ public class DeviceController : MonoBehaviour, IPointerDownHandler, IPointerUpHa
         Vector2 imgPos = new Vector2(currentPoint.x + canvasSize.x / 2, currentPoint.y + canvasSize.y / 2);
         imgPos.y = canvasSize.y - imgPos.y;
         Vector2 imgPosRate = new Vector2(imgPos.x / canvasSize.x, imgPos.y / canvasSize.y);
-        Vector2Int finalyFixedPos = new Vector2Int((int)(imgPosRate.x * QScrcpy.Instance.Width), (int)(imgPosRate.y * QScrcpy.Instance.Height));
+        Vector2Int finalyFixedPos = new Vector2Int((int)(imgPosRate.x * Scrcpy.Instance.Width), (int)(imgPosRate.y * Scrcpy.Instance.Height));
         return finalyFixedPos;
     }
 
@@ -106,11 +104,11 @@ public class DeviceController : MonoBehaviour, IPointerDownHandler, IPointerUpHa
         if (scrollValue != 0)
         {
             Vector2Int currentPos = GetDeviceFixedPos(CurrMousePosition());
-            QScrcpy.Instance.SendDeviceCmd(AssemblyControlCmd.Ass_Scroll(
+            Scrcpy.Instance.SendControlCmd(AssemblyControlCmd.Ass_Scroll(
                (short)currentPos.x,
                (short)currentPos.y,
-               (short)QScrcpy.Instance.Width,
-               (short)QScrcpy.Instance.Height,
+               (short)Scrcpy.Instance.Width,
+               (short)Scrcpy.Instance.Height,
                0,
                scrollValue
                ));
@@ -121,13 +119,13 @@ public class DeviceController : MonoBehaviour, IPointerDownHandler, IPointerUpHa
     public void OnDrag(PointerEventData eventData)
     {
         Vector2Int fixedPos = GetDeviceFixedPos(CurrMousePosition());
-        QScrcpy.Instance.SendDeviceCmd(AssemblyControlCmd.Ass_Mouse(
+        Scrcpy.Instance.SendControlCmd(AssemblyControlCmd.Ass_Mouse(
               AndroidMotioneventAction.AMOTION_EVENT_ACTION_MOVE,
               AndroidMotioneventButtons.AMOTION_EVENT_BUTTON_PRIMARY,
               (short)fixedPos.x,
               (short)fixedPos.y,
-              (short)QScrcpy.Instance.Width,
-              (short)QScrcpy.Instance.Height));
+              (short)Scrcpy.Instance.Width,
+              (short)Scrcpy.Instance.Height));
     }
 
     public void Power()
@@ -160,12 +158,12 @@ public class DeviceController : MonoBehaviour, IPointerDownHandler, IPointerUpHa
 
     private void KeyDown(AndroidKeycode keycode)
     {
-        QScrcpy.Instance.SendDeviceCmd(AssemblyControlCmd.Ass_KeyCode(
+        Scrcpy.Instance.SendControlCmd(AssemblyControlCmd.Ass_KeyCode(
            AndroidKeyeventAction.AKEY_EVENT_ACTION_DOWN,
            keycode,
            AndroidMetastate.AMETA_NONE));
 
-        QScrcpy.Instance.SendDeviceCmd(AssemblyControlCmd.Ass_KeyCode(
+        Scrcpy.Instance.SendControlCmd(AssemblyControlCmd.Ass_KeyCode(
            AndroidKeyeventAction.AKEY_EVENT_ACTION_UP,
            keycode,
            AndroidMetastate.AMETA_NONE));

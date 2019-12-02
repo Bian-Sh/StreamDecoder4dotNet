@@ -43,7 +43,7 @@ public class Process
     public System.Diagnostics.Process cmdProcess;
     public Process()
     {
-        QScrcpy.Instance.UpdateEvent += Update;
+        Scrcpy.Instance.UpdateEvent += Update;
     }
     /// <summary>
     /// 启动一个进程
@@ -133,7 +133,7 @@ public class Process
                 if(cmdList[i] == ExecuteState.Finished)
                 {
                     isExit = true;
-                    QScrcpy.Instance.UpdateEvent -= Update;
+                    Scrcpy.Instance.UpdateEvent -= Update;
                 }
             }
             cmdList.RemoveRange(0, size);
@@ -153,7 +153,7 @@ public class Process
         {
             Debug.LogWarning(ex);
         }
-        QScrcpy.Instance.UpdateEvent -= Update;
+        Scrcpy.Instance.UpdateEvent -= Update;
 
     }
 

@@ -154,7 +154,7 @@ public class AdbController
     /// <param name="serial"></param>
     /// <param name="local"></param>
     /// <param name="successCb"></param>
-    public void PushQScrcpy(string serial, string local, Action<bool> IsSuccessCb)
+    public void PushScrcpy(string serial, string local, Action<bool> IsSuccessCb)
     {
         string cmd = "push " + local + " " + deviceLocal;
         if (!string.IsNullOrEmpty(serial))
@@ -196,7 +196,7 @@ public class AdbController
     /// <param name="successCb"></param>
     public void OpenReverseProxy(string serial, int localPort, Action<bool> IsSuccessCb)
     {
-        string cmd = string.Format("reverse localabstract:{0} tcp:{1}", QScrcpy.Instance.useQtScrcpy ? "qtscrcpy" : "scrcpy", localPort);
+        string cmd = string.Format("reverse localabstract:scrcpy tcp:{1}", "", localPort);
         if (!string.IsNullOrEmpty(serial))
         {
             cmd = "-s " + serial + " " + cmd;
@@ -230,7 +230,7 @@ public class AdbController
     /// 移除QScrcpy
     /// </summary>
     /// <param name="serial"></param>
-    public void RemoveQScrcpy(string serial)
+    public void RemoveScrcpy(string serial)
     {
         string cmd = " shell rm /sdcard/scrcpy-server.jar";
         if (!string.IsNullOrEmpty(serial))
@@ -261,7 +261,7 @@ public class AdbController
 
     public void CloseReverseProxy(string serial)
     {
-        string cmd = string.Format("reverse --remove localabstract:{0}", QScrcpy.Instance.useQtScrcpy ? "qtscrcpy" : "scrcpy");
+        string cmd = string.Format("reverse --remove localabstract:scrcpy");
         if (!string.IsNullOrEmpty(serial))
         {
             cmd = "-s " + serial + " " + cmd;
@@ -308,16 +308,9 @@ public class AdbController
         // mark: crop input format: "width:height:x:y" or - for no crop, for example: "100:200:0:0"
         // 这条adb命令是阻塞运行的，m_serverProcess进程不会退出了
         string cmd = "";
-        if(QScrcpy.Instance.useQtScrcpy)
-        {
-            Debug.Log("使用QtScrcpy");
-           cmd = string.Format(" shell CLASSPATH=/sdcard/scrcpy-server.jar app_process / com.genymobile.scrcpy.Server {0} {1} false - false true", scrWidth, bitRate);
-        }
-        else
-        {
-            Debug.Log("使用Scrcpy");
-           cmd = string.Format(" shell CLASSPATH=/sdcard/scrcpy-server.jar app_process / com.genymobile.scrcpy.Server {0} {1} false ", scrWidth, bitRate);
-        }
+
+        cmd = string.Format(" shell CLASSPATH=/sdcard/scrcpy-server.jar app_process / com.genymobile.scrcpy.Server 0 10000000 false - false true", scrWidth, bitRate);
+
         if (!string.IsNullOrEmpty(serial))
         {
             cmd = "-s " + serial + " " + cmd;

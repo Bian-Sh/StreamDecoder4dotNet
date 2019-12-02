@@ -2615,7 +2615,7 @@ GameObject:
   - component: {fileID: 1551522791}
   - component: {fileID: 1551522790}
   m_Layer: 0
-  m_Name: QScrcpy
+  m_Name: ScrcpyInstance
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -2639,9 +2639,6 @@ MonoBehaviour:
   deviceIPInput: {fileID: 736052015}
   isWifi: {fileID: 1692369778}
   reverserPort: 5555
-  writeToLocal: 0
-  fileName: D:/device.h264
-  useQtScrcpy: 0
   rimg: {fileID: 1709275985}
 --- !u!4 &1551522791
 Transform:
