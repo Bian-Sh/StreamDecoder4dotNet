@@ -2006,7 +2006,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   readBuffSize: 10240
-  localPath: F:/Httpserver/4K.mp4
+  localPath: F:/Httpserver/tmp.h264
   netUrl: http://192.168.30.135/4k.mp4
   rimg: {fileID: 504296491}
   bitStreamCacheSize: 1200000

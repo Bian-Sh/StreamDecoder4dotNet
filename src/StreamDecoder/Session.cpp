@@ -227,6 +227,9 @@ void Session::OnDecodeOneAVFrame(AVFrame *frame, bool isAudio)
 		av_frame_free(&frame);
 		return;
 	}
+
+	cout << frame->pts << endl;
+
 	//初始AVFrame
 	int width = frame->width;
 	int height = frame->height;
@@ -242,11 +245,31 @@ void Session::OnDecodeOneAVFrame(AVFrame *frame, bool isAudio)
 	//不需要内存对齐
 	if (frame->linesize[0] == width)
 	{
-		tmpFrame = new Frame(config->playerID, frame->pkt_dts, Tools::Get()->GetTimestamp(), width, height, (char*)frame->data[0], (char*)frame->data[1], (char*)frame->data[2]);
+		tmpFrame = new Frame(
+			config->playerID, 
+			frame->pkt_dts, 
+			Tools::Get()->GetTimestamp(),
+			frame->pts,
+			demux->fps,
+			width, 
+			height, 
+			(char*)frame->data[0], 
+			(char*)frame->data[1], 
+			(char*)frame->data[2]);
 	}
+	//需要行对齐
 	else
 	{
-		tmpFrame = new Frame(config->playerID, frame->pkt_dts, Tools::Get()->GetTimestamp(), width, height, NULL, NULL, NULL, false);
+		tmpFrame = new Frame(
+			config->playerID, 
+			frame->pkt_dts,
+			Tools::Get()->GetTimestamp(), 
+			frame->pts,
+			demux->fps,
+			width, 
+			height, 
+			NULL, NULL, NULL, 
+			false);
 		for (int i = 0; i < height; i++)
 		{
 			memcpy(tmpFrame->frame_y + width * i, frame->data[0] + frame->linesize[0] * i, width);
@@ -301,6 +324,7 @@ void Session::OnDecodeOneAVFrame(AVFrame *frame, bool isAudio)
 	}
 
 	tmpFrame->bsdnts = Tools::Get()->GetTimestamp();
+	//cout << tmpFrame->pts << endl;
 	if (config->asyncUpdate)
 	{
 		//异步直接调用

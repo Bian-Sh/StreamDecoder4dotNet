@@ -64,21 +64,61 @@ namespace SStreamDecoder
     }
     public struct Frame
     {
+        /// <summary>
+        /// ID号，唯一ID 对用户没有作用
+        /// </summary>
         public int playerID;
+        /// <summary>
+        /// 当前帧的宽
+        /// </summary>
         public int width;
+        /// <summary>
+        /// 当前帧的高
+        /// </summary>
         public int height;
 
+        /// <summary>
+        /// y分量
+        /// </summary>
         public IntPtr frame_y;
+        /// <summary>
+        /// u分量
+        /// </summary>
         public IntPtr frame_u;
+        /// <summary>
+        /// v分量
+        /// </summary>
         public IntPtr frame_v;
+        /// <summary>
+        /// 使用libyuv解码出来的rgb数据
+        /// </summary>
         public IntPtr rgb;
 
-        //begin decode timestamp
+        /////////////
+        //用的为UTC时间1970 1 1 0 0 0 0
+        //时间并非很准确，有较小的误差
+
+        //如果要计算解码一帧所用的时间使用 edts - bdts / 解码线程数量
+        /// <summary>
+        /// 开始解码时间戳
+        /// </summary>
         public long bdts;
-        //end decode timestamp
+        /// <summary>
+        /// 解码完成时间戳
+        /// </summary>
         public long edts;
-        //begin send dot net timestamp
+        /// <summary>
+        /// 开始发送到dotNet时间戳
+        /// </summary>
         public long bsdnts;
+        /// <summary>
+        /// 当前帧的pts
+        /// </summary>
+        public long pts;
+        /// <summary>
+        /// 视频的fps，
+        /// </summary>
+        public float fps;
     };
     public static class StreamDecoder
     {

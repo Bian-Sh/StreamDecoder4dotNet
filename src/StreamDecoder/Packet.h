@@ -116,12 +116,28 @@ struct Frame
 	//begin send dot net timestamp
 	long long bsdnts = 0;
 	
+	long long pts = 0;
+
+	float fps = 0;
 	
-	Frame(int playerID, long long bdts, long long edts, int width, int height, char* y, char* u, char* v, bool isLineAlign = true)
+	Frame(
+		int playerID,
+		long long bdts,
+		long long edts,
+		long long pts,
+		float fps,
+		int width, 
+		int height, 
+		char* y, 
+		char* u, 
+		char* v, 
+		bool isLineAlign = true)
 	{
 		this->playerID = playerID;
 		this->bdts = bdts;
 		this->edts = edts;
+		this->pts = pts;
+		this->fps = fps;
 		this->width = width;
 		this->height = height;
 		int size_y = width * height;
@@ -136,6 +152,7 @@ struct Frame
 			memcpy(frame_u, u, size_u);
 			memcpy(frame_v, v, size_v);
 		}
+		//std::cout << pts << std::endl;
 	}
 
 	~Frame()

@@ -266,6 +266,7 @@ public class Scrcpy : MonoBehaviour
         mat.SetTexture("_YTex", ytex);
         mat.SetTexture("_UTex", utex);
         mat.SetTexture("_VTex", vtex);
+
     }
 
 

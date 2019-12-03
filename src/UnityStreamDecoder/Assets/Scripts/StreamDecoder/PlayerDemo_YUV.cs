@@ -124,8 +124,6 @@ public class PlayerDemo_YUV : MonoBehaviour
         mat.SetTexture("_UTex", utex);
         mat.SetTexture("_VTex", vtex);
 
-        //Debug.Log(StreamDecoder.GetTimestamp() - frame.edts + decodeTime);
-
     }
     public void DeleteSession()
     {

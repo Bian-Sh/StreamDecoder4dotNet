@@ -30,6 +30,8 @@ public:
 
 	bool quitSignal = false;
 
+	float fps = 0;
+
 private:
 	static int interrupt_cb(void* opaque);
 	static int read_packet(void *opaque, uint8_t *buf, int buf_size);

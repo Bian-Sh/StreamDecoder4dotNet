@@ -64,6 +64,8 @@ void Demux::Clear()
 
 	audioStreamIndex = -1;
 	videoStreamIndex = -1;
+
+	fps = -1;
 }
 
 //析构调用
@@ -309,7 +311,6 @@ int Demux::read_packet(void *opaque, uint8_t *buf, int buf_size)
 bool Demux::ProbeInputBuffer()
 {
 
-
 	//探测流格式  
 	//TODO要不要释放？
 	AVInputFormat *piFmt = NULL;
@@ -418,8 +419,7 @@ bool Demux::BeginDemux()
 			cout << "Stream index[" << i << "]:" << "AVMEDIA_TYPE_NB" << endl;
 		}
 	}
-	videoStreamIndex = av_find_best_stream(afc, AVMEDIA_TYPE_VIDEO, -1, -1, NULL, 0);
-
+	fps = Tools::Get()->r2d(afc->streams[videoStreamIndex]->avg_frame_rate);
 	return true;
 }
 
@@ -469,11 +469,13 @@ void Demux::ReadAVPacket()
 		{
 			if (pkt->stream_index == videoStreamIndex)
 			{
+				pkt->pts = pkt->pts * Tools::Get()->r2d(afc->streams[videoStreamIndex]->time_base) * 1000;
 				//读取到一帧视频
 				session->OnReadOneAVPacket(pkt, false);
 			}
 			else if (pkt->stream_index == audioStreamIndex)
 			{
+				pkt->pts = pkt->pts * Tools::Get()->r2d(afc->streams[audioStreamIndex]->time_base) * 1000;
 				//读取到一帧音频
 				session->OnReadOneAVPacket(pkt, true);
 			}
@@ -487,6 +489,7 @@ void Demux::ReadAVPacket()
 		{
 			if (pkt->stream_index == videoStreamIndex)
 			{
+				pkt->pts = pkt->pts * Tools::Get()->r2d(afc->streams[videoStreamIndex]->time_base) * 1000;
 				//读取到一帧视频
 				session->OnReadOneAVPacket(pkt, false);
 			}
