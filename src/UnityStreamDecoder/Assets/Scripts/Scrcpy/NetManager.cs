@@ -96,4 +96,12 @@ public class NetManager {
 
         mutex.ReleaseMutex();
     }
+
+    public void SendControlCmd(byte[] cmd)
+    {
+        if(controlClient!= null)
+        {
+            controlClient.SendControlCmd(cmd);
+        }
+    }
 }

@@ -78,4 +78,12 @@ public class Client {
 
         mutex.ReleaseMutex();
     }
+
+    public void SendControlCmd(byte[] cmd)
+    {
+        if (socket.Connected)
+        {
+            socket.Send(cmd);
+        }
+    }
 }

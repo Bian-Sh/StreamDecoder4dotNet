@@ -196,7 +196,7 @@ public class AdbController
     /// <param name="successCb"></param>
     public void OpenReverseProxy(string serial, int localPort, Action<bool> IsSuccessCb)
     {
-        string cmd = string.Format("reverse localabstract:scrcpy tcp:{1}", "", localPort);
+        string cmd = string.Format("reverse localabstract:qtscrcpy tcp:{1}", "", localPort);
         if (!string.IsNullOrEmpty(serial))
         {
             cmd = "-s " + serial + " " + cmd;
@@ -261,7 +261,7 @@ public class AdbController
 
     public void CloseReverseProxy(string serial)
     {
-        string cmd = string.Format("reverse --remove localabstract:scrcpy");
+        string cmd = string.Format("reverse --remove localabstract:qtscrcpy");
         if (!string.IsNullOrEmpty(serial))
         {
             cmd = "-s " + serial + " " + cmd;

@@ -7,15 +7,22 @@ using System.Text;
 /// </summary>
 public class AssemblyControlCmd {
 
-    private enum EType
+    public enum control_msg_type
     {
-        Keycode = 0,
-        Text,
-        Mouse,
-        Scroll,
-        Command,
-        Touch
-    }
+        CMT_NULL = -1,
+        CMT_INJECT_KEYCODE = 0,
+        CMT_INJECT_TEXT,
+        CMT_INJECT_MOUSE,
+        CMT_INJECT_SCROLL,
+        CMT_BACK_OR_SCREEN_ON,
+        CMT_EXPAND_NOTIFICATION_PANEL,
+        CMT_COLLAPSE_NOTIFICATION_PANEL,
+        CMT_GET_CLIPBOARD,
+        CMT_SET_CLIPBOARD,
+        CMT_SET_SCREEN_POWER_MODE,
+
+        CMT_INJECT_TOUCH,
+    };
     /// <summary>
     /// 拼装键盘事件
     /// </summary>
@@ -27,12 +34,12 @@ public class AssemblyControlCmd {
     {
         byte[] cmdBytes = new byte[10];
         //type
-        cmdBytes[0] = (byte)EType.Keycode;
+        cmdBytes[0] = (byte)control_msg_type.CMT_INJECT_KEYCODE;
         cmdBytes[1] = (byte)akeAction;
         byte[] akeyCodeBytes = BitConverter.GetBytes((int)akeycode);
         cmdBytes[2] = akeyCodeBytes[3];
-        cmdBytes[3] = akeyCodeBytes[1];
-        cmdBytes[4] = akeyCodeBytes[2];
+        cmdBytes[3] = akeyCodeBytes[2];
+        cmdBytes[4] = akeyCodeBytes[1];
         cmdBytes[5] = akeyCodeBytes[0];
         byte[] ametstateBytes = BitConverter.GetBytes((int)ametastate);
         cmdBytes[6] = ametstateBytes[3];
@@ -50,7 +57,7 @@ public class AssemblyControlCmd {
     /// <returns></returns>
     public static byte[] Ass_Text(string msg)
     {
-        byte[] type = { (byte)EType.Text };
+        byte[] type = { (byte)control_msg_type.CMT_INJECT_TEXT };
         byte[] msgBytes = Encoding.Default.GetBytes(msg);
         byte[] lenBytes = BitConverter.GetBytes((short)msgBytes.Length);
         byte[] cmdBytes = type.Concat(lenBytes).Concat(msgBytes).ToArray();
@@ -63,7 +70,7 @@ public class AssemblyControlCmd {
     {
         byte[] cmdBytes = new byte[14];
         //type
-        cmdBytes[0] = (byte)EType.Mouse;
+        cmdBytes[0] = (byte)control_msg_type.CMT_INJECT_MOUSE;
         cmdBytes[1] = (byte)amAction;
 
         byte[] motionevent = BitConverter.GetBytes((int)amButtons);
@@ -96,7 +103,7 @@ public class AssemblyControlCmd {
     public static byte[] Ass_Scroll(short mousePosX, short mousePosY, short width, short height, float hScroll, float vScroll)
     {
         byte[] cmdBytes = new byte[17];
-        cmdBytes[0] = (byte)EType.Scroll;
+        cmdBytes[0] = (byte)control_msg_type.CMT_INJECT_SCROLL;
 
         byte[] fixedX = BitConverter.GetBytes(mousePosX);
         cmdBytes[1] = fixedX[1];
@@ -137,7 +144,7 @@ public class AssemblyControlCmd {
     public static byte[] Ass_Touch(byte touchId, AndroidMotioneventAction amAction, short mousePosX, short mousePosY, short width, short height)
     {
         byte[] cmdBytes = new byte[11];
-        cmdBytes[0] = (byte)EType.Touch;
+        cmdBytes[0] = (byte)control_msg_type.CMT_INJECT_TOUCH;
         cmdBytes[1] = touchId;
         cmdBytes[2] = (byte)amAction;
 

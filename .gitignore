@@ -3,7 +3,6 @@ bin/adb.exe
 bin/audio
 bin/platforms
 bin/H264Decoder.exe
-bin/scrcpy-server.jar
 *.jar
 *.ilk
 *.pdb

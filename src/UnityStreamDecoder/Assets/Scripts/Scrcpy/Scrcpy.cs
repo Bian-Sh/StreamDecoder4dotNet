@@ -14,7 +14,7 @@ public class Scrcpy : MonoBehaviour
     private List<byte> dataCache = new List<byte>();
 
 
-    //private List<byte[]> cmdList = new List<byte[]>();
+    private List<byte[]> cmdList = new List<byte[]>();
 
     /// <summary>
     /// 设备列表UI元素prefab
@@ -194,34 +194,33 @@ public class Scrcpy : MonoBehaviour
             int size = Mathf.Min(player.GetCacheFreeSize(), arr.Length);
             if (player.PushStream2Cache(arr, size))
             {
-                //if (writeToLocal)
-                //{
-                //    fsWrite.Write(arr, 0, size);
-                //}
                 dataCache.RemoveRange(0, size);
             }
         }
     }
     private void HandleCmdList()
     {
-        //if (cmdList.Count <= 0) return;
-        //lock(cmdList)
-        //{
-        //    int size = cmdList.Count;
-        //    for (int i = 0; i < size; i++)
-        //    {
-              
-        //    }
-        //}
-        //cmdList.Clear();
+        if (cmdList.Count <= 0) return;
+        lock (cmdList)
+        {
+            int size = cmdList.Count;
+            for (int i = 0; i < size; i++)
+            {
+                if(netManager != null)
+                {
+                    netManager.SendControlCmd(cmdList[i]);
+                }
+            }
+        }
+        cmdList.Clear();
     }
     public void SendControlCmd(byte[] cmd)
     {
 
-        //lock(cmdList)
-        //{
-        //    cmdList.Add(cmd);
-        //}
+        lock (cmdList)
+        {
+            cmdList.Add(cmd);
+        }
     }
 
     /// <summary>
