@@ -6,11 +6,14 @@ using UnityEngine;
 using UnityEngine.UI;
 using SStreamDecoder;
 using System.IO;
+using System.Threading;
 
 public class Scrcpy : MonoBehaviour
 {
+ 
+    private List<byte> dataCache = new List<byte>();
 
-    //private List<byte> dataCache = new List<byte>();
+
     //private List<byte[]> cmdList = new List<byte[]>();
 
     /// <summary>
@@ -30,10 +33,7 @@ public class Scrcpy : MonoBehaviour
     /// 是否是无线连接
     /// </summary>
     public Toggle isWifi;
-    /// <summary>
-    /// 反向代理端口
-    /// </summary>
-    public int reverserPort = 5555;
+   
     private static Scrcpy instance;
     public static Scrcpy Instance { get { return instance; } }
     /// <summary>
@@ -59,28 +59,41 @@ public class Scrcpy : MonoBehaviour
     /// </summary>
     public event Action UpdateEvent;
 
-    ///// <summary>
-    ///// 是否写入本地文件
-    ///// </summary>
-    //public bool writeToLocal = false;
-    ///// <summary>
-    ///// 写入文件的目标位置
-    ///// </summary>
-    //public string fileName = "D:/device.h264";
-    ///// <summary>
-    ///// 写入文件流
-    ///// </summary>
-    //private FileStream fsWrite;
 
-    //private bool needDecodeMsgHead = true;
-   
 
-    //private int width = 0;
-    //private int height = 0;
-    public int Width { get; set; }
-    public int Height { get; set; }
+    private int width = 0;
+    private int height = 0;
+    public int Width { get { return width; } }
+    public int Height { get { return height; } }
     private Texture2D ytex, utex, vtex;
 
+
+    public Image loadImg;
+
+    /// <summary>
+    /// Scrcpy进程
+    /// </summary>
+    private Process qtScrcpyServer;
+
+    /// <summary>
+    /// 网络管理
+    /// </summary>
+    public NetManager netManager;
+
+    /// <summary>
+    /// 字节流播放器
+    /// </summary>
+    public StreamPlayer player;
+
+    private bool isNeedDecodeHead = true;
+    private bool isInTryScrcpy = false;
+
+    /// <summary>
+    /// 反向代理端口
+    /// </summary>
+    public int reverserPort = 5555;
+    public int maxSize = 0;
+    public int bitRate = 10000000;
     private void Awake()
     {
         instance = this;
@@ -91,8 +104,9 @@ public class Scrcpy : MonoBehaviour
     // Use this for initialization
     void Start()
     {
+
         rimg.transform.parent.gameObject.SetActive(false);
- 
+        mat = rimg.material;
 #if UNITY_EDITOR
         StreamDecoder.dllPath = Application.streamingAssetsPath + "/../../../../bin/";
 #else
@@ -100,36 +114,39 @@ public class Scrcpy : MonoBehaviour
 #endif
         adbController.adbPath = StreamDecoder.dllPath + "adb.exe";
 
-        //if (writeToLocal)
-        //{
-        //    if (File.Exists(fileName)) fsWrite = new FileStream(fileName, FileMode.Truncate);
-        //    else fsWrite = new FileStream(fileName, FileMode.Create);
-        //}
-
-        //StreamDecoder.LoadLibrary();
-        //player = StreamPlayer.CreateSession();
-        //player.SetOption(OptionType.DataCacheSize, 2000000);
-        //player.SetOption(OptionType.DemuxTimeout, 2000);
-        ////player.SetOption(OptionType.PushFrameInterval, 0);
-        //player.SetOption(OptionType.AlwaysWaitBitStream, 1);
-        ////player.SetOption(OptionType.WaitBitStreamTimeout, waitBitStreamTimeout);
-        //player.SetOption(OptionType.AutoDecode, 1);
-        //player.SetOption(OptionType.DecodeThreadCount, 0);
-        ////player.SetOption(OptionType.UseCPUConvertYUV, 0);
-        ////player.SetOption(OptionType.ConvertPixelFormat, (int)PixelFormat.RGBA);
-        ////player.SetOption(OptionType.AsyncUpdate, 0);
-        //player.SetPlayerCb(null, OnFrame);
-        //mat = rimg.material;
-
-
-
         //启动ADB
         adbController.AdbStartServer();
 
+
+        StreamDecoder.LoadLibrary();
+        player = StreamPlayer.CreateSession();
+        player.SetOption(OptionType.DataCacheSize, 2000000);
+        player.SetOption(OptionType.DemuxTimeout, 2000);
+        //player.SetOption(OptionType.PushFrameInterval, 0);
+        player.SetOption(OptionType.AlwaysWaitBitStream, 1);
+        //player.SetOption(OptionType.WaitBitStreamTimeout, waitBitStreamTimeout);
+        player.SetOption(OptionType.AutoDecode, 1);
+        player.SetOption(OptionType.DecodeThreadCount, 0);
+        //player.SetOption(OptionType.UseCPUConvertYUV, 0);
+        //player.SetOption(OptionType.ConvertPixelFormat, (int)PixelFormat.RGBA);
+        //player.SetOption(OptionType.AsyncUpdate, 0);
+        player.SetPlayerCb(null, OnFrame);
+        
     }
     // Update is called once per frame
     void Update()
     {
+
+        if(Input.GetKeyDown(KeyCode.Escape))
+        {
+#if UNITY_EDITOR
+            UnityEditor.EditorApplication.isPlaying = false;            
+#else
+            Application.Quit();
+#endif
+        }
+
+        loadImg.transform.Rotate(-Vector3.forward * Time.deltaTime * 360);
 
         HandleCmdList();
         HandleDataCacheList();
@@ -137,42 +154,53 @@ public class Scrcpy : MonoBehaviour
         if (UpdateEvent != null)
             UpdateEvent();
     }
+
+    public void PushToDataCache(byte[] buff)
+    {
+        if (isExit) return;
+      
+        lock(dataCache)
+        {
+            dataCache.AddRange(buff);
+        }
+    }
     private void HandleDataCacheList()
     {
-        //if (dataCache.Count <= 0) return;
-        //if (isFirst)
-        //{
-        //    lock (dataCache)
-        //    {
-        //        //64个字节为设备名称，2个字节为宽，2个字节为高
-        //        if (dataCache.Count < 68) return;
-        //        isFirst = false;
-        //        byte[] ba = dataCache.ToArray();
-        //        string devicename = System.Text.Encoding.Default.GetString(ba, 0, 64);
-        //        Debug.Log("device name:" + devicename);
-        //        Debug.Log("width:" + BitConverter.ToUInt16(new byte[2] { ba[65], ba[64] }, 0));
-        //        Debug.Log("height:" + BitConverter.ToInt16(new byte[2] { ba[67], ba[66] }, 0));
-        //        dataCache.RemoveRange(0, 64);
-        //        player.TryBitStreamDemux();
-        //        //做清理标记
-        //        ClearDevices();
-        //    }
-        //}
+        if (dataCache.Count <= 0) return;
+        if (isNeedDecodeHead)
+        {
+            lock (dataCache)
+            {
+                //64个字节为设备名称，2个字节为宽，2个字节为高
+                if (dataCache.Count < 68) return;
+                isNeedDecodeHead = false;
+                byte[] ba = dataCache.ToArray();
+                string devicename = System.Text.Encoding.Default.GetString(ba, 0, 64);
+                Debug.Log("device name:" + devicename);
+                Debug.Log("width:" + BitConverter.ToUInt16(new byte[2] { ba[65], ba[64] }, 0));
+                Debug.Log("height:" + BitConverter.ToInt16(new byte[2] { ba[67], ba[66] }, 0));
+                dataCache.RemoveRange(0, 64);
+                player.TryBitStreamDemux();
+                //做清理标记
+                ClearDevices();
 
-        //lock (dataCache)
-        //{
+            }
+        }
 
-        //    byte[] arr = dataCache.ToArray();
-        //    int size = Mathf.Min(player.GetCacheFreeSize(), arr.Length);
-        //    if (player.PushStream2Cache(arr, size))
-        //    {
-        //        if (writeToLocal)
-        //        {
-        //            fsWrite.Write(arr, 0, size);
-        //        }
-        //        dataCache.RemoveRange(0, size);
-        //    }
-        //}
+        lock (dataCache)
+        {
+
+            byte[] arr = dataCache.ToArray();
+            int size = Mathf.Min(player.GetCacheFreeSize(), arr.Length);
+            if (player.PushStream2Cache(arr, size))
+            {
+                //if (writeToLocal)
+                //{
+                //    fsWrite.Write(arr, 0, size);
+                //}
+                dataCache.RemoveRange(0, size);
+            }
+        }
     }
     private void HandleCmdList()
     {
@@ -207,50 +235,42 @@ public class Scrcpy : MonoBehaviour
             Debug.LogWarning("mat is null");
             return;
         }
-        //if (width != frame.width || height != frame.height)
-        //{
-        //    width = frame.width;
-        //    height = frame.height;
-        //    ytex = new Texture2D(width, height, TextureFormat.R8, false);
-        //    utex = new Texture2D(width / 2, height / 2, TextureFormat.R8, false);
-        //    vtex = new Texture2D(width / 2, height / 2, TextureFormat.R8, false);
-        //    //width 不大于 1200 高度不大于1000
+        if(loadImg.gameObject.activeInHierarchy) loadImg.gameObject.SetActive(false);
+        if (width != frame.width || height != frame.height)
+        {
+            width = frame.width;
+            height = frame.height;
+            ytex = new Texture2D(width, height, TextureFormat.R8, false);
+            utex = new Texture2D(width / 2, height / 2, TextureFormat.R8, false);
+            vtex = new Texture2D(width / 2, height / 2, TextureFormat.R8, false);
+            //width 不大于 1200 高度不大于1000
 
-        //    if (width > height)
-        //    {
-        //        float rate = height / (float)width;
-        //        rimg.rectTransform.sizeDelta = new Vector2(1200, 1200 * rate);
-              
-        //    }
-        //    else
-        //    {
-        //        float rate = width / (float)height;
-        //        rimg.rectTransform.sizeDelta = new Vector2(1000 * rate, 1000);
-        //    }
-        //    rimg.transform.parent.gameObject.SetActive(true);
-        //}
-        //ytex.LoadRawTextureData(frame.frame_y, width * height);
-        //ytex.Apply();
-        //utex.LoadRawTextureData(frame.frame_u, width * height / 4);
-        //utex.Apply();
-        //vtex.LoadRawTextureData(frame.frame_v, width * height / 4);
-        //vtex.Apply();
-        //mat.SetTexture("_YTex", ytex);
-        //mat.SetTexture("_UTex", utex);
-        //mat.SetTexture("_VTex", vtex);
+            if (width > height)
+            {
+                float rate = height / (float)width;
+                rimg.rectTransform.sizeDelta = new Vector2(1200, 1200 * rate);
+
+            }
+            else
+            {
+                float rate = width / (float)height;
+                rimg.rectTransform.sizeDelta = new Vector2(1000 * rate, 1000);
+            }
+            rimg.transform.parent.gameObject.SetActive(true);
+        }
+        ytex.LoadRawTextureData(frame.frame_y, width * height);
+        ytex.Apply();
+        utex.LoadRawTextureData(frame.frame_u, width * height / 4);
+        utex.Apply();
+        vtex.LoadRawTextureData(frame.frame_v, width * height / 4);
+        vtex.Apply();
+        mat.SetTexture("_YTex", ytex);
+        mat.SetTexture("_UTex", utex);
+        mat.SetTexture("_VTex", vtex);
     }
 
 
-    public void TryScrcpy()
-    {
-        PushScrcpy();
-    }
-    public void ClearDevices()
-    {
-        RemoveQScrcpy();
-        CloseReverseProxy();
-    }
-
+   
     /// <summary>
     /// 获取设备列表
     /// </summary>
@@ -265,57 +285,6 @@ public class Scrcpy : MonoBehaviour
                 obj.GetComponentInChildren<Text>().text = list[i];
             }
         });
-    }
-
-    public void ADBKill()
-    {
-
-        CloseServer();
-        adbController.AdbKillServer();
-
-    }
-
-    /// <summary>
-    /// 关闭所有服务
-    /// </summary>
-    public void CloseServer()
-    {
-        rimg.rectTransform.sizeDelta = new Vector2(0, 0);
-        rimg.transform.parent.gameObject.SetActive(false);
-        //lock (dataCache)
-        //{
-        //    dataCache.Clear();
-        //    isFirst = true;
-        //    if (player != null)
-        //        player.StopDecode();
-        //}
-       
-        if (qtScrcpyServer != null)
-        {
-            qtScrcpyServer.Kill();
-        }
-
-        //width = 0;
-        //height = 0;
-        //player.StopDecode();
-    }
-
-
-    private void OnDestroy()
-    {
-        //if (writeToLocal)
-        //{
-        //    fsWrite.Close();
-        //}
-
-        //StreamPlayer.DeleteSession(ref player);
-        //StreamDecoder.FreeLibrary();
-
-        if (qtScrcpyServer != null)
-        {
-            qtScrcpyServer.Kill();
-        }
-        isExit = true;
     }
 
     /// <summary>
@@ -348,6 +317,23 @@ public class Scrcpy : MonoBehaviour
         adbController.GetDeviceIP(deviceSerialInput.text, isWifi.isOn, (ip) => { deviceIPInput.text = ip; });
     }
 
+    /// <summary>
+    /// 尝试启动投屏
+    /// </summary>
+    public void TryScrcpy()
+    {
+        if (isInTryScrcpy) return;
+        loadImg.gameObject.SetActive(true);
+        isInTryScrcpy = true;
+        PushScrcpy();
+    }
+    public void ClearDevices()
+    {
+        RemoveQScrcpy();
+        CloseReverseProxy();
+    }
+
+
     private void PushScrcpy()
     {
         string local = StreamDecoder.dllPath + "scrcpy-server.jar";
@@ -357,6 +343,11 @@ public class Scrcpy : MonoBehaviour
             {
                 Debug.Log("push success");
                 OpenReverseProxy();
+            }
+            else
+            {
+                isInTryScrcpy = false;
+                loadImg.gameObject.SetActive(false);
             }
         });
     }
@@ -368,12 +359,26 @@ public class Scrcpy : MonoBehaviour
         {
             if (isSuccess)
             {
-                //打开QScrcpy
-                //StartQScrcpyServer();
+                Debug.Log("open reverse proxy success");
+                //创建服务并启动
+                netManager = new NetManager();
+                if(netManager.Start(reverserPort))
+                {
+                    //打开QScrcpy
+                    StartQScrcpyServer();
+                }
+                else
+                {
+                    //创建失败
+                    CloseServer();
+                    loadImg.gameObject.SetActive(false);
+                }
             }
             else
             {
+                isInTryScrcpy = false;
                 adbController.RemoveScrcpy(deviceSerialInput.text);
+                loadImg.gameObject.SetActive(false);
             }
 
         });
@@ -390,16 +395,80 @@ public class Scrcpy : MonoBehaviour
         adbController.CloseReverseProxy(deviceSerialInput.text);
     }
 
-    private Process qtScrcpyServer;
-
     /// <summary>
     /// 启动Scrcpy服务
     /// </summary>
     private void StartQScrcpyServer()
     {
-        qtScrcpyServer = adbController.StartQScrcpyServer(deviceSerialInput.text, 0, 10000000);
+        qtScrcpyServer = adbController.StartQScrcpyServer(deviceSerialInput.text, maxSize, bitRate);
     }
 
-   
+    public void CloseAllServer()
+    {
+        CloseServer();
+        //关闭adb
+        adbController.AdbKillServer();
+    }
 
+    public void CloseServer()
+    {
+        //关闭页面显示
+        if(rimg!=null)
+        {
+            rimg.transform.parent.gameObject.SetActive(false);
+            rimg.rectTransform.sizeDelta = new Vector2(0, 0);
+        }
+        if(loadImg != null)
+        {
+            loadImg.gameObject.SetActive(false);
+        }
+        
+
+        //清理缓冲
+        lock (dataCache)
+        {
+            dataCache.Clear();
+            isNeedDecodeHead = true;
+        }
+
+        //停止解码
+        if (player != null)
+            player.StopDecode();
+
+        //关闭Scrcpy进程
+        if (qtScrcpyServer != null)
+        {
+            qtScrcpyServer.Kill();
+        }
+
+        //关闭网络模块
+        if (netManager != null)
+        {
+            netManager.Close();
+            netManager = null;
+        }
+
+
+        width = 0;
+        height = 0;
+
+        isInTryScrcpy = false;
+        isNeedDecodeHead = true;
+    }
+
+
+    private void OnDestroy()
+    {
+
+        CloseServer();
+
+        if(player != null)
+        {
+            StreamPlayer.DeleteSession(ref player);
+        }
+        
+        StreamDecoder.FreeLibrary();
+      
+        isExit = true;
+    }
 }

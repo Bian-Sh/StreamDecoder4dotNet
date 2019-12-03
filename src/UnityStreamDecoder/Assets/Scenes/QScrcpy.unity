@@ -198,6 +198,7 @@ RectTransform:
   m_LocalScale: {x: 0.50364584, y: 0.50364584, z: 0.50364584}
   m_Children:
   - {fileID: 106732710}
+  - {fileID: 1719105546}
   - {fileID: 1209664668}
   m_Father: {fileID: 0}
   m_RootOrder: 2
@@ -219,7 +220,7 @@ GameObject:
   - component: {fileID: 71262187}
   - component: {fileID: 71262186}
   m_Layer: 5
-  m_Name: TryScrcpy
+  m_Name: TryScrcpyBtn
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -433,8 +434,8 @@ RectTransform:
   - {fileID: 557168131}
   - {fileID: 785827602}
   - {fileID: 736052014}
-  - {fileID: 1568648767}
   - {fileID: 866404712}
+  - {fileID: 1568648767}
   - {fileID: 1838166343}
   - {fileID: 1692369777}
   - {fileID: 71262185}
@@ -621,7 +622,7 @@ RectTransform:
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 170795472}
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 450, y: -504.16214, z: 0}
+  m_LocalPosition: {x: 450, y: -504.16208, z: 0}
   m_LocalScale: {x: 1.0000082, y: 1.0000082, z: 1.0000082}
   m_Children:
   - {fileID: 2066292884}
@@ -630,7 +631,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0}
   m_AnchorMax: {x: 0.5, y: 0}
-  m_AnchoredPosition: {x: 450, y: 35.899975}
+  m_AnchoredPosition: {x: 450, y: 35.900024}
   m_SizeDelta: {x: 131.9, y: 71.8}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &170795474
@@ -730,7 +731,7 @@ GameObject:
   - component: {fileID: 341252878}
   - component: {fileID: 341252877}
   m_Layer: 5
-  m_Name: CloseServer
+  m_Name: CloseScrcpyServerBtn
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -753,7 +754,7 @@ RectTransform:
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 0, y: 0}
   m_AnchoredPosition: {x: 279.68, y: 140}
-  m_SizeDelta: {x: 254.6, y: 70.2}
+  m_SizeDelta: {x: 348.64, y: 70.2}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &341252877
 MonoBehaviour:
@@ -852,7 +853,7 @@ GameObject:
   - component: {fileID: 352872088}
   - component: {fileID: 352872087}
   m_Layer: 5
-  m_Name: ClearDevices
+  m_Name: ClearDeviceBtn
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -1514,7 +1515,7 @@ GameObject:
   - component: {fileID: 866404714}
   - component: {fileID: 866404713}
   m_Layer: 5
-  m_Name: GetDevicesList
+  m_Name: GetDevicesListBtn
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -1532,7 +1533,7 @@ RectTransform:
   m_Children:
   - {fileID: 1841951441}
   m_Father: {fileID: 106732710}
-  m_RootOrder: 6
+  m_RootOrder: 5
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
@@ -1922,7 +1923,7 @@ RectTransform:
   - {fileID: 1651009162}
   - {fileID: 170795473}
   m_Father: {fileID: 53029136}
-  m_RootOrder: 1
+  m_RootOrder: 2
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
@@ -2256,7 +2257,7 @@ RectTransform:
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 1414082311}
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -150, y: -504.16214, z: 0}
+  m_LocalPosition: {x: -150, y: -504.16208, z: 0}
   m_LocalScale: {x: 1.0000082, y: 1.0000082, z: 1.0000082}
   m_Children:
   - {fileID: 2143597153}
@@ -2265,7 +2266,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0}
   m_AnchorMax: {x: 0.5, y: 0}
-  m_AnchoredPosition: {x: -150, y: 35.899975}
+  m_AnchoredPosition: {x: -150, y: 35.900024}
   m_SizeDelta: {x: 131.9, y: 71.8}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1414082313
@@ -2638,8 +2639,11 @@ MonoBehaviour:
   deviceSerialInput: {fileID: 785827603}
   deviceIPInput: {fileID: 736052015}
   isWifi: {fileID: 1692369778}
-  reverserPort: 5555
   rimg: {fileID: 1709275985}
+  loadImg: {fileID: 1719105547}
+  reverserPort: 5557
+  maxSize: 0
+  bitRate: 10000000
 --- !u!4 &1551522791
 Transform:
   m_ObjectHideFlags: 0
@@ -2665,7 +2669,7 @@ GameObject:
   - component: {fileID: 1568648769}
   - component: {fileID: 1568648768}
   m_Layer: 5
-  m_Name: GetDevicesIP
+  m_Name: GetDevicesIPBtn
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -2678,16 +2682,16 @@ RectTransform:
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 1568648766}
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -636.9, y: -117, z: 0}
+  m_LocalPosition: {x: -606, y: -117, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
   - {fileID: 81048982}
   m_Father: {fileID: 106732710}
-  m_RootOrder: 5
+  m_RootOrder: 6
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0.5}
   m_AnchorMax: {x: 0, y: 0.5}
-  m_AnchoredPosition: {x: 323.1, y: -117}
+  m_AnchoredPosition: {x: 354, y: -117}
   m_SizeDelta: {x: 261.8, y: 79.70001}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1568648768
@@ -2835,14 +2839,14 @@ MonoBehaviour:
     m_FontStyle: 0
     m_BestFit: 0
     m_MinSize: 3
-    m_MaxSize: 40
+    m_MaxSize: 49
     m_Alignment: 4
     m_AlignByGeometry: 0
     m_RichText: 1
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: CloseServer
+  m_Text: Close Scrcpy Server
 --- !u!222 &1574566652
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -3205,6 +3209,74 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a4b75351c9615574caac023dd0dbff1b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+--- !u!1 &1719105545
+GameObject:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  serializedVersion: 5
+  m_Component:
+  - component: {fileID: 1719105546}
+  - component: {fileID: 1719105548}
+  - component: {fileID: 1719105547}
+  m_Layer: 5
+  m_Name: LoadImage
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 0
+--- !u!224 &1719105546
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 1719105545}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 275.49997, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children: []
+  m_Father: {fileID: 53029136}
+  m_RootOrder: 1
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 0.5, y: 0.5}
+  m_AnchorMax: {x: 0.5, y: 0.5}
+  m_AnchoredPosition: {x: 275.49997, y: 0}
+  m_SizeDelta: {x: 200, y: 200}
+  m_Pivot: {x: 0.5, y: 0.5}
+--- !u!114 &1719105547
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 1719105545}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: -765806418, guid: f70555f144d8491a825f0804e09c671c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_Material: {fileID: 0}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_RaycastTarget: 1
+  m_OnCullStateChanged:
+    m_PersistentCalls:
+      m_Calls: []
+    m_TypeName: UnityEngine.UI.MaskableGraphic+CullStateChangedEvent, UnityEngine.UI,
+      Version=1.0.0.0, Culture=neutral, PublicKeyToken=null
+  m_Sprite: {fileID: 21300000, guid: 53ed845487111b1409961dde1bed9891, type: 3}
+  m_Type: 0
+  m_PreserveAspect: 0
+  m_FillCenter: 1
+  m_FillMethod: 4
+  m_FillAmount: 1
+  m_FillClockwise: 1
+  m_FillOrigin: 0
+--- !u!222 &1719105548
+CanvasRenderer:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 1719105545}
 --- !u!1 &1727598088
 GameObject:
   m_ObjectHideFlags: 0
@@ -3346,7 +3418,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: kill-server
+  m_Text: Close All Server
 --- !u!222 &1758611334
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -3365,7 +3437,7 @@ GameObject:
   - component: {fileID: 1838166345}
   - component: {fileID: 1838166344}
   m_Layer: 5
-  m_Name: AdbKill
+  m_Name: CloseAllServerBtn
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -3430,7 +3502,7 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls:
       - m_Target: {fileID: 1551522790}
-        m_MethodName: ADBKill
+        m_MethodName: CloseAllServer
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}

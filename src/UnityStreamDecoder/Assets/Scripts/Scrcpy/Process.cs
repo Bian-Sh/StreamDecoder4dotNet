@@ -99,8 +99,18 @@ public class Process
         //等待执行完毕
         cmdProcess.WaitForExit();
 
-        exitCode = cmdProcess.ExitCode;
+        try
+        {
+            if(isExit)
+                exitCode = cmdProcess.ExitCode;
+        }
+        catch(Exception ex)
+        {
+            Debug.LogWarning(ex);
+        }
+
         if (callback != null) PushToMainThread(ExecuteState.Finished);
+
     }
 
 

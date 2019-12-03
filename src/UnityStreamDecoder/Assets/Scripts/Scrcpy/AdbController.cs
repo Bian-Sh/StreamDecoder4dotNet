@@ -309,7 +309,7 @@ public class AdbController
         // 这条adb命令是阻塞运行的，m_serverProcess进程不会退出了
         string cmd = "";
 
-        cmd = string.Format(" shell CLASSPATH=/sdcard/scrcpy-server.jar app_process / com.genymobile.scrcpy.Server 0 10000000 false - false true", scrWidth, bitRate);
+        cmd = string.Format(" shell CLASSPATH=/sdcard/scrcpy-server.jar app_process / com.genymobile.scrcpy.Server {0} {1} false - false true", scrWidth, bitRate);
 
         if (!string.IsNullOrEmpty(serial))
         {
@@ -331,16 +331,15 @@ public class AdbController
                 //正常结束
                 if (sender.ExitCode == 0)
                 {
-                    Debug.Log("Close QScrcpy Success");
+                    Debug.Log("QScrcpy is exit");
                 }
                 //异常结束
                 else
                 {
                     if (!string.IsNullOrEmpty(sender.ErrorOutStr)) Debug.LogWarning(sender.ErrorOutStr);
-                    if (!string.IsNullOrEmpty(sender.StandardOutStr)) Debug.Log(sender.StandardOutStr);
+                    if (!string.IsNullOrEmpty(sender.StandardOutStr)) Debug.LogWarning(sender.StandardOutStr);
                 }
             }
-
         });
         return process;
     }
