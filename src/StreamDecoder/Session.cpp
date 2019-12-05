@@ -35,14 +35,11 @@ void _stdcall SessionTimerProcess(HWND hwnd, UINT uMsg, UINT_PTR timerPtr, DWORD
 }
 
 Session::Session(int playerID)
-	:verifyValue(0x1122334455667788)
+	:verifyValue(VERIFY_VALUE)
 {
 	config = new SessionConfig();
 
 	config->playerID = playerID;
-
-	/*DotNetSessionEvent = pE;
-	DotNetDrawFrame = pDF;*/
 
 #ifndef USE_LIBYUV
 	InitConverter();
@@ -52,6 +49,7 @@ Session::Session(int playerID)
 
 Session::~Session()
 {
+	verifyValue = 0;
 	Close();
 	cout << "~Session" << endl;
 }

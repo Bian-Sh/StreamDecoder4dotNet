@@ -11,6 +11,7 @@ struct Frame;
 typedef void(*PEvent)(int playerID, int eventType);
 typedef void(*PDrawFrame)(Frame* frame);
 
+#define VERIFY_VALUE 0x1122334455667788
 class Session
 {
 
@@ -45,7 +46,7 @@ public:
 
 	inline bool IsVaild()
 	{
-		if (verifyValue == 0x1122334455667788) return true;
+		if (verifyValue == VERIFY_VALUE) return true;
 		else return false;
 	}
 

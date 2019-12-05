@@ -109,6 +109,7 @@ void StreamDecoder::DeleteSession(void* session)
 	}*/
 
 	delete s;
+	cout << "delete success session" << endl;
 	s = NULL;
 	PushLog2Net(Info, "Delete Session Success");
 }
@@ -199,18 +200,19 @@ int StreamDecoder::GetCacheFreeSize(void* session)
 }
 
 //向 数据流缓冲区 追加数据
+//打印Log可能会阻塞线程，此函数为高频调用函数
 bool StreamDecoder::PushStream2Cache(void* session, char* data, int len)
 {
 
 	Session* s = (Session*)session;
 	if (s == NULL)
 	{
-		PushLog2Net(Error, "PushStream2Cache exception, session is null");
+		//PushLog2Net(Error, "PushStream2Cache exception, session is null");
 		return false;
 	}
 	if (!s->IsVaild())
 	{
-		PushLog2Net(Error, "Serious Error! Invaild Sessiion on PushStream2Cache");
+		//PushLog2Net(Error, "Serious Error! Invaild Sessiion on PushStream2Cache");
 		return false;
 	}
 	return s->PushStream2Cache(data, len);
@@ -232,7 +234,7 @@ void StreamDecoder::SetOption(void* session, int optionType, int value)
 	s->SetOption(optionType, value);
 }
 
-
+//设置Session的回调函数
 void StreamDecoder::SetEventCallBack(void* session, void(*PEvent)(int playerID, int eventType), void(*PDrawFrame)(Frame* frame))
 {
 	Session* s = (Session*)session;

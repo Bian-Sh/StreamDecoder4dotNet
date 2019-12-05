@@ -16,9 +16,9 @@
   <widget class="QPushButton" name="CreatePlayer">
    <property name="geometry">
     <rect>
-     <x>150</x>
+     <x>140</x>
      <y>120</y>
-     <width>151</width>
+     <width>171</width>
      <height>41</height>
     </rect>
    </property>
