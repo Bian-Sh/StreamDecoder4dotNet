@@ -74,7 +74,7 @@ char* StreamDecoder::GetStreamDecoderVersion()
 void* StreamDecoder::CreateSession(int playerID)
 {
 	Session* session = new Session(playerID);
-	//sessionList.push_back(session);
+	sessionList.push_back(session);
 	PushLog2Net(Info, "Create Session Success");
 	return session;
 }
@@ -90,7 +90,7 @@ void StreamDecoder::DeleteSession(void* session)
 		return;
 	}
 
-	/*if (std::count(sessionList.begin(), sessionList.end(), session) == 1)
+	if (std::count(sessionList.begin(), sessionList.end(), session) == 1)
 	{
 		vector<Session*>::iterator iter = find(sessionList.begin(), sessionList.end(), session);
 		sessionList.erase(iter);
@@ -100,13 +100,13 @@ void StreamDecoder::DeleteSession(void* session)
 		cout << "严重错误，不存在当前值 session" << endl;
 		PushLog2Net(Error, "Serious Error! Remove session from vector<Session*>");
 		return;
-	}*/
+	}
 	
-	if (!s->IsVaild())
+	/*if (!s->IsVaild())
 	{
 		PushLog2Net(Error, "Serious Error! Invaild Sessiion on DeleteSession");
 		return;
-	}
+	}*/
 
 	delete s;
 	s = NULL;
@@ -264,11 +264,11 @@ void StreamDecoder::PushLog2Net(LogLevel level, char* log)
 void StreamDecoder::FixedUpdate()
 {
 
-	/*int sessionCount = sessionList.size();
+	int sessionCount = sessionList.size();
 	for (int i = 0; i < sessionCount; i ++)
 	{
 		sessionList[i]->Update();
-	}*/
+	}
 
 	timerCounter++;
 	logMux.lock();
@@ -367,5 +367,10 @@ bool PushStream2Cache(void* session, char* data, int len)
 void SetOption(void* session, int optionType, int value)
 {
 	StreamDecoder::Get()->SetOption(session, optionType, value);
+}
+
+void SetEventCallBack(void* session, void(*PEvent)(int playerID, int eventType), void(*PDrawFrame)(Frame* frame))
+{
+	StreamDecoder::Get()->SetEventCallBack(session, PEvent, PDrawFrame);
 }
 

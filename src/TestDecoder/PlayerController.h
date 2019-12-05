@@ -1,6 +1,7 @@
 #pragma once
 
 #include <QWidget>
+#include <mutex>
 #include "ui_PlayerController.h"
 
 class PlayerController : public QWidget
@@ -52,7 +53,7 @@ private:
 	QString filePath = "F:/HTTPServer/Faded.mp4";
 
 	bool isExit = false;
-	bool isInThread = false;
+	bool isInSendThread = false;
 
 	int playerID;
 	void* player = NULL;

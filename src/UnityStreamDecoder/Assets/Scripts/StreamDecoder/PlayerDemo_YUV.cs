@@ -211,7 +211,7 @@ public class PlayerDemo_YUV : MonoBehaviour
            
             count += ret;
             //处理数据
-            while (!applicationIsQuit && isInSendThread)
+            while (!applicationIsQuit && isInSendThread && player != null)
             {
 
                 mutex.WaitOne();

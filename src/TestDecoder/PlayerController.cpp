@@ -26,7 +26,7 @@ PlayerController::PlayerController(int playerID, QWidget *parent)
 PlayerController::~PlayerController()
 {
 	isExit = true;
-	while (isInThread)
+	while (isInSendThread)
 	{
 		QThread::msleep(1);
 	}
@@ -93,7 +93,7 @@ void PlayerController::on_EndDecode_clicked()
 
 void PlayerController::on_StartSendData_clicked()
 {
-	if (isInThread || isExit) return;
+	if (isInSendThread || isExit) return;
 	QtConcurrent::run(this, &PlayerController::run);
 }
 
@@ -104,16 +104,35 @@ void PlayerController::on_StopSendData_clicked()
 
 void PlayerController::run()
 {
-	isInThread = true;
+	isInSendThread = true;
 	FILE* fp = NULL;
 	unsigned char* readBuff = NULL;
 	fp = fopen(filePath.toLatin1(), "rb");
-	if (!fp) goto end;
-	readBuff = new unsigned char[10240];
-	while (!isExit)
+	if (!fp)
 	{
+		qDebug() << filePath.toLatin1().data() << " not exits";
+		goto end;
+	}
+	readBuff = new unsigned char[10240];
+	while (!isExit && isInSendThread && player)
+	{
+		int ret = fread(readBuff, 1, 10240, fp);
+		if (ret <= 0)
+		{
+			qDebug() << "read ok";
+			break;
+		}
+
+		while (!isExit && isInSendThread && player)
+		{
+
+			if (PushStream2Cache(player, (char*)readBuff, ret))
+			{
+				break;
+			}
+			continue;
+		}
 		QThread::msleep(1);
-		qDebug() << "run";
 	}
 
 end:
@@ -130,5 +149,5 @@ end:
 		readBuff = NULL;
 	}
 	qDebug() << "run thread end";
-	isInThread = false;
+	isInSendThread = false;
 }

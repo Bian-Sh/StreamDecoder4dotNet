@@ -2055,7 +2055,6 @@ GameObject:
   m_Component:
   - component: {fileID: 1551522791}
   - component: {fileID: 1551522790}
-  - component: {fileID: 1551522792}
   m_Layer: 0
   m_Name: GameManager
   m_TagString: Untagged
@@ -2099,29 +2098,6 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 1
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &1551522792
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_PrefabParentObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 0}
-  m_GameObject: {fileID: 1551522789}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: e6ada6c607b276149bbc15988b8f3e28, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  readBuffSize: 10240
-  localPath: F:/Httpserver/mv.mp4
-  netUrl: http://192.168.30.135/4k.mp4
-  rimg: {fileID: 478865144}
-  bitStreamCacheSize: 1200000
-  demuxTimeout: 4000
-  pushFrameInterval: 0
-  waitBitStreamTimeout: 1000
-  alwaysWaitBitStream: 1
-  autoDecode: 1
-  decodeThreadCount: 8
-  useCPUConvertYUV: 0
 --- !u!1 &1961479569
 GameObject:
   m_ObjectHideFlags: 0

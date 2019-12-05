@@ -98,7 +98,7 @@ private:
 	long long timerCounter = 1;
 	long long startTimeStamp = 0;
 
-	//std::vector<Session*> sessionList;
+	std::vector<Session*> sessionList;
 
 	/*PEvent DotNetSessionEvent = NULL;
 	PDrawFrame DotNetDrawFrame = NULL;*/
@@ -129,4 +129,4 @@ HEAD bool _cdecl PushStream2Cache(void* session, char* data, int len);
 
 HEAD void _cdecl SetOption(void* session, int optionType, int value);
 
-//HEAD void _cdecl SetSessionEvent(void* session, PEvent pE, PDrawFrame pDF);
+HEAD void _cdecl SetEventCallBack(void* session, void(*PEvent)(int playerID, int eventType), void(*PDrawFrame)(Frame* frame));

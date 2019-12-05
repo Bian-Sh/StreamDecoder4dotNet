@@ -356,8 +356,7 @@ void Session::OnDecodeOneAVFrame(AVFrame *frame, bool isAudio)
 //call_cb是否调用回调函数
 void Session::Update(bool call_cb)
 {
-	Tools::Get()->Sleep(10);
-	cout << "Update";
+
 	if (framePackets.size() == 0 && eventPackets.size() == 0) return;
 
 	funcMux.lock();
@@ -434,6 +433,9 @@ void Session::SetOption(int optionType, int value)
 
 void Session::SetEventCallBack(PEvent pEvent, PDrawFrame pDrawFrame)
 {
-
+	funcMux.lock();
+	DotNetSessionEvent = pEvent;
+	DotNetDrawFrame = pDrawFrame;
+	funcMux.unlock();
 }
 
