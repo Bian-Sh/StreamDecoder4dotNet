@@ -5,6 +5,7 @@
 #include <iostream>
 #include "Tools.h"
 #include "Demux.h"
+#include <windows.h>
 
 #define USE_LIBYUV
 
@@ -28,15 +29,20 @@ extern "C"
 }
 
 
-Session::Session(int playerID, PEvent pE, PDrawFrame pDF)
+void _stdcall SessionTimerProcess(HWND hwnd, UINT uMsg, UINT_PTR timerPtr, DWORD dwTime)
+{
+	
+}
+
+Session::Session(int playerID)
 	:verifyValue(0x1122334455667788)
 {
 	config = new SessionConfig();
 
 	config->playerID = playerID;
 
-	DotNetSessionEvent = pE;
-	DotNetDrawFrame = pDF;
+	/*DotNetSessionEvent = pE;
+	DotNetDrawFrame = pDF;*/
 
 #ifndef USE_LIBYUV
 	InitConverter();
@@ -317,7 +323,6 @@ void Session::OnDecodeOneAVFrame(AVFrame *frame, bool isAudio)
 			I420toBGRA((unsigned char*)tmpFrame->frame_y, (unsigned char*)tmpFrame->frame_u, (unsigned char*)tmpFrame->frame_v, width, height, (unsigned char*)tmpFrame->rgb);
 		}
 
-
 #endif
 		
 	}
@@ -348,9 +353,11 @@ void Session::OnDecodeOneAVFrame(AVFrame *frame, bool isAudio)
 
 
 //主线程调用
+//call_cb是否调用回调函数
 void Session::Update(bool call_cb)
 {
-
+	Tools::Get()->Sleep(10);
+	cout << "Update";
 	if (framePackets.size() == 0 && eventPackets.size() == 0) return;
 
 	funcMux.lock();
@@ -423,5 +430,10 @@ void Session::SetOption(int optionType, int value)
 	{
 		config->asyncUpdate = value;
 	}
+}
+
+void Session::SetEventCallBack(PEvent pEvent, PDrawFrame pDrawFrame)
+{
+
 }
 

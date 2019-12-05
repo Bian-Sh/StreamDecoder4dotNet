@@ -26,8 +26,8 @@ struct Frame;
 
 class Session;
 typedef void(*PLog)(int level, char* log);
-typedef void(*PEvent)(int playerID, int eventType);
-typedef void(*PDrawFrame)(Frame* frame);
+//typedef void(*PEvent)(int playerID, int eventType);
+//typedef void(*PDrawFrame)(Frame* frame);
 class StreamDecoder
 {
 	
@@ -41,7 +41,7 @@ public:
 	~StreamDecoder();
 
 	//初始化StreamDecoder 设置日志回调函数
-	void StreamDecoderInitialize(PLog logfunc, PEvent pE, PDrawFrame pDF);
+	void StreamDecoderInitialize(PLog logfunc);
 
 	//注销StreamDecoder
 	void StreamDecoderDeInitialize();
@@ -51,6 +51,7 @@ public:
 	char* GetStreamDecoderVersion();
 	//创建一个Session
 	void* CreateSession(int playerID);
+
 	//删除一个Session
 	void DeleteSession(void* session);
 
@@ -72,6 +73,8 @@ public:
 	//设置参数
 	void SetOption(void* session, int optionType, int value);
 
+	void SetEventCallBack(void* session, void(*PEvent)(int playerID, int eventType), void(*PDrawFrame)(Frame* frame));
+
 	//把消息追加到队列，通过主线程发送
 	void PushLog2Net(LogLevel level, char* log);
 
@@ -87,22 +90,22 @@ private:
 
 private:
 	std::mutex logMux;
+	//日志回调
 	PLog Log = NULL;
 	std::list<LogPacket*> logpackets;
 
-	
 	unsigned long long timerPtr = 0;
 	long long timerCounter = 1;
 	long long startTimeStamp = 0;
 
-	std::vector<Session*> sessionList;
+	//std::vector<Session*> sessionList;
 
-	PEvent DotNetSessionEvent = NULL;
-	PDrawFrame DotNetDrawFrame = NULL;
+	/*PEvent DotNetSessionEvent = NULL;
+	PDrawFrame DotNetDrawFrame = NULL;*/
 };
 
 //Global
-HEAD void _cdecl StreamDecoderInitialize(PLog logfunc, PEvent pE, PDrawFrame pDF);
+HEAD void _cdecl StreamDecoderInitialize(PLog logfunc);
 //Global
 HEAD void _cdecl StreamDecoderDeInitialize();
 //Global

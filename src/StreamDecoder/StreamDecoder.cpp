@@ -18,6 +18,10 @@ void _stdcall TimerProcess(HWND hwnd, UINT uMsg, UINT_PTR timerPtr, DWORD dwTime
 {
 	StreamDecoder::Get()->FixedUpdate();
 }
+//void CALLBACK TimerProc(HWND hWnd, UINT nMsg, UINT nTimerid, DWORD dwTime)
+//{
+//	cout << nTimerid << endl;
+//}
 
 StreamDecoder::StreamDecoder()
 {
@@ -35,17 +39,16 @@ StreamDecoder::~StreamDecoder()
 }
 
 //初始化StreamDecoder 设置日志回调函数
-void StreamDecoder::StreamDecoderInitialize(PLog logfunc, PEvent pE, PDrawFrame pDF)
+void StreamDecoder::StreamDecoderInitialize(PLog logfunc)
 {
 
 	if (!Log) Log = logfunc;
 	
-	if (!DotNetSessionEvent) DotNetSessionEvent = pE;
+	/*if (!DotNetSessionEvent) DotNetSessionEvent = pE;
 
-	if (!DotNetDrawFrame) DotNetDrawFrame = pDF;
-	
+	if (!DotNetDrawFrame) DotNetDrawFrame = pDF;*/
 
-	timerPtr = SetTimer(NULL, 1, 20, TimerProcess);
+	timerPtr = SetTimer(NULL, 0, 15, (TIMERPROC)TimerProcess);
 	startTimeStamp = Tools::Get()->GetTimestamp();
 }
 
@@ -70,8 +73,8 @@ char* StreamDecoder::GetStreamDecoderVersion()
 //创建一个Session
 void* StreamDecoder::CreateSession(int playerID)
 {
-	Session* session = new Session(playerID, DotNetSessionEvent, DotNetDrawFrame);
-	sessionList.push_back(session);
+	Session* session = new Session(playerID);
+	//sessionList.push_back(session);
 	PushLog2Net(Info, "Create Session Success");
 	return session;
 }
@@ -79,7 +82,7 @@ void* StreamDecoder::CreateSession(int playerID)
 //删除一个Session
 void StreamDecoder::DeleteSession(void* session)
 {
-	//if(IsBadReadPtr(this, sizeof(Session)))
+
 	Session* s = (Session*)session;
 	if (s == NULL)
 	{
@@ -87,7 +90,7 @@ void StreamDecoder::DeleteSession(void* session)
 		return;
 	}
 
-	if (std::count(sessionList.begin(), sessionList.end(), session) == 1)
+	/*if (std::count(sessionList.begin(), sessionList.end(), session) == 1)
 	{
 		vector<Session*>::iterator iter = find(sessionList.begin(), sessionList.end(), session);
 		sessionList.erase(iter);
@@ -97,8 +100,14 @@ void StreamDecoder::DeleteSession(void* session)
 		cout << "严重错误，不存在当前值 session" << endl;
 		PushLog2Net(Error, "Serious Error! Remove session from vector<Session*>");
 		return;
-	}
+	}*/
 	
+	if (!s->IsVaild())
+	{
+		PushLog2Net(Error, "Serious Error! Invaild Sessiion on DeleteSession");
+		return;
+	}
+
 	delete s;
 	s = NULL;
 	PushLog2Net(Info, "Delete Session Success");
@@ -224,6 +233,23 @@ void StreamDecoder::SetOption(void* session, int optionType, int value)
 }
 
 
+void StreamDecoder::SetEventCallBack(void* session, void(*PEvent)(int playerID, int eventType), void(*PDrawFrame)(Frame* frame))
+{
+	Session* s = (Session*)session;
+	if (s == NULL)
+	{
+		PushLog2Net(Error, "SetEventCallBack exception, session is null");
+		return;
+	}
+	if (!s->IsVaild())
+	{
+		PushLog2Net(Error, "Serious Error! Invaild Sessiion on SetEventCallBack");
+		return;
+	}
+
+	s->SetEventCallBack(PEvent, PDrawFrame);
+}
+
 //把消息追加到队列，通过主线程发送
 void StreamDecoder::PushLog2Net(LogLevel level, char* log)
 {
@@ -237,12 +263,13 @@ void StreamDecoder::PushLog2Net(LogLevel level, char* log)
 //主线程更新 物理时间
 void StreamDecoder::FixedUpdate()
 {
-	//PushLog2Net(Info, "hello");
-	int sessionCount = sessionList.size();
+
+	/*int sessionCount = sessionList.size();
 	for (int i = 0; i < sessionCount; i ++)
 	{
 		sessionList[i]->Update();
-	}
+	}*/
+
 	timerCounter++;
 	logMux.lock();
 	int size = logpackets.size();
@@ -270,16 +297,20 @@ void StreamDecoder::Log2Net(LogPacket* logpacket)
 	{
 		Log(logpacket->_level, logpacket->_log);
 	}
-	cout << logpacket->_log << endl;
+	else
+	{
+		cout << logpacket->_log << endl;
+	}
+	
 	delete logpacket;
 	logpacket = NULL;
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-void StreamDecoderInitialize(PLog logfunc, PEvent pE, PDrawFrame pDF)
+void StreamDecoderInitialize(PLog logfunc)
 {
-	StreamDecoder::Get()->StreamDecoderInitialize(logfunc, pE, pDF);
+	StreamDecoder::Get()->StreamDecoderInitialize(logfunc);
 }
 
 void StreamDecoderDeInitialize()

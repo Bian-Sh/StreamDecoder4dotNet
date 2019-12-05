@@ -15,7 +15,7 @@ class Session
 {
 
 public:
-	Session(int playerID, PEvent pE, PDrawFrame pDF);
+	Session(int playerID);
 	~Session();
 
 	void TryStreamDemux(char* url);
@@ -40,6 +40,8 @@ public:
 
 	//…Ë÷√—°œÓ 
 	void SetOption(int optionType, int value);
+
+	void SetEventCallBack(PEvent pEvent, PDrawFrame pDrawFrame);
 
 	inline bool IsVaild()
 	{
