@@ -23,7 +23,7 @@ public:
 	//开始解码
 	void BeginDecode();
 	//停止解码
-	void StopDecode();
+	void EndDecode();
 	
 	//获取 字节流缓冲 空余空间大小
 	int GetCacheFreeSize();
@@ -41,6 +41,11 @@ public:
 	//设置选项 
 	void SetOption(int optionType, int value);
 
+	inline bool IsVaild()
+	{
+		if (verifyValue == 0x1122334455667788) return true;
+		else return false;
+	}
 
 public:
 
@@ -77,4 +82,5 @@ private:
 	std::list<Frame*> framePackets;
 	std::list<int> eventPackets;
 
+	long long verifyValue;
 };

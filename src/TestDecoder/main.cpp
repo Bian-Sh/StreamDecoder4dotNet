@@ -1,8 +1,8 @@
-#include "H264Decoder.h"
+#include "TestDecoder.h"
 #include <QtWidgets/QApplication>
 #include <QDebug>
 #include <sys/timeb.h>
-
+#include "PlayerController.h"
 //#include <sys/timeb.h>
 //获取时间戳ms 
 long long GetNowMs()
@@ -20,12 +20,9 @@ int main(int argc, char *argv[])
 {
 	QApplication a(argc, argv);
 	
-	H264Decoder w;
+	TestDecoder w;
 	w.show();
 
-
-	
-	
 
 	return a.exec();
 }

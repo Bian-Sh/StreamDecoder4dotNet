@@ -33,23 +33,32 @@
     <ClCompile Include="main.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="H264Decoder.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="DrawI420.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="PlayerController.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="TestDecoder.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <QtMoc Include="H264Decoder.h">
-      <Filter>Header Files</Filter>
-    </QtMoc>
     <QtMoc Include="DrawI420.h">
       <Filter>Header Files</Filter>
     </QtMoc>
+    <QtMoc Include="PlayerController.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="TestDecoder.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
   </ItemGroup>
   <ItemGroup>
-    <QtUic Include="H264Decoder.ui">
+    <QtUic Include="PlayerController.ui">
+      <Filter>Form Files</Filter>
+    </QtUic>
+    <QtUic Include="TestDecoder.ui">
       <Filter>Form Files</Filter>
     </QtUic>
   </ItemGroup>

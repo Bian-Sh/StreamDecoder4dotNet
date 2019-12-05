@@ -43,7 +43,7 @@ public:
 	//初始化StreamDecoder 设置日志回调函数
 	void StreamDecoderInitialize(PLog logfunc, PEvent pE, PDrawFrame pDF);
 
-	//注销StreamDecoder 预留函数
+	//注销StreamDecoder
 	void StreamDecoderDeInitialize();
 
 
@@ -62,7 +62,7 @@ public:
 	//开始解码
 	void BeginDecode(void* session);
 	//停止解码
-	void StopDecode(void* session);
+	void EndDecode(void* session);
 
 	//获取 数据流缓冲区 可用空间（字节）
 	int GetCacheFreeSize(void* session);
@@ -72,14 +72,8 @@ public:
 	//设置参数
 	void SetOption(void* session, int optionType, int value);
 
-	//void SetSessionEvent(void* session, PEvent pE, PDrawFrame pDF);
-
 	//把消息追加到队列，通过主线程发送
 	void PushLog2Net(LogLevel level, char* log);
-
-	/*void PushFrame2Net(Frame* frame);
-
-	void PushEvent2Net(int playerID, int eventType);*/
 
 	//主线程更新 物理时间
 	void FixedUpdate();
@@ -91,9 +85,6 @@ private:
 	//调用回调函数（主线程同步）
 	void Log2Net(LogPacket* logpacket);
 
-	/*void DrawFrame2dotNet(Frame* frame);
-
-	void Event2Net(DEvent* ev);*/
 private:
 	std::mutex logMux;
 	PLog Log = NULL;
@@ -127,7 +118,7 @@ HEAD void _cdecl TryNetStreamDemux(void* session, char* url);
 
 HEAD void _cdecl BeginDecode(void* session);
 
-HEAD void _cdecl StopDecode(void* session);
+HEAD void _cdecl EndDecode(void* session);
 
 HEAD int _cdecl GetCacheFreeSize(void* session);
 

@@ -60,6 +60,7 @@ public class PlayerDemo_YUV : MonoBehaviour
 
         mat = rimg.material;
 
+        CreateSession();
     }
 
     private void OnDestroy()
@@ -87,6 +88,11 @@ public class PlayerDemo_YUV : MonoBehaviour
         player.SetOption(OptionType.ConvertPixelFormat, (int)PixelFormat.RGBA);
         player.SetOption(OptionType.AsyncUpdate, 0);
         player.SetPlayerCb(OnEvent,OnDrawFrame);
+
+        TryBitStreamDemux();
+
+        StartSendData();
+       
 
     }
     private void OnEvent(SessionEventType type)

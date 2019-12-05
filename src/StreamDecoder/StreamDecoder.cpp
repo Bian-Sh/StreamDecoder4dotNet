@@ -49,16 +49,12 @@ void StreamDecoder::StreamDecoderInitialize(PLog logfunc, PEvent pE, PDrawFrame 
 	startTimeStamp = Tools::Get()->GetTimestamp();
 }
 
-//注销StreamDecoder 预留函数
+//注销StreamDecoder
 void StreamDecoder::StreamDecoderDeInitialize()
 {
 	logMux.lock();
 	Log = NULL;
 	logMux.unlock();
-
-	/*frameMux.lock();
-	DrawFrame = NULL;
-	frameMux.unlock();*/
 
 	KillTimer(NULL, timerPtr);
 	cout << "平均刷新率" << GetUpdateRate() << "次/s" << endl;
@@ -68,7 +64,7 @@ void StreamDecoder::StreamDecoderDeInitialize()
 //获取版本号
 char* StreamDecoder::GetStreamDecoderVersion()
 {
-	return "stream decoder version 1.0";
+	return "stream decoder version 1.1";
 }
 
 //创建一个Session
@@ -99,7 +95,8 @@ void StreamDecoder::DeleteSession(void* session)
 	else
 	{
 		cout << "严重错误，不存在当前值 session" << endl;
-		PushLog2Net(Error, "Remove session from vector<Session*>!");
+		PushLog2Net(Error, "Serious Error! Remove session from vector<Session*>");
+		return;
 	}
 	
 	delete s;
@@ -116,6 +113,11 @@ void StreamDecoder::TryBitStreamDemux(void* session)
 		PushLog2Net(Error, "TryBitStreamDemux exception, session is null");
 		return;
 	}
+	if (!s->IsVaild())
+	{
+		PushLog2Net(Error, "Serious Error! Invaild Sessiion on TryBitStreamDemux");
+		return;
+	}
 	s->TryStreamDemux(NULL);
 }
 
@@ -125,6 +127,11 @@ void StreamDecoder::TryNetStreamDemux(void* session, char* url)
 	if (s == NULL)
 	{
 		PushLog2Net(Error, "TryNetStreamDemux exception, session is null");
+		return;
+	}
+	if (!s->IsVaild())
+	{
+		PushLog2Net(Error, "Serious Error! Invaild Sessiion on TryNetStreamDemux");
 		return;
 	}
 	s->TryStreamDemux(url);
@@ -139,11 +146,16 @@ void StreamDecoder::BeginDecode(void* session)
 		PushLog2Net(Error, "BeginDecode exception, session is null");
 		return;
 	}
+	if (!s->IsVaild())
+	{
+		PushLog2Net(Error, "Serious Error! Invaild Sessiion on BeginDecode");
+		return;
+	}
 	s->BeginDecode();
 }
 
 //停止解码
-void StreamDecoder::StopDecode(void* session)
+void StreamDecoder::EndDecode(void* session)
 {
 	Session* s = (Session*)session;
 	if (s == NULL)
@@ -151,7 +163,12 @@ void StreamDecoder::StopDecode(void* session)
 		PushLog2Net(Error, "CloseSession exception, session is null");
 		return;
 	}
-	s->StopDecode();
+	if (!s->IsVaild())
+	{
+		PushLog2Net(Error, "Serious Error! Invaild Sessiion on EndDecode");
+		return;
+	}
+	s->EndDecode();
 }
 
 //获取 数据流缓冲区 可用空间（字节）
@@ -161,7 +178,13 @@ int StreamDecoder::GetCacheFreeSize(void* session)
 	if (s == NULL)
 	{
 		PushLog2Net(Error, "GetCacheFreeSize exception, session is null");
-		return false;
+		return -2;
+	}
+
+	if (!s->IsVaild())
+	{
+		PushLog2Net(Error, "Serious Error! Invaild Sessiion on GetCacheFreeSize");
+		return -2;
 	}
 	return s->GetCacheFreeSize();
 }
@@ -176,6 +199,11 @@ bool StreamDecoder::PushStream2Cache(void* session, char* data, int len)
 		PushLog2Net(Error, "PushStream2Cache exception, session is null");
 		return false;
 	}
+	if (!s->IsVaild())
+	{
+		PushLog2Net(Error, "Serious Error! Invaild Sessiion on PushStream2Cache");
+		return false;
+	}
 	return s->PushStream2Cache(data, len);
 }
 
@@ -187,19 +215,14 @@ void StreamDecoder::SetOption(void* session, int optionType, int value)
 		PushLog2Net(Error, "SetOption exception, session is null");
 		return;
 	}
+	if (!s->IsVaild())
+	{
+		PushLog2Net(Error, "Serious Error! Invaild Sessiion on SetOption");
+		return;
+	}
 	s->SetOption(optionType, value);
 }
 
-//void StreamDecoder::SetSessionEvent(void* session, PEvent pE, PDrawFrame pDF)
-//{
-//	Session* s = (Session*)session;
-//	if (s == NULL)
-//	{
-//		PushLog2Net(Error, "SetSessionEvent exception, session is null");
-//		return;
-//	}
-//	s->SetSessionEvent(pE, pDF);
-//}
 
 //把消息追加到队列，通过主线程发送
 void StreamDecoder::PushLog2Net(LogLevel level, char* log)
@@ -210,20 +233,6 @@ void StreamDecoder::PushLog2Net(LogLevel level, char* log)
 	logMux.unlock();
 }
 
-//void StreamDecoder::PushFrame2Net(Frame* frame)
-//{
-//	frameMux.lock();
-//	framepackets.push_back(frame);
-//	frameMux.unlock();
-//}
-//
-//void StreamDecoder::PushEvent2Net(int playerID, int eventType)
-//{
-//	DEvent * ev = new DEvent(playerID, eventType);
-//	eventMux.lock();
-//	eventpackets.push_back(ev);
-//	eventMux.unlock();
-//}
 
 //主线程更新 物理时间
 void StreamDecoder::FixedUpdate()
@@ -244,23 +253,6 @@ void StreamDecoder::FixedUpdate()
 	}
 	logMux.unlock();
 
-	/*frameMux.lock();
-	size = framepackets.size();
-	for (int i = 0; i < size; i++)
-	{
-		DrawFrame2dotNet(framepackets.front());
-		framepackets.pop_front();
-	}
-	frameMux.unlock();
-
-	eventMux.lock();
-	size = eventpackets.size();
-	for (int i = 0; i < size; i++)
-	{
-		Event2Net(eventpackets.front());
-		eventpackets.pop_front();
-	}
-	eventMux.unlock();*/
 }
 
 
@@ -282,34 +274,6 @@ void StreamDecoder::Log2Net(LogPacket* logpacket)
 	delete logpacket;
 	logpacket = NULL;
 }
-////调用回调函数（主线程同步）
-//void StreamDecoder::DrawFrame2dotNet(Frame* frame)
-//{
-//	if (DrawFrame)
-//	{
-//		DotNetFrame* dotNetFrame = new DotNetFrame();
-//		dotNetFrame->playerID = frame->playerID;
-//		dotNetFrame->width = frame->width;
-//		dotNetFrame->height = frame->height;
-//		dotNetFrame->frame_y = frame->frame_y;
-//		dotNetFrame->frame_u = frame->frame_u;
-//		dotNetFrame->frame_v = frame->frame_v;
-//		//真正调用C#
-//		DrawFrame(dotNetFrame);
-//		//Log2Net(new LogPacket(Info, "call ok"));
-//		delete dotNetFrame;
-//		dotNetFrame = NULL;
-//	}
-//	delete frame;
-//	frame = NULL;
-//}
-//
-//void StreamDecoder::Event2Net(DEvent* ev)
-//{
-//	if (Event) Event(ev->playerID, ev->eventType);
-//	delete ev;
-//	ev = NULL;
-//}
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -354,9 +318,9 @@ void BeginDecode(void* session)
 	StreamDecoder::Get()->BeginDecode(session);
 }
 
-void StopDecode(void* session)
+void EndDecode(void* session)
 {
-	StreamDecoder::Get()->StopDecode(session);
+	StreamDecoder::Get()->EndDecode(session);
 }
 
 int GetCacheFreeSize(void* session)
@@ -373,9 +337,4 @@ void SetOption(void* session, int optionType, int value)
 {
 	StreamDecoder::Get()->SetOption(session, optionType, value);
 }
-
-//void SetSessionEvent(void* session, PEvent pE, PDrawFrame pDF)
-//{
-//	StreamDecoder::Get()->SetSessionEvent(session, pE, pDF);
-//}
 

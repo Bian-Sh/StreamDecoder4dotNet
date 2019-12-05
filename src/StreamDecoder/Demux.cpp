@@ -214,7 +214,7 @@ void Demux::Start()
 int Demux::GetCacheFreeSize()
 {
 	if (dataCache) return dataCacheSize - dataCache->size();
-	return 0;
+	return -1;
 }
 
 AVCodecParameters* Demux::GetVideoPara()

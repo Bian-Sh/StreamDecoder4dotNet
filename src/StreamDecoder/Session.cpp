@@ -29,6 +29,7 @@ extern "C"
 
 
 Session::Session(int playerID, PEvent pE, PDrawFrame pDF)
+	:verifyValue(0x1122334455667788)
 {
 	config = new SessionConfig();
 
@@ -142,7 +143,7 @@ void Session::BeginDecode()
 	demux->Start();
 }
 
-void Session::StopDecode()
+void Session::EndDecode()
 {
 	Clear();
 }
@@ -227,8 +228,6 @@ void Session::OnDecodeOneAVFrame(AVFrame *frame, bool isAudio)
 		av_frame_free(&frame);
 		return;
 	}
-
-	cout << frame->pts << endl;
 
 	//³õÊ¼AVFrame
 	int width = frame->width;
@@ -425,3 +424,4 @@ void Session::SetOption(int optionType, int value)
 		config->asyncUpdate = value;
 	}
 }
+

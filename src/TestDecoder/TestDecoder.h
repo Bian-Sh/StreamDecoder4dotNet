@@ -1,22 +1,24 @@
 #pragma once
 
 #include <QtWidgets/QWidget>
-#include "ui_H264Decoder.h"
+#include "ui_TestDecoder.h"
 #include "Session.h"
 #include <QThread>
 #include <QMutex>
 
+class PlayerController;
 
 void OnDraw_cb(struct Frame* frame);
 void OnEvent_cb(int playerID, int eventType);
-class H264Decoder : public QWidget
+class TestDecoder : public QWidget
 {
 	Q_OBJECT
 
 public:
-	H264Decoder(QWidget *parent = Q_NULLPTR);
+	TestDecoder(QWidget *parent = Q_NULLPTR);
+	~TestDecoder();
 
-	static H264Decoder* self;
+	static TestDecoder* self;
 	void OnFrame(Frame* frame);
 	void OnSessionEvent(int playerID, int eventType);
 public slots :
@@ -35,6 +37,8 @@ public slots :
 
 	void on_EndSendData_clicked();
 
+
+	void on_CreatePlayer_clicked();
 
 	void OnRead();
 protected:
@@ -70,4 +74,10 @@ private:
 
 
 	bool isSettingCanvas = false;
+
+
+private:
+
+	std::vector<int> playerIDvector;
+	std::list<PlayerController*> playerList;
 };
