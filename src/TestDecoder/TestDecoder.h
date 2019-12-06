@@ -25,8 +25,6 @@ protected:
 
 	void closeEvent(QCloseEvent *event);
 
-	bool event(QEvent* event);
-
 private:
 
 	Ui::H264DecoderClass ui;
@@ -39,6 +37,6 @@ private:
 
 private:
 
-	std::vector<int> playerIDvector;
+	//std::vector<int> playerIDvector;
 	std::list<PlayerController*> playerList;
 };

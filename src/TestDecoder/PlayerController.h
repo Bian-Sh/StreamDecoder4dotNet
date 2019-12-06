@@ -5,20 +5,20 @@
 #include "ui_PlayerController.h"
 
 struct Frame;
-class DrawI420;
+class CanvasI420;
 class PlayerController : public QWidget
 {
 	Q_OBJECT
 
 public:
-	PlayerController(int playerID, QWidget *parent = Q_NULLPTR);
+	PlayerController(QWidget *parent = Q_NULLPTR);
 	~PlayerController();
 
 	//一个简单验证指针是否有效的方法
 	bool isVaild();
 
 	void OnDrawFrameCb(Frame * frame);
-	void OnSessionEventCb(int playerID, int eventType);
+	void OnSessionEventCb(int eventType);
 protected:
 
 	void closeEvent(QCloseEvent *event);
@@ -62,13 +62,16 @@ private:
 	bool isExit = false;
 	bool isInSendThread = false;
 
-	int playerID;
 	void* player = NULL;
 
-	DrawI420* canvas = NULL;
+	CanvasI420* canvas = NULL;
 	
 	std::mutex canvasMux;
 
 	int width = 0;
 	int height = 0;
+
+	
+	bool isInSettingCanvas = false;
+
 };

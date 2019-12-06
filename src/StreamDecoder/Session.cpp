@@ -34,12 +34,12 @@ void _stdcall SessionTimerProcess(HWND hwnd, UINT uMsg, UINT_PTR timerPtr, DWORD
 	
 }
 
-Session::Session(int playerID)
+Session::Session()
 	:verifyValue(VERIFY_VALUE)
 {
 	config = new SessionConfig();
 
-	config->playerID = playerID;
+	//config->playerID = playerID;
 
 #ifndef USE_LIBYUV
 	InitConverter();
@@ -249,7 +249,7 @@ void Session::OnDecodeOneAVFrame(AVFrame *frame, bool isAudio)
 	if (frame->linesize[0] == width)
 	{
 		tmpFrame = new Frame(
-			config->playerID, 
+			//config->playerID, 
 			frame->pkt_dts, 
 			Tools::Get()->GetTimestamp(),
 			frame->pts,
@@ -264,7 +264,7 @@ void Session::OnDecodeOneAVFrame(AVFrame *frame, bool isAudio)
 	else
 	{
 		tmpFrame = new Frame(
-			config->playerID, 
+			//config->playerID, 
 			frame->pkt_dts,
 			Tools::Get()->GetTimestamp(), 
 			frame->pts,
@@ -372,7 +372,7 @@ void Session::Update(bool call_cb)
 	{
 		int eventType = eventPackets.front();
 		eventPackets.pop_front();
-		if (call_cb && DotNetSessionEvent) DotNetSessionEvent(opaque, config->playerID, eventType);
+		if (call_cb && DotNetSessionEvent) DotNetSessionEvent(opaque, eventType);
 	}
 	funcMux.unlock();
 }
@@ -384,6 +384,7 @@ void Session::SetOption(int optionType, int value)
 
 	if ((OptionType)optionType == OptionType::DataCacheSize)
 	{
+		//ื๎ะก500K
 		if (value < 500000) value = 500000;
 		config->dataCacheSize = value;
 	}

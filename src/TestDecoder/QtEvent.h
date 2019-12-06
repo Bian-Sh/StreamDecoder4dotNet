@@ -6,7 +6,7 @@ class QtEvent : public QEvent
 public:
 	enum Type
 	{
-		Event1 = QEvent::User + 1,
+		SetCanvas = QEvent::User + 1,
 		Event2 = QEvent::User + 2,
 	};
 	QtEvent(Type type) : QEvent(QEvent::Type(type)) {};

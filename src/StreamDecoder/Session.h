@@ -8,7 +8,7 @@ struct AVPacket;
 struct SessionConfig;
 
 struct Frame;
-typedef void(*PEvent)(void* opaque, int playerID, int eventType);
+typedef void(*PEvent)(void* opaque, int eventType);
 typedef void(*PDrawFrame)(void* opaque, Frame* frame);
 
 #define VERIFY_VALUE 0x1122334455667788
@@ -16,7 +16,7 @@ class Session
 {
 
 public:
-	Session(int playerID);
+	Session();
 	~Session();
 
 	void TryStreamDemux(char* url);

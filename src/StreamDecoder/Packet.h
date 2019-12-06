@@ -97,7 +97,7 @@ struct LogPacket
 
 struct Frame
 {
-	int playerID;
+	//int playerID;
 	int width;
 	int height;
 
@@ -121,7 +121,7 @@ struct Frame
 	float fps = 0;
 	
 	Frame(
-		int playerID,
+		//int playerID,
 		long long bdts,
 		long long edts,
 		long long pts,
@@ -133,7 +133,7 @@ struct Frame
 		char* v, 
 		bool isLineAlign = true)
 	{
-		this->playerID = playerID;
+		//this->playerID = playerID;
 		this->bdts = bdts;
 		this->edts = edts;
 		this->pts = pts;
@@ -213,7 +213,7 @@ enum PixelFormat
 	BGRA
 };
 
-//OptionType与SessionConfig一一对应(playerID除外)
+//OptionType与SessionConfig一一对应
 enum OptionType
 {
 	DataCacheSize = 1,
@@ -229,7 +229,7 @@ enum OptionType
 };
 struct SessionConfig
 {
-	int playerID = 0;
+	//int playerID = 0;
 
 	int dataCacheSize = 1000000;				//DataCacheSize
 	//解封装等待时间								

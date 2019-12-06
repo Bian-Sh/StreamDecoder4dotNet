@@ -71,9 +71,9 @@ char* StreamDecoder::GetStreamDecoderVersion()
 }
 
 //创建一个Session
-void* StreamDecoder::CreateSession(int playerID)
+void* StreamDecoder::CreateSession()
 {
-	Session* session = new Session(playerID);
+	Session* session = new Session();
 	sessionList.push_back(session);
 	PushLog2Net(Info, "Create Session Success");
 	return session;
@@ -235,7 +235,7 @@ void StreamDecoder::SetOption(void* session, int optionType, int value)
 }
 
 //设置Session的回调函数
-void StreamDecoder::SetEventCallBack(void* session, void(*PEvent)(void* opaque, int playerID, int eventType), void(*PDrawFrame)(void* opaque, Frame* frame), void* opaque)
+void StreamDecoder::SetEventCallBack(void* session, void(*PEvent)(void* opaque, int eventType), void(*PDrawFrame)(void* opaque, Frame* frame), void* opaque)
 {
 	Session* s = (Session*)session;
 	if (s == NULL)
@@ -325,9 +325,9 @@ char* GetStreamDecoderVersion()
 	return StreamDecoder::Get()->GetStreamDecoderVersion();
 }
 
-void* CreateSession(int playerID)
+void* CreateSession()
 {
-	return StreamDecoder::Get()->CreateSession(playerID);
+	return StreamDecoder::Get()->CreateSession();
 }
 
 void DeleteSession(void* session)
@@ -371,7 +371,7 @@ void SetOption(void* session, int optionType, int value)
 	StreamDecoder::Get()->SetOption(session, optionType, value);
 }
 
-void SetEventCallBack(void* session, void(*PEvent)(void* opaque, int playerID, int eventType), void(*PDrawFrame)(void* opaque, Frame* frame), void* opaque)
+void SetEventCallBack(void* session, void(*PEvent)(void* opaque, int eventType), void(*PDrawFrame)(void* opaque, Frame* frame), void* opaque)
 {
 	StreamDecoder::Get()->SetEventCallBack(session, PEvent, PDrawFrame, opaque);
 }

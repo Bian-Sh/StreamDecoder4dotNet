@@ -4,22 +4,20 @@
 #include <QtConcurrent/QtConcurrent>
 #include "StreamDecoder.h"
 #include "Packet.h"
-#include "DrawI420.h"
-#include <QEvent>
+#include "CanvasI420.h"
+#include "QtEvent.h"
 #include <QDesktopWidget>
 
 #define USE_WIDGET
 
-PlayerController::PlayerController(int playerID, QWidget *parent)
+PlayerController::PlayerController(QWidget *parent)
 	: QWidget(parent), value(0x1122334455667788)
 {
 	ui.setupUi(this);
 	ui.FilePath->setText("F:/HTTPServer/Faded.mp4");
 
-	this->playerID = playerID;
-
 #ifdef USE_WIDGET
-	canvas = new DrawI420();
+	canvas = new CanvasI420();
 	canvas->show();
 #endif
 
@@ -80,10 +78,10 @@ void drawframe_callback(void* opaque, Frame* frame)
 	PlayerController* pc = (PlayerController*)opaque;
 	if (pc) pc->OnDrawFrameCb(frame);
 }
-void sessionevent_callback(void* opaque, int playerID, int eventType)
+void sessionevent_callback(void* opaque, int eventType)
 {
 	PlayerController* pc = (PlayerController*)opaque;
-	if (pc) pc->OnSessionEventCb(playerID, eventType);
+	if (pc) pc->OnSessionEventCb(eventType);
 }
 
 void PlayerController::OnDrawFrameCb(Frame * frame)
@@ -94,43 +92,13 @@ void PlayerController::OnDrawFrameCb(Frame * frame)
 	{
 		width = frame->width;
 		height = frame->height;
-		/*QtEvent * _event = new QtEvent(QtEvent::Event1);
-		QCoreApplication::postEvent(this, _event);*/
 
-		canvasMux.lock();
-		if (canvas)
-		{
-
-			int scrWidth, scrHeight;
-			GetScreenSize(&scrWidth, &scrHeight);
-			//ÊÓÆµ³ß´ç´óÓÚÆÁÄ»³ß´ç
-			if (width > scrWidth || height > scrHeight)
-			{
-				float rate = (float)height / width;
-				int w, h;
-				//ºáÆÁ
-				if (width > height)
-				{
-					w = scrWidth * 0.7f;
-					h = w * rate;
-				}
-				//ÊúÆÁ
-				else
-				{
-					h = scrHeight;
-					w = h / rate;
-				}
-				canvas->resize(w, h);
-			}
-			else
-			{
-				canvas->resize(width, height);
-			}
-			
-			canvas->Init(width, height);
-		}
-		canvasMux.unlock();
+		isInSettingCanvas = true;
+		QtEvent * _event = new QtEvent(QtEvent::SetCanvas);
+		QCoreApplication::postEvent(this, _event);
 	}
+
+	if (isInSettingCanvas) return;
 	canvasMux.lock();
 	if (canvas)
 		canvas->Repaint(frame);
@@ -138,7 +106,7 @@ void PlayerController::OnDrawFrameCb(Frame * frame)
 #endif
 }
 
-void PlayerController::OnSessionEventCb(int playerID, int eventType)
+void PlayerController::OnSessionEventCb(int eventType)
 {
 	if (eventType == SessionEventType::DemuxSuccess)
 	{
@@ -150,19 +118,20 @@ void PlayerController::OnSessionEventCb(int playerID, int eventType)
 void PlayerController::on_CreateSession_clicked()
 {
 	if (player) return;
-	player = CreateSession(playerID);
+	player = CreateSession();
 
 	SetOption(player, OptionType::DataCacheSize, 1000000);
 	SetOption(player, OptionType::DemuxTimeout, 2000);
-	SetOption(player, OptionType::PushFrameInterval, 0);
+	SetOption(player, OptionType::PushFrameInterval, 10);
 	SetOption(player, OptionType::AlwaysWaitBitStream, false);
 	SetOption(player, OptionType::WaitBitStreamTimeout, 1000);
 	SetOption(player, OptionType::AutoDecode, false);
 	SetOption(player, OptionType::DecodeThreadCount, 4);
 	SetOption(player, OptionType::UseCPUConvertYUV, false);
 	SetOption(player, OptionType::ConvertPixelFormat, PixelFormat::RGBA);
-	SetOption(player, OptionType::AsyncUpdate, false);
+	SetOption(player, OptionType::AsyncUpdate, true);
 
+	SetEventCallBack(player, sessionevent_callback, drawframe_callback, this);
 	
 }
 //É¾³ýÒ»¸öSession
@@ -176,7 +145,6 @@ void PlayerController::on_DeleteSession_clicked()
 
 void PlayerController::on_GetCacheFree_clicked()
 {
-	SetEventCallBack(player, sessionevent_callback, drawframe_callback, this);
 	qDebug() << GetCacheFreeSize(player);
 }
 
@@ -220,10 +188,10 @@ void PlayerController::run()
 	isInSendThread = true;
 	FILE* fp = NULL;
 	unsigned char* readBuff = NULL;
-	fp = fopen(ui.FilePath->text().toLatin1(), "rb");
+	fp = fopen(ui.FilePath->text().toLocal8Bit(), "rb");
 	if (!fp)
 	{
-		qDebug() << ui.FilePath->text().toLatin1().data() << " not exits";
+		qDebug() << ui.FilePath->text().toLocal8Bit().data() << " not exits";
 		goto end;
 	}
 	readBuff = new unsigned char[10240];
@@ -268,13 +236,43 @@ end:
 
 bool PlayerController::event(QEvent* event)
 {
-	/*if (event->type() == QtEvent::Event1)
+	if (event->type() == QtEvent::SetCanvas)
 	{
-		canvas->resize(width, height);
-		canvas->Init(width, height);
-		isSettingCanvas = false;
+		canvasMux.lock();
+		if (canvas)
+		{
+			int scrWidth, scrHeight;
+			GetScreenSize(&scrWidth, &scrHeight);
+			//ÊÓÆµ³ß´ç´óÓÚÆÁÄ»³ß´ç
+			if (width > scrWidth || height > scrHeight)
+			{
+				float rate = (float)height / width;
+				int w, h;
+				//ºáÆÁ
+				if (width > height)
+				{
+					w = scrWidth * 0.7f;
+					h = w * rate;
+				}
+				//ÊúÆÁ
+				else
+				{
+					h = scrHeight;
+					w = h / rate;
+				}
+				canvas->resize(w, h);
+			}
+			else
+			{
+				canvas->resize(width, height);
+			}
+
+			canvas->Init(width, height);
+		}
+		canvasMux.unlock();
+		isInSettingCanvas = false;
 		return true;
-	}*/
+	}
 	return QWidget::event(event);
 }
 

@@ -5,14 +5,14 @@
 #include <QMutex>
 #include <QWaitCondition>
 struct Frame;
-class DrawI420 : public QOpenGLWidget, protected QOpenGLFunctions
+class CanvasI420 : public QOpenGLWidget, protected QOpenGLFunctions
 {
 
 	Q_OBJECT
 
 public:
-	DrawI420();
-	~DrawI420();
+	CanvasI420();
+	~CanvasI420();
 
 	void Init(int width, int height);
 

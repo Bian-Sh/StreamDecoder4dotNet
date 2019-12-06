@@ -33,24 +33,24 @@
     <ClCompile Include="main.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="DrawI420.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="PlayerController.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="TestDecoder.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="CanvasI420.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <QtMoc Include="DrawI420.h">
-      <Filter>Header Files</Filter>
-    </QtMoc>
     <QtMoc Include="PlayerController.h">
       <Filter>Header Files</Filter>
     </QtMoc>
     <QtMoc Include="TestDecoder.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="CanvasI420.h">
       <Filter>Header Files</Filter>
     </QtMoc>
   </ItemGroup>

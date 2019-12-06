@@ -6,7 +6,7 @@
 #include <QCryptographicHash>
 #include <Session.h>
 #include "Packet.h"
-#include "DrawI420.h"
+#include "CanvasI420.h"
 #include <QFileDialog>
 #include <QTcpServer>
 #include <QTcpSocket>
@@ -15,19 +15,6 @@
 #include "QtEvent.h"
 #include "PlayerController.h"
 #pragma comment(lib, "StreamDecoder.lib")
-
-
-
-bool TestDecoder::event(QEvent* event)
-{
-	if (event->type() == QtEvent::Event1)
-	{
-		return true;
-	}
-	return QWidget::event(event);
-}
-
-
 
 
 TestDecoder::TestDecoder(QWidget *parent)
@@ -82,14 +69,14 @@ void TestDecoder::OnRead()
 
 void TestDecoder::on_CreatePlayer_clicked()
 {
-	int id = 0;
+	/*int id = 0;
 	while (std::count(playerIDvector.begin(), playerIDvector.end(), id) > 0)
 	{
 		id++;
 	}
-	playerIDvector.push_back(id);
+	playerIDvector.push_back(id);*/
 
-	PlayerController* p = new PlayerController(id);
+	PlayerController* p = new PlayerController();
 	p->show();
 	playerList.push_back(p);
 }

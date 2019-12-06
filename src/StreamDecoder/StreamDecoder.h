@@ -50,7 +50,7 @@ public:
 	//获取版本号
 	char* GetStreamDecoderVersion();
 	//创建一个Session
-	void* CreateSession(int playerID);
+	void* CreateSession();
 
 	//删除一个Session
 	void DeleteSession(void* session);
@@ -73,7 +73,7 @@ public:
 	//设置参数
 	void SetOption(void* session, int optionType, int value);
 
-	void SetEventCallBack(void* session, void(*PEvent)(void* opaque, int playerID, int eventType), void(*PDrawFrame)(void* opaque, Frame* frame), void* opaque);
+	void SetEventCallBack(void* session, void(*PEvent)(void* opaque, int eventType), void(*PDrawFrame)(void* opaque, Frame* frame), void* opaque);
 
 	//把消息追加到队列，通过主线程发送
 	void PushLog2Net(LogLevel level, char* log);
@@ -111,7 +111,7 @@ HEAD void _cdecl StreamDecoderDeInitialize();
 //Global
 HEAD char* _cdecl GetStreamDecoderVersion();
 
-HEAD void* _cdecl CreateSession(int playerID);
+HEAD void* _cdecl CreateSession();
 
 HEAD void _cdecl DeleteSession(void* session);
 
@@ -129,6 +129,6 @@ HEAD bool _cdecl PushStream2Cache(void* session, char* data, int len);
 
 HEAD void _cdecl SetOption(void* session, int optionType, int value);
 
-HEAD void _cdecl SetEventCallBack(void* session, void(*PEvent)(void* opaque, int playerID, int eventType), void(*PDrawFrame)(void* opaque, Frame* frame), void* opaque);
+HEAD void _cdecl SetEventCallBack(void* session, void(*PEvent)(void* opaque, int eventType), void(*PDrawFrame)(void* opaque, Frame* frame), void* opaque);
 
 HEAD void* _cdecl TestSetObj(void* obj);

@@ -461,7 +461,7 @@ void Demux::ReadAVPacket()
 			StreamDecoder::Get()->PushLog2Net(Warning, "Stream is interrupt!");
 			break;
 		}
-		cout << "[" << ++frame << "]";
+		//cout << "[" << ++frame << "]";
 		mux.unlock();
 		//读取一帧数据
 

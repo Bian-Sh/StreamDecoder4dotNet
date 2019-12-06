@@ -1,4 +1,4 @@
-#include "DrawI420.h"
+#include "CanvasI420.h"
 
 #include <QDebug>
 #include <QThread>
@@ -46,13 +46,13 @@ void main(void)
 }
 );
 
-DrawI420::DrawI420()
+CanvasI420::CanvasI420()
 {
 	
 }
 
 
-DrawI420::~DrawI420()
+CanvasI420::~CanvasI420()
 {
 	mux.lock();
 	delete datas[0];
@@ -62,7 +62,7 @@ DrawI420::~DrawI420()
 	mux.unlock();
 	qDebug() << "~DrawI420";
 }
-void DrawI420::initializeGL()
+void CanvasI420::initializeGL()
 {
 	QMutexLocker locker(&mux);
 	initializeOpenGLFunctions();
@@ -109,7 +109,7 @@ void DrawI420::initializeGL()
 
 	glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
 }
-void DrawI420::Init(int width, int height)
+void CanvasI420::Init(int width, int height)
 {
 	QMutexLocker locker(&mux);
 	this->width = width;
@@ -204,7 +204,7 @@ void DrawI420::Init(int width, int height)
 //	update();
 //}
 
-bool DrawI420::Repaint(unsigned char* yuv[])
+bool CanvasI420::Repaint(unsigned char* yuv[])
 {
 
 	if (isRepainting) return false;
@@ -219,7 +219,7 @@ bool DrawI420::Repaint(unsigned char* yuv[])
 	return true;
 }
 
-bool DrawI420::Repaint(Frame* frame)
+bool CanvasI420::Repaint(Frame* frame)
 {
 	if (isRepainting) return false;
 
@@ -237,7 +237,7 @@ bool DrawI420::Repaint(Frame* frame)
 	return true;
 }
 
-void DrawI420::Close()
+void CanvasI420::Close()
 {
 	if (isExit)return;
 	isExit = true;
@@ -259,7 +259,7 @@ void DrawI420::Close()
 	close();
 }
 
-void DrawI420::paintGL()
+void CanvasI420::paintGL()
 {
 	if (isExit) return;
 	QMutexLocker locker(&mux);
@@ -297,7 +297,7 @@ void DrawI420::paintGL()
 
 
 
-void DrawI420::closeEvent(QCloseEvent *event)
+void CanvasI420::closeEvent(QCloseEvent *event)
 {
 	//DecodeEvent* trigger = new DecodeEvent(DecodeEvent::CloseWidget);
 	//QCoreApplication::postEvent(session, trigger);
