@@ -4,6 +4,12 @@
 #include <QtConcurrent/QtConcurrent>
 #include "StreamDecoder.h"
 #include "Packet.h"
+#include "DrawI420.h"
+#include <QEvent>
+#include <QDesktopWidget>
+
+#define USE_WIDGET
+
 PlayerController::PlayerController(int playerID, QWidget *parent)
 	: QWidget(parent), value(0x1122334455667788)
 {
@@ -11,6 +17,11 @@ PlayerController::PlayerController(int playerID, QWidget *parent)
 	ui.FilePath->setText("F:/HTTPServer/Faded.mp4");
 
 	this->playerID = playerID;
+
+#ifdef USE_WIDGET
+	canvas = new DrawI420();
+	canvas->show();
+#endif
 
 	//测试效率定时器
 	QTimer *timer = new QTimer(parent);
@@ -26,11 +37,21 @@ PlayerController::PlayerController(int playerID, QWidget *parent)
 
 PlayerController::~PlayerController()
 {
+	value = 0;
 	isExit = true;
 	while (isInSendThread)
 	{
 		QThread::msleep(1);
 	}
+#ifdef USE_WIDGET
+	canvasMux.lock();
+	if (canvas)
+	{
+		canvas->deleteLater();
+		canvas = NULL;
+	}
+	canvasMux.unlock();
+#endif // USE_WIDGET
 	qDebug() << "~PlayerController";
 }
 
@@ -44,6 +65,7 @@ bool PlayerController::isVaild()
 
 void PlayerController::closeEvent(QCloseEvent *event)
 {
+
 	this->deleteLater();
 }
 
@@ -56,24 +78,64 @@ void PlayerController::on_OpenFile_clicked()
 void drawframe_callback(void* opaque, Frame* frame)
 {
 	PlayerController* pc = (PlayerController*)opaque;
-	if (pc)
-	{
-		pc->OnDrawFrameCb(frame);
-	}
-	
+	if (pc) pc->OnDrawFrameCb(frame);
 }
 void sessionevent_callback(void* opaque, int playerID, int eventType)
 {
 	PlayerController* pc = (PlayerController*)opaque;
-	if (pc)
-	{
-		pc->OnSessionEventCb(playerID, eventType);
-	}
+	if (pc) pc->OnSessionEventCb(playerID, eventType);
 }
 
 void PlayerController::OnDrawFrameCb(Frame * frame)
 {
-	//qDebug() << frame->pts;
+	if (!isVaild()) return;
+#ifdef USE_WIDGET
+	if (width != frame->width || height != frame->height)
+	{
+		width = frame->width;
+		height = frame->height;
+		/*QtEvent * _event = new QtEvent(QtEvent::Event1);
+		QCoreApplication::postEvent(this, _event);*/
+
+		canvasMux.lock();
+		if (canvas)
+		{
+
+			int scrWidth, scrHeight;
+			GetScreenSize(&scrWidth, &scrHeight);
+			//视频尺寸大于屏幕尺寸
+			if (width > scrWidth || height > scrHeight)
+			{
+				float rate = (float)height / width;
+				int w, h;
+				//横屏
+				if (width > height)
+				{
+					w = scrWidth * 0.7f;
+					h = w * rate;
+				}
+				//竖屏
+				else
+				{
+					h = scrHeight;
+					w = h / rate;
+				}
+				canvas->resize(w, h);
+			}
+			else
+			{
+				canvas->resize(width, height);
+			}
+			
+			canvas->Init(width, height);
+		}
+		canvasMux.unlock();
+	}
+	canvasMux.lock();
+	if (canvas)
+		canvas->Repaint(frame);
+	canvasMux.unlock();
+#endif
 }
 
 void PlayerController::OnSessionEventCb(int playerID, int eventType)
@@ -91,32 +153,41 @@ void PlayerController::on_CreateSession_clicked()
 	player = CreateSession(playerID);
 
 	SetOption(player, OptionType::DataCacheSize, 1000000);
+	SetOption(player, OptionType::DemuxTimeout, 2000);
+	SetOption(player, OptionType::PushFrameInterval, 0);
+	SetOption(player, OptionType::AlwaysWaitBitStream, false);
+	SetOption(player, OptionType::WaitBitStreamTimeout, 1000);
+	SetOption(player, OptionType::AutoDecode, false);
+	SetOption(player, OptionType::DecodeThreadCount, 4);
+	SetOption(player, OptionType::UseCPUConvertYUV, false);
+	SetOption(player, OptionType::ConvertPixelFormat, PixelFormat::RGBA);
+	SetOption(player, OptionType::AsyncUpdate, false);
 
-	SetEventCallBack(player, sessionevent_callback, drawframe_callback, this);
+	
 }
 //删除一个Session
 void PlayerController::on_DeleteSession_clicked()
 {
 	if (!player) return;
+	isInSendThread = false;
 	DeleteSession(player);
 	player = NULL;
 }
 
 void PlayerController::on_GetCacheFree_clicked()
 {
-	
+	SetEventCallBack(player, sessionevent_callback, drawframe_callback, this);
 	qDebug() << GetCacheFreeSize(player);
 }
 
 void PlayerController::on_TryBitStreamDemux_clicked()
 {
-	//player = new char(88);
 	TryBitStreamDemux(player);
 }
 
 void PlayerController::on_TryNetStreamDemux_clicked()
 {
-	qDebug() << "on_TryNetStreamDemux_clicked";
+	TryNetStreamDemux(player, "rtmp://192.168.30.166/live/test");
 }
 
 void PlayerController::on_BeginDecode_clicked()
@@ -126,11 +197,14 @@ void PlayerController::on_BeginDecode_clicked()
 
 void PlayerController::on_EndDecode_clicked()
 {
+	isInSendThread = false;
 	EndDecode(player);
 }
 
 void PlayerController::on_StartSendData_clicked()
 {
+	//当Player正在处于解码等待数据的时候，重开读取数据线程发送到dataCache，解码就会出错
+	//视频流就发生了错误，是外在因素决定
 	if (isInSendThread || isExit) return;
 	QtConcurrent::run(this, &PlayerController::run);
 }
@@ -190,4 +264,31 @@ end:
 	}
 	qDebug() << "run thread end";
 	isInSendThread = false;
+}
+
+bool PlayerController::event(QEvent* event)
+{
+	/*if (event->type() == QtEvent::Event1)
+	{
+		canvas->resize(width, height);
+		canvas->Init(width, height);
+		isSettingCanvas = false;
+		return true;
+	}*/
+	return QWidget::event(event);
+}
+
+void PlayerController::GetScreenSize(int *width, int *height)
+{
+
+	QDesktopWidget *desktop = QApplication::desktop();
+	int screenNum = desktop->screenCount();
+	for (int i = 0; i < screenNum; i++)
+	{
+		QRect screen = desktop->screenGeometry();
+		//qDebug("screen %d, width %d, height %d", i, screen.width(), screen.height());
+		*width = screen.width();
+		*height = screen.height();
+	}
+
 }

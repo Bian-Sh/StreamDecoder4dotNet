@@ -30,3 +30,5 @@ src/UnityStreamDecoder/bin
 src/UnityStreamDecoder/obj
 src/TestDecoder_CSharp/bin
 src/TestDecoder_CSharp/obj
+bin/TestDecoder_CSharp.exe
+bin/TestDecoder_CSharp.exe.config

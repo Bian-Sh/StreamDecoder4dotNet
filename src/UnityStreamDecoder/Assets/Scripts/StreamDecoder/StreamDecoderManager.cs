@@ -8,6 +8,7 @@ using UnityEngine.UI;
 
 namespace SStreamDecoder
 {
+    
     public enum PixelFormat
     {
         RGBA = 1,

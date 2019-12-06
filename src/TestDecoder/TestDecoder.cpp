@@ -70,6 +70,7 @@ void TestDecoder::closeEvent(QCloseEvent *event)
 		}
 		
 	}
+
 }
 
 void TestDecoder::OnRead()

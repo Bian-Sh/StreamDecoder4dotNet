@@ -450,7 +450,7 @@ void Demux::ReadAVPacket()
 		AVPacket* pkt = av_packet_alloc();
 
 		int ret = av_read_frame(afc, pkt);
-		//cout << "[" << ++frame << "]";
+		
 		if (ret != 0)
 		{
 			mux.unlock();
@@ -461,6 +461,7 @@ void Demux::ReadAVPacket()
 			StreamDecoder::Get()->PushLog2Net(Warning, "Stream is interrupt!");
 			break;
 		}
+		cout << "[" << ++frame << "]";
 		mux.unlock();
 		//读取一帧数据
 

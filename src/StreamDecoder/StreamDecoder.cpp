@@ -376,8 +376,10 @@ void SetEventCallBack(void* session, void(*PEvent)(void* opaque, int playerID, i
 	StreamDecoder::Get()->SetEventCallBack(session, PEvent, PDrawFrame, opaque);
 }
 
-void TestSetObj(void* obj)
+void* TestSetObj(void* obj)
 {
-	cout << "obj set success" << endl;
+	cout << "obj set success " << obj << endl;
+	//cout << *(int*)obj << endl;
+	return obj;
 }
 

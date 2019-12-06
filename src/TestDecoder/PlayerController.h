@@ -5,6 +5,7 @@
 #include "ui_PlayerController.h"
 
 struct Frame;
+class DrawI420;
 class PlayerController : public QWidget
 {
 	Q_OBJECT
@@ -21,6 +22,8 @@ public:
 protected:
 
 	void closeEvent(QCloseEvent *event);
+
+	bool event(QEvent* event);
 
 private slots:
 
@@ -49,6 +52,9 @@ private:
 	void run();
 
 private:
+
+	void GetScreenSize(int *width, int *height);
+
 	Ui::PlayerController ui;
 
 	long long value;
@@ -58,4 +64,11 @@ private:
 
 	int playerID;
 	void* player = NULL;
+
+	DrawI420* canvas = NULL;
+	
+	std::mutex canvasMux;
+
+	int width = 0;
+	int height = 0;
 };

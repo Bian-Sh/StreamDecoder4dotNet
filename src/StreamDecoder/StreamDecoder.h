@@ -131,4 +131,4 @@ HEAD void _cdecl SetOption(void* session, int optionType, int value);
 
 HEAD void _cdecl SetEventCallBack(void* session, void(*PEvent)(void* opaque, int playerID, int eventType), void(*PDrawFrame)(void* opaque, Frame* frame), void* opaque);
 
-HEAD void _cdecl TestSetObj(void* obj);
+HEAD void* _cdecl TestSetObj(void* obj);
