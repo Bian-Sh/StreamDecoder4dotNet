@@ -139,7 +139,7 @@ namespace SStreamDecoder
         /// </summary>
         /// <param name="pfun"></param>
         /// <param name="pDraw"></param>
-        private delegate void StreamDecoderInitialize(DLL_Debug_Log pLog, DLL_Decode_Event sessionEvent, DLL_Draw_Frame drawEvent);
+        private delegate void StreamDecoderInitialize(DLL_Debug_Log pLog);
 
         /// <summary>
         /// 注销StreamDecoder委托
@@ -189,7 +189,7 @@ namespace SStreamDecoder
         /// 停止解码委托
         /// </summary>
         /// <param name="session"></param>
-        public delegate void StopDecode(IntPtr session);
+        public delegate void EndDecode(IntPtr session);
 
         /// <summary>
         /// 获取 数据流缓冲区 可用空间（字节） 委托
@@ -216,7 +216,14 @@ namespace SStreamDecoder
         public delegate void SetOption(IntPtr session, OptionType type, int value);
 
 
-        //public delegate void SetSessionEvent(IntPtr session);
+        /// <summary>
+        /// 设置回调
+        /// </summary>
+        /// <param name="session"></param>
+        /// <param name="sessionEvent"></param>
+        /// <param name="drawEvent"></param>
+        /// <param name="opaque"></param>
+        public delegate void SetEventCallBack(IntPtr session, DLL_Decode_Event sessionEvent, DLL_Draw_Frame drawEvent, object opaque);
 
 
         #region C++ 回调委托
@@ -233,7 +240,7 @@ namespace SStreamDecoder
         /// </summary>
         /// <param name="frame"></param>
         [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-        public delegate void DLL_Draw_Frame(Frame frame);
+        public delegate void DLL_Draw_Frame(object opaque, Frame frame);
 
         /// <summary>
         /// C++ 回调函数 解码时间 委托
@@ -241,7 +248,7 @@ namespace SStreamDecoder
         /// <param name="playerID"></param>
         /// <param name="eventType"></param>
         [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-        public delegate void DLL_Decode_Event(int playerID, int eventType);
+        public delegate void DLL_Decode_Event(object opaque, int playerID, int eventType);
         #endregion
 
 
@@ -291,9 +298,9 @@ namespace SStreamDecoder
         {
             isInit = true;
             DLL_Debug_Log log = StreamDecoderLog;
-            DLL_Decode_Event ev = StreamDecoderEvent;
-            DLL_Draw_Frame draw = StreamDecoderDrawFrame;
-            Native.Invoke<StreamDecoderInitialize>(streamDecoder_dll, log, ev, draw);
+            //DLL_Decode_Event ev = StreamDecoderEvent;
+            //DLL_Draw_Frame draw = StreamDecoderDrawFrame;
+            Native.Invoke<StreamDecoderInitialize>(streamDecoder_dll, log);
         }
 
         /// <summary>
@@ -321,16 +328,27 @@ namespace SStreamDecoder
         public static event Action<int, SessionEventType> onSessionEvent;
         public static event Action<Frame> onFrameEvent;
 
-        private static void StreamDecoderEvent(int playerID, int eventType)
+        private static void StreamDecoderEvent(object opaque, int playerID, int eventType)
         {
+            
             if (onSessionEvent != null) onSessionEvent(playerID, (SessionEventType)eventType);
+            PlayerDemo_YUV player = (PlayerDemo_YUV)opaque;
+            if(player!= null)
+            {
+                player.OnEvent(playerID, eventType);
+            }
         }
 
-        private static void StreamDecoderDrawFrame(Frame frame)
+        private static void StreamDecoderDrawFrame(object opaque, Frame frame)
         {
             if (onFrameEvent != null) onFrameEvent(frame);
         }
-
+        public static void _SetEventCallBack(IntPtr session, object obj)
+        {
+            DLL_Decode_Event ev = StreamDecoderEvent;
+            DLL_Draw_Frame draw = StreamDecoderDrawFrame;
+            Native.Invoke<SetEventCallBack>(streamDecoder_dll, session, ev, draw, 10);
+        }
         /// <summary>
         /// 获取版本信息
         /// </summary>

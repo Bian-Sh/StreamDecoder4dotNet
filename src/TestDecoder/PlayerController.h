@@ -4,6 +4,7 @@
 #include <mutex>
 #include "ui_PlayerController.h"
 
+struct Frame;
 class PlayerController : public QWidget
 {
 	Q_OBJECT
@@ -15,6 +16,8 @@ public:
 	//一个简单验证指针是否有效的方法
 	bool isVaild();
 
+	void OnDrawFrameCb(Frame * frame);
+	void OnSessionEventCb(int playerID, int eventType);
 protected:
 
 	void closeEvent(QCloseEvent *event);
@@ -49,8 +52,6 @@ private:
 	Ui::PlayerController ui;
 
 	long long value;
-
-	QString filePath = "D:/HTTPServer/Faded.mp4";
 
 	bool isExit = false;
 	bool isInSendThread = false;

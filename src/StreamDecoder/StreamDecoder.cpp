@@ -235,7 +235,7 @@ void StreamDecoder::SetOption(void* session, int optionType, int value)
 }
 
 //设置Session的回调函数
-void StreamDecoder::SetEventCallBack(void* session, void(*PEvent)(int playerID, int eventType), void(*PDrawFrame)(Frame* frame))
+void StreamDecoder::SetEventCallBack(void* session, void(*PEvent)(void* opaque, int playerID, int eventType), void(*PDrawFrame)(void* opaque, Frame* frame), void* opaque)
 {
 	Session* s = (Session*)session;
 	if (s == NULL)
@@ -249,7 +249,7 @@ void StreamDecoder::SetEventCallBack(void* session, void(*PEvent)(int playerID, 
 		return;
 	}
 
-	s->SetEventCallBack(PEvent, PDrawFrame);
+	s->SetEventCallBack(PEvent, PDrawFrame, opaque);
 }
 
 //把消息追加到队列，通过主线程发送
@@ -371,8 +371,13 @@ void SetOption(void* session, int optionType, int value)
 	StreamDecoder::Get()->SetOption(session, optionType, value);
 }
 
-void SetEventCallBack(void* session, void(*PEvent)(int playerID, int eventType), void(*PDrawFrame)(Frame* frame))
+void SetEventCallBack(void* session, void(*PEvent)(void* opaque, int playerID, int eventType), void(*PDrawFrame)(void* opaque, Frame* frame), void* opaque)
 {
-	StreamDecoder::Get()->SetEventCallBack(session, PEvent, PDrawFrame);
+	StreamDecoder::Get()->SetEventCallBack(session, PEvent, PDrawFrame, opaque);
+}
+
+void TestSetObj(void* obj)
+{
+	cout << "obj set success" << endl;
 }
 

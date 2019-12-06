@@ -3,11 +3,12 @@
 #include <QFileDialog>
 #include <QtConcurrent/QtConcurrent>
 #include "StreamDecoder.h"
+#include "Packet.h"
 PlayerController::PlayerController(int playerID, QWidget *parent)
 	: QWidget(parent), value(0x1122334455667788)
 {
 	ui.setupUi(this);
-	ui.FilePath->setText(filePath);
+	ui.FilePath->setText("F:/HTTPServer/Faded.mp4");
 
 	this->playerID = playerID;
 
@@ -39,6 +40,8 @@ bool PlayerController::isVaild()
 	else return false;
 }
 
+
+
 void PlayerController::closeEvent(QCloseEvent *event)
 {
 	this->deleteLater();
@@ -46,8 +49,39 @@ void PlayerController::closeEvent(QCloseEvent *event)
 
 void PlayerController::on_OpenFile_clicked()
 {
-	filePath = QFileDialog::getOpenFileName(this, "select file", "F:/HTTPServer");
+	QString filePath = QFileDialog::getOpenFileName(this, "select file", "F:/HTTPServer");
 	ui.FilePath->setText(filePath);
+}
+
+void drawframe_callback(void* opaque, Frame* frame)
+{
+	PlayerController* pc = (PlayerController*)opaque;
+	if (pc)
+	{
+		pc->OnDrawFrameCb(frame);
+	}
+	
+}
+void sessionevent_callback(void* opaque, int playerID, int eventType)
+{
+	PlayerController* pc = (PlayerController*)opaque;
+	if (pc)
+	{
+		pc->OnSessionEventCb(playerID, eventType);
+	}
+}
+
+void PlayerController::OnDrawFrameCb(Frame * frame)
+{
+	//qDebug() << frame->pts;
+}
+
+void PlayerController::OnSessionEventCb(int playerID, int eventType)
+{
+	if (eventType == SessionEventType::DemuxSuccess)
+	{
+		qDebug() << "DemuxSuccess";
+	}
 }
 
 //创建一个Session
@@ -55,6 +89,10 @@ void PlayerController::on_CreateSession_clicked()
 {
 	if (player) return;
 	player = CreateSession(playerID);
+
+	SetOption(player, OptionType::DataCacheSize, 1000000);
+
+	SetEventCallBack(player, sessionevent_callback, drawframe_callback, this);
 }
 //删除一个Session
 void PlayerController::on_DeleteSession_clicked()
@@ -83,12 +121,12 @@ void PlayerController::on_TryNetStreamDemux_clicked()
 
 void PlayerController::on_BeginDecode_clicked()
 {
-	qDebug() << "on_BeginDecode_clicked";
+	BeginDecode(player);
 }
 
 void PlayerController::on_EndDecode_clicked()
 {
-	qDebug() << "on_EndDecode_clicked";
+	EndDecode(player);
 }
 
 void PlayerController::on_StartSendData_clicked()
@@ -99,18 +137,19 @@ void PlayerController::on_StartSendData_clicked()
 
 void PlayerController::on_StopSendData_clicked()
 {
-	qDebug() << "on_StopSendData_clicked";
+	isInSendThread = false;
 }
 
 void PlayerController::run()
 {
+	qDebug() << "run thread begin";
 	isInSendThread = true;
 	FILE* fp = NULL;
 	unsigned char* readBuff = NULL;
-	fp = fopen(filePath.toLatin1(), "rb");
+	fp = fopen(ui.FilePath->text().toLatin1(), "rb");
 	if (!fp)
 	{
-		qDebug() << filePath.toLatin1().data() << " not exits";
+		qDebug() << ui.FilePath->text().toLatin1().data() << " not exits";
 		goto end;
 	}
 	readBuff = new unsigned char[10240];
@@ -125,11 +164,12 @@ void PlayerController::run()
 
 		while (!isExit && isInSendThread && player)
 		{
-
+			//动态库中已经添加了错误判断机制，包括player已经为空，在此过程中可以不用互斥锁
 			if (PushStream2Cache(player, (char*)readBuff, ret))
 			{
 				break;
 			}
+			QThread::msleep(1);
 			continue;
 		}
 		QThread::msleep(1);

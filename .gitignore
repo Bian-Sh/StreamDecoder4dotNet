@@ -28,3 +28,5 @@ bin/I420toRGB.exe
 bin/ConvertTest.exe
 src/UnityStreamDecoder/bin
 src/UnityStreamDecoder/obj
+src/TestDecoder_CSharp/bin
+src/TestDecoder_CSharp/obj

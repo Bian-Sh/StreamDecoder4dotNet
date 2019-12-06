@@ -8,8 +8,8 @@ struct AVPacket;
 struct SessionConfig;
 
 struct Frame;
-typedef void(*PEvent)(int playerID, int eventType);
-typedef void(*PDrawFrame)(Frame* frame);
+typedef void(*PEvent)(void* opaque, int playerID, int eventType);
+typedef void(*PDrawFrame)(void* opaque, Frame* frame);
 
 #define VERIFY_VALUE 0x1122334455667788
 class Session
@@ -42,7 +42,7 @@ public:
 	//…Ë÷√—°œÓ 
 	void SetOption(int optionType, int value);
 
-	void SetEventCallBack(PEvent pEvent, PDrawFrame pDrawFrame);
+	void SetEventCallBack(PEvent pEvent, PDrawFrame pDrawFrame, void* opaque);
 
 	inline bool IsVaild()
 	{
@@ -78,6 +78,8 @@ private:
 
 
 	std::mutex funcMux;
+
+	void* opaque = NULL;
 
 	PEvent DotNetSessionEvent = NULL;
 	PDrawFrame DotNetDrawFrame = NULL;

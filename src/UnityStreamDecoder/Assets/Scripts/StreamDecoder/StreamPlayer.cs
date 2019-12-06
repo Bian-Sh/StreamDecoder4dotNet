@@ -106,7 +106,7 @@ public class StreamPlayer {
             Debug.LogError("session is null");
             return;
         }
-        Native.Invoke<StreamDecoder.StopDecode>(StreamDecoder.streamDecoder_dll, session);
+        Native.Invoke<StreamDecoder.EndDecode>(StreamDecoder.streamDecoder_dll, session);
     }
 
     public int GetCacheFreeSize()
@@ -144,5 +144,11 @@ public class StreamPlayer {
     {
         this.onSessionEvent = onSessionEvent;
         this.onFrameEvent = onFrameEvent;
+    }
+
+    public void SetEventCallBack(Action<int ,int> onSessionEvent, Action<Frame> onFrameEvent, object opaque)
+    {
+        if (session == IntPtr.Zero) return;
+        StreamDecoder._SetEventCallBack(session, opaque);
     }
 }

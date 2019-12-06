@@ -59,8 +59,6 @@ public class PlayerDemo_YUV : MonoBehaviour
         }
 
         mat = rimg.material;
-
-        CreateSession();
     }
 
     private void OnDestroy()
@@ -87,21 +85,29 @@ public class PlayerDemo_YUV : MonoBehaviour
         player.SetOption(OptionType.UseCPUConvertYUV, useCPUConvertYUV ? 1 : 0);
         player.SetOption(OptionType.ConvertPixelFormat, (int)PixelFormat.RGBA);
         player.SetOption(OptionType.AsyncUpdate, 0);
-        player.SetPlayerCb(OnEvent,OnDrawFrame);
-
-        TryBitStreamDemux();
-
-        StartSendData();
+        player.SetEventCallBack(OnEvent, OnDrawFrame, this);
        
 
     }
-    private void OnEvent(SessionEventType type)
+    public void OnEvent(int playerID, int type)
     {
-        if(type == SessionEventType.DemuxSuccess)
+        //if (type == SessionEventType.DemuxSuccess)
+        //{
+        //    Debug.Log("Demux Success");
+        //}
+        if((SessionEventType)type == SessionEventType.DemuxSuccess)
         {
             Debug.Log("Demux Success");
         }
     }
+
+    //private void OnEvent(SessionEventType type)
+    //{
+    //    if(type == SessionEventType.DemuxSuccess)
+    //    {
+    //        Debug.Log("Demux Success");
+    //    }
+    //}
 
     public void OnDrawFrame(Frame frame)
     {

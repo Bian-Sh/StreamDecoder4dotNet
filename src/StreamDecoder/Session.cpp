@@ -330,7 +330,7 @@ void Session::OnDecodeOneAVFrame(AVFrame *frame, bool isAudio)
 	if (config->asyncUpdate)
 	{
 		//异步直接调用
-		if (DotNetDrawFrame) DotNetDrawFrame(tmpFrame);
+		if (DotNetDrawFrame) DotNetDrawFrame(opaque, tmpFrame);
 		delete tmpFrame;
 		tmpFrame = NULL;
 	}
@@ -354,7 +354,6 @@ void Session::OnDecodeOneAVFrame(AVFrame *frame, bool isAudio)
 //call_cb是否调用回调函数
 void Session::Update(bool call_cb)
 {
-
 	if (framePackets.size() == 0 && eventPackets.size() == 0) return;
 
 	funcMux.lock();
@@ -363,7 +362,7 @@ void Session::Update(bool call_cb)
 	{
 		Frame* frame = framePackets.front();
 		framePackets.pop_front();
-		if (call_cb && DotNetDrawFrame) DotNetDrawFrame(frame);
+		if (call_cb && DotNetDrawFrame) DotNetDrawFrame(opaque, frame);
 		delete frame;
 		frame = NULL;
 	}
@@ -373,7 +372,7 @@ void Session::Update(bool call_cb)
 	{
 		int eventType = eventPackets.front();
 		eventPackets.pop_front();
-		if (call_cb && DotNetSessionEvent) DotNetSessionEvent(config->playerID, eventType);
+		if (call_cb && DotNetSessionEvent) DotNetSessionEvent(opaque, config->playerID, eventType);
 	}
 	funcMux.unlock();
 }
@@ -429,9 +428,10 @@ void Session::SetOption(int optionType, int value)
 	}
 }
 
-void Session::SetEventCallBack(PEvent pEvent, PDrawFrame pDrawFrame)
+void Session::SetEventCallBack(PEvent pEvent, PDrawFrame pDrawFrame, void* opaque)
 {
 	funcMux.lock();
+	this->opaque = opaque;
 	DotNetSessionEvent = pEvent;
 	DotNetDrawFrame = pDrawFrame;
 	funcMux.unlock();

@@ -1,0 +1,15 @@
+﻿<Window x:Class="TestDecoder_CSharp.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:TestDecoder_CSharp"
+        mc:Ignorable="d"
+        Title="MainWindow" Height="450" Width="800" >
+    <Grid>
+
+        <Button Content="CreateSession" HorizontalAlignment="Left" Margin="34,30,0,0" VerticalAlignment="Top" Width="154" Click="CreateSession_Click" Height="61" FontSize="18" Grid.IsSharedSizeScope="True"/>
+        <Button Content="DeleteSession" HorizontalAlignment="Left" Margin="34,116,0,0" VerticalAlignment="Top" Width="154" Click="DeleteSession_Click" Height="61" FontSize="18" Grid.IsSharedSizeScope="True"/>
+
+    </Grid>
+</Window>
