@@ -46,9 +46,9 @@ void main(void)
 }
 );
 
-CanvasI420::CanvasI420()
+CanvasI420::CanvasI420(QWidget *parent)
+	: Canvas(parent)
 {
-	
 }
 
 
@@ -60,8 +60,56 @@ CanvasI420::~CanvasI420()
 	delete datas[2];
 	datas[0] = NULL;
 	mux.unlock();
-	qDebug() << "~DrawI420";
 }
+
+void CanvasI420::Init(int width, int height)
+{
+	QMutexLocker locker(&mux);
+	this->width = width;
+	this->height = height;
+
+	delete datas[0];
+	delete datas[1];
+	delete datas[2];
+	//分配内存空间
+	datas[0] = new unsigned char[width * height * 2];
+	datas[1] = new unsigned char[width * height / 2];
+	datas[2] = new unsigned char[width * height / 2];
+
+	//清理
+	if (texs[0])
+	{
+		glDeleteTextures(3, texs);
+	}
+	//创建材质
+	glGenTextures(3, texs);
+	//Y
+	glBindTexture(GL_TEXTURE_2D, texs[0]);
+	//放大缩小过滤器，线性插值  GL_NEAREST(效率高，但马赛克严重)
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	//创建材质空间(显卡空间）
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_LUMINANCE, width, height, 0, GL_LUMINANCE, GL_UNSIGNED_BYTE, NULL);
+
+	//U
+	glBindTexture(GL_TEXTURE_2D, texs[1]);
+	//放大缩小过滤器，线性插值
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	//创建材质空间(显卡空间）
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_LUMINANCE, width / 2, height / 2, 0, GL_LUMINANCE, GL_UNSIGNED_BYTE, NULL);
+
+	//V
+	glBindTexture(GL_TEXTURE_2D, texs[2]);
+	//放大缩小过滤器，线性插值
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+
+	//创建材质空间(显卡空间）
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_LUMINANCE, width / 2, height / 2, 0, GL_LUMINANCE, GL_UNSIGNED_BYTE, NULL);
+
+}
+
 void CanvasI420::initializeGL()
 {
 	QMutexLocker locker(&mux);
@@ -109,54 +157,7 @@ void CanvasI420::initializeGL()
 
 	glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
 }
-void CanvasI420::Init(int width, int height)
-{
-	QMutexLocker locker(&mux);
-	this->width = width;
-	this->height = height;
 
-	delete datas[0];
-	delete datas[1];
-	delete datas[2];
-	//分配内存空间
-	datas[0] = new unsigned char[width * height * 2];
-	datas[1] = new unsigned char[width * height / 2];
-	datas[2] = new unsigned char[width * height / 2];
-
-	//清理
-	if (texs[0])
-	{
-		glDeleteTextures(3, texs);
-	}
-	//创建材质
-	glGenTextures(3, texs);
-	//Y
-	glBindTexture(GL_TEXTURE_2D, texs[0]);
-	//放大缩小过滤器，线性插值  GL_NEAREST(效率高，但马赛克严重)
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	//创建材质空间(显卡空间）
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_LUMINANCE, width, height, 0, GL_LUMINANCE, GL_UNSIGNED_BYTE, NULL);
-
-	//U
-	glBindTexture(GL_TEXTURE_2D, texs[1]);
-	//放大缩小过滤器，线性插值
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	//创建材质空间(显卡空间）
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_LUMINANCE, width / 2, height / 2, 0, GL_LUMINANCE, GL_UNSIGNED_BYTE, NULL);
-
-	//V
-	glBindTexture(GL_TEXTURE_2D, texs[2]);
-	//放大缩小过滤器，线性插值
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-
-	//创建材质空间(显卡空间）
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_LUMINANCE, width / 2, height / 2, 0, GL_LUMINANCE, GL_UNSIGNED_BYTE, NULL);
-
-	isValid = true;
-}
 
 //void DrawI420::Repaint(struct AVFrame *frame)
 //{
@@ -204,20 +205,20 @@ void CanvasI420::Init(int width, int height)
 //	update();
 //}
 
-bool CanvasI420::Repaint(unsigned char* yuv[])
-{
-
-	if (isRepainting) return false;
-	
-	isRepainting = true;
-	memcpy(datas[0], yuv[0], width * height);
-	memcpy(datas[1], yuv[1], width * height / 4);
-	memcpy(datas[2], yuv[2], width * height / 4);
-	//QThread::msleep(30);
-	update();
-
-	return true;
-}
+//bool CanvasI420::Repaint(unsigned char* yuv[])
+//{
+//
+//	if (isRepainting) return false;
+//	
+//	isRepainting = true;
+//	memcpy(datas[0], yuv[0], width * height);
+//	memcpy(datas[1], yuv[1], width * height / 4);
+//	memcpy(datas[2], yuv[2], width * height / 4);
+//	//QThread::msleep(30);
+//	update();
+//
+//	return true;
+//}
 
 bool CanvasI420::Repaint(Frame* frame)
 {
@@ -237,27 +238,27 @@ bool CanvasI420::Repaint(Frame* frame)
 	return true;
 }
 
-void CanvasI420::Close()
-{
-	if (isExit)return;
-	isExit = true;
-	QMutexLocker locker(&mux);
-
-	delete datas[0];
-	delete datas[1];
-	delete datas[2];
-	datas[0] = NULL;
-	datas[1] = NULL;
-	datas[2] = NULL;
-
-	//清理
-	if (texs[0])
-	{
-		glDeleteTextures(3, texs);
-	}
-
-	close();
-}
+//void CanvasI420::Close()
+//{
+//	if (isExit)return;
+//	isExit = true;
+//	QMutexLocker locker(&mux);
+//
+//	delete datas[0];
+//	delete datas[1];
+//	delete datas[2];
+//	datas[0] = NULL;
+//	datas[1] = NULL;
+//	datas[2] = NULL;
+//
+//	//清理
+//	if (texs[0])
+//	{
+//		glDeleteTextures(3, texs);
+//	}
+//
+//	close();
+//}
 
 void CanvasI420::paintGL()
 {
@@ -293,13 +294,4 @@ void CanvasI420::paintGL()
 
 	glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
 	isRepainting = false;
-}
-
-
-
-void CanvasI420::closeEvent(QCloseEvent *event)
-{
-	//DecodeEvent* trigger = new DecodeEvent(DecodeEvent::CloseWidget);
-	//QCoreApplication::postEvent(session, trigger);
-	qDebug() << "closeEvent";
 }

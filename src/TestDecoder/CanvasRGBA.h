@@ -1,14 +1,15 @@
 #pragma once
-#include "Canvas.h"
-struct Frame;
-class CanvasI420 : public Canvas
-{
 
+#include "Canvas.h"
+#include <QWidget>
+
+class CanvasRGBA : public Canvas
+{
 	Q_OBJECT
 
 public:
-	CanvasI420(QWidget *parent = Q_NULLPTR);
-	~CanvasI420();
+	CanvasRGBA(QWidget *parent = Q_NULLPTR);
+	~CanvasRGBA();
 
 	virtual void Init(int width, int height);
 
@@ -16,6 +17,7 @@ public:
 	virtual bool Repaint(Frame* frame);
 
 protected:
+
 	//初始化GL
 	void initializeGL();
 
@@ -27,13 +29,12 @@ protected:
 
 private:
 
+	
 	//从shader获取中的yuv变量地址
-	GLuint unis[3] = { 0 };
+	GLuint uniform;
 	//opengltexture地址
-	GLuint texs[3] = { 0 };
+	GLuint tex;
 
+	unsigned char* rgba = NULL;
 
-	//YUV数据 需要释放
-	unsigned char* datas[3] = { 0 };
 };
-

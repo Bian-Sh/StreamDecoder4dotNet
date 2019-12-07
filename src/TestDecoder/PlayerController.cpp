@@ -7,17 +7,23 @@
 #include "CanvasI420.h"
 #include "QtEvent.h"
 #include <QDesktopWidget>
+#include "CanvasRGBA.h"
 
-#define USE_WIDGET
+#define USE_WIDGET_
+#define USE_RGBA_
 
 PlayerController::PlayerController(QWidget *parent)
 	: QWidget(parent), value(0x1122334455667788)
 {
 	ui.setupUi(this);
-	ui.FilePath->setText("F:/HTTPServer/Faded.mp4");
+	ui.FilePath->setText("D:/HTTPServer/Faded.mp4");
 
 #ifdef USE_WIDGET
+#ifdef USE_RGBA
+	canvas = new CanvasRGBA();
+#else
 	canvas = new CanvasI420();
+#endif // USE_RGBA
 	canvas->show();
 #endif
 
@@ -101,7 +107,32 @@ void PlayerController::OnDrawFrameCb(Frame * frame)
 	if (isInSettingCanvas) return;
 	canvasMux.lock();
 	if (canvas)
-		canvas->Repaint(frame);
+	{
+		
+
+#ifdef USE_RGBA
+		
+		while (!isExit && frame->rgba)
+		{
+			if (canvas->Repaint(frame))
+			{
+				break;
+			}
+			QThread::msleep(1);
+		}
+#else
+		while (!isExit)
+		{
+			if (canvas->Repaint(frame))
+			{
+				break;
+			}
+			QThread::msleep(1);
+		}
+#endif // USE_RGBA
+
+	}
+		
 	canvasMux.unlock();
 #endif
 }
@@ -122,7 +153,7 @@ void PlayerController::on_CreateSession_clicked()
 
 	SetOption(player, OptionType::DataCacheSize, 1000000);
 	SetOption(player, OptionType::DemuxTimeout, 2000);
-	SetOption(player, OptionType::PushFrameInterval, 10);
+	SetOption(player, OptionType::PushFrameInterval, 0);
 	SetOption(player, OptionType::AlwaysWaitBitStream, false);
 	SetOption(player, OptionType::WaitBitStreamTimeout, 1000);
 	SetOption(player, OptionType::AutoDecode, false);

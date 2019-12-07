@@ -107,7 +107,7 @@ struct Frame
 	char* frame_y = NULL;
 	char* frame_u = NULL;
 	char* frame_v = NULL;
-	char* rgb = NULL;
+	char* rgba = NULL;
 
 	//begin decode timestamp
 	long long bdts = 0;
@@ -173,10 +173,10 @@ struct Frame
 			frame_v = NULL;
 		}
 
-		if (rgb)
+		if (rgba)
 		{
-			delete rgb;
-			rgb = NULL;
+			delete rgba;
+			rgba = NULL;
 		}
 	}
 };

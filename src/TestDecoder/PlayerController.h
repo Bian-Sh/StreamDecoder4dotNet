@@ -5,7 +5,7 @@
 #include "ui_PlayerController.h"
 
 struct Frame;
-class CanvasI420;
+class Canvas;
 class PlayerController : public QWidget
 {
 	Q_OBJECT
@@ -64,7 +64,7 @@ private:
 
 	void* player = NULL;
 
-	CanvasI420* canvas = NULL;
+	Canvas* canvas = NULL;
 	
 	std::mutex canvasMux;
 

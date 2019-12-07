@@ -290,7 +290,7 @@ void Session::OnDecodeOneAVFrame(AVFrame *frame, bool isAudio)
 
 	if (config->useCPUConvertYUV)
 	{
-		tmpFrame->rgb = new char[width * height * 4];
+		tmpFrame->rgba = new char[width * height * 4];
 		
 		
 #ifdef USE_LIBYUV
@@ -300,14 +300,14 @@ void Session::OnDecodeOneAVFrame(AVFrame *frame, bool isAudio)
 			libyuv::I420ToABGR(
 				(uint8_t*)tmpFrame->frame_y, width,
 				(uint8_t*)tmpFrame->frame_u, width / 2,
-				(uint8_t*)tmpFrame->frame_v, width / 2, (uint8_t*)tmpFrame->rgb, width * 4, width, height);
+				(uint8_t*)tmpFrame->frame_v, width / 2, (uint8_t*)tmpFrame->rgba, width * 4, width, height);
 		}
 		else if (config->convertPixelFormat == BGRA)
 		{
 			libyuv::I420ToARGB(
 				(uint8_t*)tmpFrame->frame_y, width,
 				(uint8_t*)tmpFrame->frame_u, width / 2,
-				(uint8_t*)tmpFrame->frame_v, width / 2, (uint8_t*)tmpFrame->rgb, width * 4, width, height);
+				(uint8_t*)tmpFrame->frame_v, width / 2, (uint8_t*)tmpFrame->rgba, width * 4, width, height);
 		}
 
 #else

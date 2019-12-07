@@ -42,6 +42,12 @@
     <ClCompile Include="CanvasI420.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="Canvas.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="CanvasRGBA.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <QtMoc Include="PlayerController.h">
@@ -51,6 +57,12 @@
       <Filter>Header Files</Filter>
     </QtMoc>
     <QtMoc Include="CanvasI420.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="Canvas.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="CanvasRGBA.h">
       <Filter>Header Files</Filter>
     </QtMoc>
   </ItemGroup>

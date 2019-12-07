@@ -7,7 +7,6 @@
 #include <QMutex>
 
 class PlayerController;
-
 class TestDecoder : public QWidget
 {
 	Q_OBJECT
@@ -37,6 +36,5 @@ private:
 
 private:
 
-	//std::vector<int> playerIDvector;
 	std::list<PlayerController*> playerList;
 };
