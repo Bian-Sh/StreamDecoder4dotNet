@@ -40,6 +40,6 @@ namespace TestDecoder_CSharp
         public static extern IntPtr CreateSession(int playerID);
 
         [DllImport(dllPath, CallingConvention = CallingConvention.Cdecl)]
-        public static extern IntPtr TestSetObj(IntPtr ptr);
+        public static extern IntPtr TestGUID(char[] ptr);
     }
 }

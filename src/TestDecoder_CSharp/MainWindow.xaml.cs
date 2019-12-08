@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
@@ -24,7 +25,13 @@ namespace TestDecoder_CSharp
     {
         private IntPtr player = IntPtr.Zero;
         ExternMethod.DLL_Debug_Log LogDelegate;
-        
+
+        public static long GetTimestamp()
+        {
+            //获取从1970年一月一日0点0分0秒0微妙开始
+            return (DateTime.UtcNow.Ticks - new DateTime(1970, 1, 1, 0, 0, 0, 0).Ticks) / 10;
+        }
+
         public MainWindow()
         {
             InitializeComponent();
@@ -34,7 +41,26 @@ namespace TestDecoder_CSharp
 
             IntPtr msgPtr = ExternMethod.GetStreamDecoderVersion();
             Console.WriteLine(Marshal.PtrToStringAnsi(msgPtr));
-            
+
+            long t = GetTimestamp();
+
+            for (int i = 0; i < 1000; i++)
+            {
+                Guid guid = Guid.NewGuid();
+
+                var v = guid.ToString().ToArray();
+
+                IntPtr ptr = ExternMethod.TestGUID(v);
+
+                Guid _guid;
+                if (Guid.TryParse(Marshal.PtrToStringAnsi(ptr), out _guid))
+                {
+                    //Console.WriteLine("yes");
+                }
+            }
+
+            Console.WriteLine(GetTimestamp() - t);
+
         }
         private static void Log(int level, IntPtr log)
         {
@@ -44,10 +70,7 @@ namespace TestDecoder_CSharp
         private void CreateSession_Click(object sender, RoutedEventArgs e)
         {
 
-            IntPtr cptr = new IntPtr(100);
-            IntPtr ptr = ExternMethod.TestSetObj(cptr);
-
-            Console.WriteLine(ptr);
+           
             
         }
         public string name = "stt";

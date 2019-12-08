@@ -9,7 +9,7 @@
 #include <QDesktopWidget>
 #include "CanvasRGBA.h"
 
-#define USE_WIDGET_
+#define USE_WIDGET
 #define USE_RGBA_
 
 PlayerController::PlayerController(QWidget *parent)
@@ -49,6 +49,7 @@ PlayerController::~PlayerController()
 	}
 #ifdef USE_WIDGET
 	canvasMux.lock();
+	
 	if (canvas)
 	{
 		canvas->deleteLater();
@@ -56,6 +57,8 @@ PlayerController::~PlayerController()
 	}
 	canvasMux.unlock();
 #endif // USE_WIDGET
+	on_DeleteSession_clicked();
+
 	qDebug() << "~PlayerController";
 }
 
@@ -157,7 +160,7 @@ void PlayerController::on_CreateSession_clicked()
 	SetOption(player, OptionType::AlwaysWaitBitStream, false);
 	SetOption(player, OptionType::WaitBitStreamTimeout, 1000);
 	SetOption(player, OptionType::AutoDecode, false);
-	SetOption(player, OptionType::DecodeThreadCount, 4);
+	SetOption(player, OptionType::DecodeThreadCount, 8);
 	SetOption(player, OptionType::UseCPUConvertYUV, false);
 	SetOption(player, OptionType::ConvertPixelFormat, PixelFormat::RGBA);
 	SetOption(player, OptionType::AsyncUpdate, true);

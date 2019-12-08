@@ -73,7 +73,19 @@ public:
 	//设置参数
 	void SetOption(void* session, int optionType, int value);
 
-	void SetEventCallBack(void* session, void(*PEvent)(void* opaque, int eventType), void(*PDrawFrame)(void* opaque, Frame* frame), void* opaque);
+	/**
+	 * 测试C# GUID
+	 * @param session Session指针
+	 * @param PEvent Session事件回调
+	 * @param PDrawFrame Session解码一帧数据回调
+	 * @param opaque Session唯一标识符， C#调用建议使用IntPtr，char[](Guid.NewGuid()ToString().ToArray()，
+	 *		  接收还原使用 Guid.TryParse(Marshal.PtrToStringAnsi(ptr), out guid))
+	 */
+	void SetEventCallBack(
+		void* session, 
+		void(*PEvent)(void* opaque, int eventType), 
+		void(*PDrawFrame)(void* opaque, Frame* frame), 
+		void* opaque);
 
 	//把消息追加到队列，通过主线程发送
 	void PushLog2Net(LogLevel level, char* log);
@@ -129,6 +141,14 @@ HEAD bool _cdecl PushStream2Cache(void* session, char* data, int len);
 
 HEAD void _cdecl SetOption(void* session, int optionType, int value);
 
-HEAD void _cdecl SetEventCallBack(void* session, void(*PEvent)(void* opaque, int eventType), void(*PDrawFrame)(void* opaque, Frame* frame), void* opaque);
+HEAD void _cdecl SetEventCallBack(
+	void* session, 
+	void(*PEvent)(void* opaque, int eventType), 
+	void(*PDrawFrame)(void* opaque, Frame* frame), 
+	void* opaque);
 
-HEAD void* _cdecl TestSetObj(void* obj);
+/**
+ * 测试C# GUID
+ * @param obj 是C#GUID值
+ */
+HEAD void* _cdecl TestGUID(void* obj);

@@ -252,6 +252,7 @@ void StreamDecoder::SetEventCallBack(void* session, void(*PEvent)(void* opaque, 
 	s->SetEventCallBack(PEvent, PDrawFrame, opaque);
 }
 
+
 //把消息追加到队列，通过主线程发送
 void StreamDecoder::PushLog2Net(LogLevel level, char* log)
 {
@@ -376,10 +377,8 @@ void SetEventCallBack(void* session, void(*PEvent)(void* opaque, int eventType),
 	StreamDecoder::Get()->SetEventCallBack(session, PEvent, PDrawFrame, opaque);
 }
 
-void* TestSetObj(void* obj)
+void* TestGUID(void* obj)
 {
-	cout << "obj set success " << obj << endl;
-	//cout << *(int*)obj << endl;
 	return obj;
 }
 

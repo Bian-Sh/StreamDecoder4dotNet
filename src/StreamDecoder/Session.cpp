@@ -57,6 +57,13 @@ Session::~Session()
 void Session::Close()
 {
 	Clear();
+
+	funcMux.lock();
+	this->opaque = NULL;
+	DotNetSessionEvent = NULL;
+	DotNetDrawFrame = NULL;
+	funcMux.unlock();
+
 	mux.lock();
 	if (config)
 	{
@@ -437,4 +444,5 @@ void Session::SetEventCallBack(PEvent pEvent, PDrawFrame pDrawFrame, void* opaqu
 	DotNetDrawFrame = pDrawFrame;
 	funcMux.unlock();
 }
+
 
