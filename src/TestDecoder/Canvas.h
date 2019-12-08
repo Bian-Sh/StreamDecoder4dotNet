@@ -17,7 +17,7 @@ public:
 	virtual void Init(int width, int height) = 0;
 
 	//»æÖÆYUVÊý¾Ý
-	virtual bool Repaint(Frame* frame) = 0;
+	virtual void Repaint(Frame* frame) = 0;
 
 	bool isExit = false;
 

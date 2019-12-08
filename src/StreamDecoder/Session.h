@@ -60,13 +60,16 @@ public:
 	std::mutex mux;
 
 private:
-	void OpenDemuxThread(char* url);
+	void OpenDemuxThread();
 
 	//清理数据
 	void Clear();
 	//关闭Session
 	void Close();
 private:
+
+	char* url = NULL;
+
 	Demux* demux = NULL;
 
 	//需要清理

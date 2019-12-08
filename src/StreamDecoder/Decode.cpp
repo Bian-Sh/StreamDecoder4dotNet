@@ -135,7 +135,11 @@ void Decode::DecodeAVPacket()
 		while (!quitSignal)
 		{
 			mux.lock();
-			if (!codec) return;
+			if (!codec)
+			{
+				mux.unlock();
+				continue;
+			}
 			AVFrame *frame = av_frame_alloc();
 			int ret = avcodec_receive_frame(codec, frame);
 			mux.unlock();

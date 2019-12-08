@@ -13,7 +13,7 @@ public:
 	virtual void Init(int width, int height);
 
 	//绘制YUV数据
-	virtual bool Repaint(Frame* frame);
+	virtual void Repaint(Frame* frame);
 
 protected:
 	//初始化GL

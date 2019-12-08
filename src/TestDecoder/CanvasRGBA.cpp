@@ -75,18 +75,18 @@ void CanvasRGBA::Init(int width, int height)
 }
 
 
-bool CanvasRGBA::Repaint(Frame* frame)
+void CanvasRGBA::Repaint(Frame* frame)
 {
-	if (isRepainting || !rgba) return false;
+	if (isRepainting || !rgba) return;
 	isRepainting = true;
 	if (!frame->rgba)
 	{
 		qDebug() << "rgba is null";
-		return false;
+		return;
 	}
 	memcpy(rgba, frame->rgba, width * height * 4);
 	update();
-	return true;
+	return;
 }
 
 void CanvasRGBA::initializeGL()

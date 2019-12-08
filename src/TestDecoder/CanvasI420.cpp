@@ -220,14 +220,14 @@ void CanvasI420::initializeGL()
 //	return true;
 //}
 
-bool CanvasI420::Repaint(Frame* frame)
+void CanvasI420::Repaint(Frame* frame)
 {
-	if (isRepainting) return false;
+	if (isRepainting) return;
 
 	isRepainting = true;
 	if (!datas[0])
 	{
-		return false;
+		return;
 	}
 	memcpy(datas[0], frame->frame_y, frame->width * frame->height);
 	memcpy(datas[1], frame->frame_u, frame->width * frame->height / 4);
@@ -235,7 +235,7 @@ bool CanvasI420::Repaint(Frame* frame)
 	//QThread::msleep(30);
 	update();
 
-	return true;
+	return;
 }
 
 //void CanvasI420::Close()
@@ -262,7 +262,11 @@ bool CanvasI420::Repaint(Frame* frame)
 
 void CanvasI420::paintGL()
 {
-	if (isExit) return;
+	if (isExit)
+	{
+		isRepainting = true;
+		return;
+	}
 	QMutexLocker locker(&mux);
 
 	glActiveTexture(GL_TEXTURE0);

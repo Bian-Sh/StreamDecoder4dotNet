@@ -39,8 +39,6 @@ Session::Session()
 {
 	config = new SessionConfig();
 
-	//config->playerID = playerID;
-
 #ifndef USE_LIBYUV
 	InitConverter();
 #endif
@@ -115,16 +113,28 @@ void Session::TryStreamDemux(char* url)
 {
 	quitSignal = false;
 	if (!demux) demux = new Demux(this);
-	std::thread t(&Session::OpenDemuxThread, this, url);
+
+	if (url != NULL)
+	{
+		this->url = new char[512];
+		memset(this->url, 0, 512);
+		memcpy(this->url, url, strlen(url));
+	}
+	std::thread t(&Session::OpenDemuxThread, this);
 	t.detach();
 }
 
 
 
-void Session::OpenDemuxThread(char* url)
+void Session::OpenDemuxThread()
 {
 	StreamDecoder::Get()->PushLog2Net(Info, "Try open stream!");
 	cout << "解封装结果:" << (demux->Open(url) == false ? "false" : "true") << endl;
+	if (url)
+	{
+		delete url;
+		url = NULL;
+	}
 }
 
 
@@ -332,11 +342,21 @@ void Session::OnDecodeOneAVFrame(AVFrame *frame, bool isAudio)
 		
 	}
 
+	
 	tmpFrame->bsdnts = Tools::Get()->GetTimestamp();
 	//cout << tmpFrame->pts << endl;
 	if (config->asyncUpdate)
 	{
-		//异步直接调用
+		//cout << "demux" << (demux == NULL)<<endl;
+		//mux.lock();
+
+		//if (!quitSignal && DotNetDrawFrame)
+		//{
+		//	//异步直接调用
+		//	DotNetDrawFrame(opaque, tmpFrame);
+		//}
+		//
+		//mux.unlock();
 		if (DotNetDrawFrame) DotNetDrawFrame(opaque, tmpFrame);
 		delete tmpFrame;
 		tmpFrame = NULL;

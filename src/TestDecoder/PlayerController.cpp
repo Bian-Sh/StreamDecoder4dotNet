@@ -10,7 +10,7 @@
 #include "CanvasRGBA.h"
 
 #define USE_WIDGET
-#define USE_RGBA_
+#define USE_RGBA
 
 PlayerController::PlayerController(QWidget *parent)
 	: QWidget(parent), value(0x1122334455667788)
@@ -111,29 +111,7 @@ void PlayerController::OnDrawFrameCb(Frame * frame)
 	canvasMux.lock();
 	if (canvas)
 	{
-		
-
-#ifdef USE_RGBA
-		
-		while (!isExit && frame->rgba)
-		{
-			if (canvas->Repaint(frame))
-			{
-				break;
-			}
-			QThread::msleep(1);
-		}
-#else
-		while (!isExit)
-		{
-			if (canvas->Repaint(frame))
-			{
-				break;
-			}
-			QThread::msleep(1);
-		}
-#endif // USE_RGBA
-
+		canvas->Repaint(frame);
 	}
 		
 	canvasMux.unlock();
@@ -161,9 +139,9 @@ void PlayerController::on_CreateSession_clicked()
 	SetOption(player, OptionType::WaitBitStreamTimeout, 1000);
 	SetOption(player, OptionType::AutoDecode, false);
 	SetOption(player, OptionType::DecodeThreadCount, 8);
-	SetOption(player, OptionType::UseCPUConvertYUV, false);
+	SetOption(player, OptionType::UseCPUConvertYUV, true);
 	SetOption(player, OptionType::ConvertPixelFormat, PixelFormat::RGBA);
-	SetOption(player, OptionType::AsyncUpdate, true);
+	SetOption(player, OptionType::AsyncUpdate, false);
 
 	SetEventCallBack(player, sessionevent_callback, drawframe_callback, this);
 	
@@ -189,7 +167,9 @@ void PlayerController::on_TryBitStreamDemux_clicked()
 
 void PlayerController::on_TryNetStreamDemux_clicked()
 {
-	TryNetStreamDemux(player, "rtmp://192.168.30.166/live/test");
+	QByteArray ba = ui.FilePath->text().toLocal8Bit();
+	char* path = ba.data();
+	TryNetStreamDemux(player, path);
 }
 
 void PlayerController::on_BeginDecode_clicked()

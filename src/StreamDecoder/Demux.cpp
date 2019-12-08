@@ -12,15 +12,12 @@ extern "C"
 #include <libavutil/time.h>
 }
 #define BUFF_SIZE 65536
-#define  URL_LENGTH 1280
+
 using namespace  std;
 Demux::Demux(Session* session)
 {
 	this->session = session;
 	this->dataCacheSize = session->config->dataCacheSize;
-	//初始化 视频流地址 数组
-	url = new char[URL_LENGTH];
-	memset(url, 0, URL_LENGTH);
 
 	dataCache = new SCharList(this->dataCacheSize);
 }
@@ -74,8 +71,6 @@ void Demux::Close()
 
 	Clear();
 	mux.lock();
-	delete url;
-	url = NULL;
 
 	delete dataCache;
 	dataCache = NULL;
@@ -130,16 +125,13 @@ bool Demux::Open(char* url)
 	//bit 流
 	if (url == NULL)
 	{
-		memset(this->url, 0, URL_LENGTH);
-
 		isSuccess = ProbeInputBuffer();
 
 	}
 	//网络流
 	else
 	{
-		memset(this->url, 0, URL_LENGTH);
-		memcpy(this->url, url, strlen(url));
+		this->url = url;
 		afc->interrupt_callback.opaque = this;
 		afc->interrupt_callback.callback = interrupt_cb;
 		StreamDecoder::Get()->PushLog2Net(Info, this->url);

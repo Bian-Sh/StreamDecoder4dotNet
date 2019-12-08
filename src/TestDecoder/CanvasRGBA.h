@@ -14,7 +14,7 @@ public:
 	virtual void Init(int width, int height);
 
 	//»æÖÆYUVÊý¾Ý
-	virtual bool Repaint(Frame* frame);
+	virtual void Repaint(Frame* frame);
 
 protected:
 
